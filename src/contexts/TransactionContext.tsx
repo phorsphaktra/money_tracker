@@ -2,13 +2,13 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { transactionService } from '../services/transactionService';
 import { useAuth } from './AuthContext'; // Assuming you have an AuthContext
 import { useLoading } from './LoadingContext';
+import { CategoryId } from '../utils/categories';
 
 export interface Transaction {
   id: string;
-  name: string;
   description: string;
   amount: number;
-  category: string;
+  category: CategoryId;
   type: 'income' | 'expense';
   date: string;
   createdAt?: string;

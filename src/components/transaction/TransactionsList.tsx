@@ -1,6 +1,7 @@
 import { Transaction } from '../../contexts/TransactionContext';
-import { CategoryIcon } from './CategoryIcon';
+import { getCategoryById } from '../../utils/categories';
 import { formatCurrency } from '../../utils/formatters';
+import { CategoryIcon } from './CategoryIcon';
 
 interface TransactionsListProps {
   transactions: Transaction[];
@@ -43,35 +44,33 @@ export const TransactionsList = ({
   );
 };
 
-const TransactionItem = ({ transaction }: { transaction: Transaction }) => (
-  <div className="flex items-center justify-between p-4 rounded-lg bg-gray-50 hover:bg-gray-100 transition-all duration-200 group cursor-pointer">
-    <div className="flex items-center space-x-4">
-      <CategoryIcon category={transaction.category} />
-      <div>
-        <p className="text-sm font-medium text-gray-900 group-hover:text-indigo-600 transition-colors">
-          {transaction.name}
-        </p>
-        <div className="flex items-center gap-2 text-xs text-gray-500">
-          <span>{new Date(transaction.date).toLocaleDateString()}</span>
-          {transaction.description && (
-            <>
-              <span>•</span>
-              <span className="truncate max-w-[200px]">{transaction.description}</span>
-            </>
-          )}
+const TransactionItem = ({ transaction }: { transaction: Transaction }) => {
+  const category = getCategoryById(transaction.category, transaction.type);
+  
+  return (
+    <div className="flex items-center justify-between p-4 rounded-lg bg-gray-50 hover:bg-gray-100 transition-all duration-200 group cursor-pointer">
+      <div className="flex items-center space-x-4">
+        <CategoryIcon category={category} />
+        <div>
+          <p className="text-sm font-medium text-gray-900 group-hover:text-indigo-600 transition-colors">
+            {transaction.description || category.label}
+          </p>
+          <div className="flex items-center gap-2 text-xs text-gray-500">
+            <span>{new Date(transaction.date).toLocaleDateString()}</span>
+          </div>
         </div>
       </div>
+      <span className={`text-sm font-medium whitespace-nowrap ${
+        transaction.type === 'income' 
+          ? 'text-green-600 group-hover:text-green-700' 
+          : 'text-red-600 group-hover:text-red-700'
+      } transition-colors`}>
+        {transaction.type === 'income' ? '+' : '-'}
+        {formatCurrency(Math.abs(transaction.amount))}
+      </span>
     </div>
-    <span className={`text-sm font-medium whitespace-nowrap ${
-      transaction.type === 'income' 
-        ? 'text-green-600 group-hover:text-green-700' 
-        : 'text-red-600 group-hover:text-red-700'
-    } transition-colors`}>
-      {transaction.type === 'income' ? '+' : '-'}
-      {formatCurrency(Math.abs(transaction.amount))}
-    </span>
-  </div>
-);
+  );
+};
 
 const TransactionSkeleton = () => (
   <div className="animate-pulse flex items-center gap-4 p-4 bg-gray-50 rounded-lg">

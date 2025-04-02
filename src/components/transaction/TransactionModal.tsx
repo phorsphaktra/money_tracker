@@ -1,43 +1,42 @@
 import { useState } from 'react';
 import { useTransactions, Transaction } from '../../contexts/TransactionContext';
 import { Button } from '../shared/Button';
+import { EXPENSE_CATEGORIES, INCOME_CATEGORIES, getCategoryById, isValidCategory } from '../../utils/categories';
+import { CategorySelect } from './CategorySelect';
 
 interface TransactionModalProps {
   transaction?: Transaction;
   onClose: () => void;
+  type?: 'income' | 'expense';
 }
 
-const CATEGORIES = [
-  { id: 'food', label: 'Food & Dining' },
-  { id: 'transport', label: 'Transportation' },
-  { id: 'utilities', label: 'Utilities' },
-  { id: 'rent', label: 'Rent & Housing' },
-  { id: 'entertainment', label: 'Entertainment' },
-  { id: 'shopping', label: 'Shopping' },
-  { id: 'healthcare', label: 'Healthcare' },
-  { id: 'income', label: 'Income' },
-  { id: 'other', label: 'Other' }
-];
+type FormData = {
+  description: string;
+  amount: string;
+  category: string;
+  type: 'income' | 'expense';
+  date: string;
+};
 
-export const TransactionModal = ({ transaction, onClose }: TransactionModalProps) => {
+type FormField = 'description' | 'amount' | 'category' | 'date' | 'type';
+type FormErrors = Partial<Record<FormField | 'submit', string>>;
+
+export const TransactionModal = ({ transaction, onClose, type = 'expense' }: TransactionModalProps) => {
   const { addTransaction, updateTransaction } = useTransactions();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [errors, setErrors] = useState<Record<string, string>>({});
-  const [formData, setFormData] = useState({
-    name: transaction?.name || '',
+  const [errors, setErrors] = useState<FormErrors>({});
+
+  const [formData, setFormData] = useState<FormData>({
     description: transaction?.description || '',
     amount: transaction ? Math.abs(transaction.amount).toString() : '',
-    category: transaction?.category || CATEGORIES[0].id,
-    type: transaction?.type || 'expense',
+    category: transaction?.category || 
+      (type === 'income' ? INCOME_CATEGORIES[0].id : EXPENSE_CATEGORIES[0].id),
+    type: transaction?.type || type,
     date: transaction?.date || new Date().toISOString().split('T')[0]
   });
 
   const validateForm = () => {
-    const newErrors: Record<string, string> = {};
-    
-    if (!formData.name.trim()) {
-      newErrors.name = 'Name is required';
-    }
+    const newErrors: FormErrors = {};
 
     if (!formData.description.trim()) {
       newErrors.description = 'Description is required';
@@ -46,6 +45,14 @@ export const TransactionModal = ({ transaction, onClose }: TransactionModalProps
     const amount = parseFloat(formData.amount);
     if (!formData.amount || isNaN(amount) || amount <= 0) {
       newErrors.amount = 'Amount must be greater than 0';
+    }
+
+    if (!isValidCategory(formData.category, formData.type)) {
+      newErrors.category = 'Please select a valid category';
+    }
+
+    if (!formData.date || isNaN(new Date(formData.date).getTime())) {
+      newErrors.date = 'Please select a valid date';
     }
 
     setErrors(newErrors);
@@ -57,22 +64,35 @@ export const TransactionModal = ({ transaction, onClose }: TransactionModalProps
     if (!validateForm()) return;
 
     setIsSubmitting(true);
+    setErrors({});
+
     try {
+      const amount = parseFloat(formData.amount);
       const transactionData = {
-        name: formData.name.trim(),
         description: formData.description.trim(),
-        amount: parseFloat(formData.amount) * (formData.type === 'expense' ? -1 : 1),
+        amount: formData.type === 'expense' ? -Math.abs(amount) : Math.abs(amount),
         category: formData.category,
-        type: formData.type as 'income' | 'expense',
+        type: formData.type,
         date: formData.date
       };
 
       if (transaction) {
+        // Check if anything has actually changed
+        const hasChanges = Object.keys(transactionData).some(
+          key => transactionData[key as keyof typeof transactionData] !== 
+                 transaction[key as keyof typeof transactionData]
+        );
+
+        if (!hasChanges) {
+          onClose();
+          return;
+        }
+
         await updateTransaction(transaction.id, transactionData);
       } else {
-        const newTransaction = await addTransaction(transactionData);
-        // You can do something with the newTransaction if needed
+        await addTransaction(transactionData);
       }
+      
       onClose();
     } catch (err) {
       setErrors({ 
@@ -83,14 +103,28 @@ export const TransactionModal = ({ transaction, onClose }: TransactionModalProps
     }
   };
 
-  const handleChange = (field: keyof typeof formData) => (
+  const handleChange = (field: FormField) => (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
-    setFormData(prev => ({ ...prev, [field]: e.target.value }));
+    const value = e.target.value;
+    setFormData(prev => {
+      const newData = { ...prev, [field]: value };
+      
+      // Update category if type changes
+      if (field === 'type') {
+        const categories = value === 'income' ? INCOME_CATEGORIES : EXPENSE_CATEGORIES;
+        newData.category = categories[0].id;
+      }
+      
+      return newData;
+    });
+    
     if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: '' }));
+      setErrors(prev => ({ ...prev, [field]: undefined }));
     }
   };
+
+  const categories = formData.type === 'income' ? INCOME_CATEGORIES : EXPENSE_CATEGORIES;
 
   return (
     <div className="fixed inset-0 bg-gray-600 bg-opacity-50 z-50 flex items-center justify-center">
@@ -108,67 +142,63 @@ export const TransactionModal = ({ transaction, onClose }: TransactionModalProps
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-6">
           {/* Transaction Type */}
-          <div className="flex space-x-4 p-1 bg-gray-100 rounded-lg">
-            {['income', 'expense'].map((type) => (
-              <button
-                key={type}
-                type="button"
-                onClick={() => setFormData(prev => ({ ...prev, type: type as 'income' | 'expense' }))}
-                className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors
-                  ${formData.type === type 
-                    ? 'bg-white text-indigo-600 shadow-sm' 
-                    : 'text-gray-500 hover:text-gray-700'}`}
-              >
-                {type.charAt(0).toUpperCase() + type.slice(1)}
-              </button>
+          {!transaction && (
+            <div className="flex space-x-4 p-1 bg-gray-100 rounded-lg">
+              {['income', 'expense'].map((t) => (
+                <button
+                  key={t}
+                  type="button"
+                  onClick={() => handleChange('type')({ 
+                    target: { value: t } 
+                  } as React.ChangeEvent<HTMLInputElement>)}
+                  className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors
+                    ${formData.type === t 
+                      ? 'bg-white text-indigo-600 shadow-sm' 
+                      : 'text-gray-500 hover:text-gray-700'}`}
+                >
+                  {t.charAt(0).toUpperCase() + t.slice(1)}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Form Fields */}
+          <div className="space-y-4">
+            {[
+              { id: 'description' as const, label: 'Description', type: 'text' },
+              { id: 'amount' as const, label: 'Amount', type: 'number', step: '0.01' },
+              { id: 'date' as const, label: 'Date', type: 'date' }
+            ].map(field => (
+              <div key={field.id} className="space-y-1">
+                <label className="block text-sm font-medium text-gray-700">
+                  {field.label}
+                </label>
+                <input
+                  {...field}
+                  value={formData[field.id]}
+                  onChange={handleChange(field.id)}
+                  className={`block w-full px-3 py-2 rounded-md border 
+                    ${errors[field.id] ? 'border-red-500' : 'border-gray-300'}
+                    focus:ring-indigo-500 focus:border-indigo-500 shadow-sm`}
+                />
+                {errors[field.id] && (
+                  <p className="text-sm text-red-600 mt-1">{errors[field.id]}</p>
+                )}
+              </div>
             ))}
           </div>
 
-          {/* Form Fields */}
-          {[
-            { id: 'name', label: 'Name', type: 'text' },
-            { id: 'description', label: 'Description', type: 'text' },
-            { id: 'amount', label: 'Amount', type: 'number', step: '0.01' },
-            { id: 'date', label: 'Date', type: 'date' }
-          ].map(field => (
-            <div key={field.id} className="space-y-1">
-              <label className="block text-sm font-medium text-gray-700">
-                {field.label}
-              </label>
-              <input
-                {...field}
-                value={formData[field.id as keyof typeof formData]}
-                onChange={handleChange(field.id as keyof typeof formData)}
-                className={`block w-full px-3 py-2 rounded-md border 
-                  ${errors[field.id] ? 'border-red-500' : 'border-gray-300'}
-                  focus:ring-indigo-500 focus:border-indigo-500 shadow-sm`}
-              />
-              {errors[field.id] && (
-                <p className="text-sm text-red-600 mt-1">{errors[field.id]}</p>
-              )}
-            </div>
-          ))}
-
           {/* Category Selection */}
-          <div className="space-y-1">
-            <label className="block text-sm font-medium text-gray-700">
-              Category
-            </label>
-            <select
-              value={formData.category}
-              onChange={handleChange('category')}
-              className="block w-full px-3 py-2 rounded-md border border-gray-300
-                focus:ring-indigo-500 focus:border-indigo-500 shadow-sm"
-            >
-              {CATEGORIES.map(category => (
-                <option key={category.id} value={category.id}>
-                  {category.label}
-                </option>
-              ))}
-            </select>
-          </div>
+          <CategorySelect
+            categories={categories}
+            value={formData.category}
+            onChange={(value) => handleChange('category')({ 
+              target: { value } 
+            } as React.ChangeEvent<HTMLSelectElement>)}
+            error={errors.category}
+          />
 
           {/* Action Buttons */}
           <div className="flex justify-end space-x-3 pt-4">

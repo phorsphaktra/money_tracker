@@ -21,10 +21,12 @@ export class TransactionService {
 
   async addTransaction(userId: string, transaction: Omit<Transaction, 'id'>) {
     const collectionRef = collection(db, this.getTransactionPath(userId));
+    const now = new Date().toISOString();
     const docRef = await addDoc(collectionRef, {
       ...transaction,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+      date: transaction.date || now.split('T')[0], // Use today as default date
+      createdAt: now,
+      updatedAt: now
     });
     
     // Fetch the complete transaction data after creation
