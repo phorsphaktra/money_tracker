@@ -1,62 +1,116 @@
-import { createContext, useContext, useState, ReactNode } from 'react';
+import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from 'react';
+import { User } from 'firebase/auth';
+import { auth } from '../config/firebase';
+import { authService } from '../services/authService';
 
-interface AuthContextType {
-  isAuthenticated: boolean;
-  isLoading: boolean;
-  error: string | null;
-  login: (email: string, password: string) => Promise<void>;
-  logout: () => void;
-  signup: (email: string, password: string, name: string) => Promise<void>;
+interface AuthState {
+    user: User | null;
+    loading: boolean;
+    isAuthenticated: boolean;
+    error: string | null;
 }
 
-const AuthContext = createContext<AuthContextType | null>(null);
+interface AuthContextType extends AuthState {
+    login: (email: string, password: string) => Promise<void>;
+    register: (email: string, password: string, displayName: string) => Promise<void>;
+    loginWithGoogle: () => Promise<void>;
+    logout: () => Promise<void>;
+    clearError: () => void;
+}
+
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+    const [state, setState] = useState<AuthState>({
+        user: null,
+        loading: true,
+        isAuthenticated: false,
+        error: null
+    });
 
-  const login = async (email: string, password: string) => {
-    try {
-      setIsLoading(true);
-      setError(null);
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      setIsAuthenticated(true);
-    } catch (err) {
-      setError('Invalid credentials');
-    } finally {
-      setIsLoading(false);
+    const handleError = useCallback((error: Error) => {
+        setState(prev => ({ ...prev, error: error.message }));
+    }, []);
+
+    const clearError = useCallback(() => {
+        setState(prev => ({ ...prev, error: null }));
+    }, []);
+
+    useEffect(() => {
+        const unsubscribe = auth.onAuthStateChanged(async (user) => {
+            setState(prev => ({
+                ...prev,
+                user,
+                isAuthenticated: !!user,
+                loading: false
+            }));
+
+            if (user) {
+                try {
+                    await authService.updateLastLogin(user.uid);
+                } catch (error) {
+                    console.error('Failed to update last login:', error);
+                }
+            }
+        });
+
+        return unsubscribe;
+    }, []);
+
+    const login = useCallback(async (email: string, password: string) => {
+        try {
+            await authService.loginWithEmail(email, password);
+            clearError();
+        } catch (error) {
+            handleError(error as Error);
+        }
+    }, [clearError, handleError]);
+
+    const value = {
+        ...state,
+        login,
+        register: async (email: string, password: string, displayName: string) => {
+            try {
+                await authService.registerWithProfile(email, password, displayName);
+                clearError();
+            } catch (error) {
+                handleError(error as Error);
+            }
+        },
+        loginWithGoogle: async () => {
+            try {
+                await authService.loginWithGoogle();
+                clearError();
+            } catch (error) {
+                handleError(error as Error);
+            }
+        },
+        logout: async () => {
+            try {
+                await authService.logout();
+                clearError();
+            } catch (error) {
+                handleError(error as Error);
+            }
+        },
+        clearError
+    };
+
+    if (state.loading) {
+        return null; // or loading component
     }
-  };
 
-  const signup = async (email: string, password: string, name: string) => {
-    try {
-      setIsLoading(true);
-      setError(null);
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      setIsAuthenticated(true);
-    } catch (err) {
-      setError('Registration failed');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const logout = () => {
-    setIsAuthenticated(false);
-  };
-
-  return (
-    <AuthContext.Provider value={{ isAuthenticated, isLoading, error, login, logout, signup }}>
-      {children}
-    </AuthContext.Provider>
-  );
+    return (
+        <AuthContext.Provider value={value}>
+            {children}
+        </AuthContext.Provider>
+    );
 };
 
 export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) throw new Error('useAuth must be used within AuthProvider');
-  return context;
+    const context = useContext(AuthContext);
+    if (context === undefined) {
+        throw new Error('useAuth must be used within an AuthProvider');
+    }
+    return context;
 };
