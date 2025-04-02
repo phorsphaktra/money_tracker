@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { CardStats } from '../components/CardStats';
 import { SpendingChart } from '../components/SpendingChart';
 import { TransactionsList } from '../components/transaction/TransactionsList';
-import { Transaction, useTransactions } from '../contexts/TransactionContext';
+import { useTransactions } from '../contexts/TransactionContext';
 import { calculateDashboardStats } from '../utils/statsCalculator';
 
 export const DashboardScreen = () => {
@@ -82,11 +82,6 @@ export const DashboardScreen = () => {
     );
 };
 
-const DashboardSkeleton = () => (
-  <div className="flex justify-center items-center h-64">
-    Loading...
-  </div>
-);
 
 const DashboardError = ({ error }: { error: Error }) => (
   <div className="text-red-500">Error: {error.message}</div>
@@ -125,27 +120,4 @@ const StatsGrid = ({ stats, isLoading }: { stats: ReturnType<typeof calculateDas
   </div>
 );
 
-const ChartsSection = ({ transactions, isLoading }: { transactions: Transaction[], isLoading: boolean }) => (
-  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-    <div className="bg-white rounded-xl shadow-sm p-6">
-      <h3 className="text-lg font-semibold text-gray-900 mb-4">
-        Spending Overview
-      </h3>
-      <SpendingChart 
-        transactions={transactions} 
-        isLoading={isLoading} 
-      />
-    </div>
-    <div className="bg-white rounded-xl shadow-sm p-6">
-      <h3 className="text-lg font-semibold text-gray-900 mb-4">
-        Recent Transactions
-      </h3>
-      <TransactionsList 
-        transactions={transactions}
-        isLoading={isLoading}
-        limit={5}
-        showFilters={false}
-      />
-    </div>
-  </div>
-);
+

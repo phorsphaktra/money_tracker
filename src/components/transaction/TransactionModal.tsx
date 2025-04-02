@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useTransactions, Transaction } from '../../contexts/TransactionContext';
 import { Button } from '../shared/Button';
-import { EXPENSE_CATEGORIES, INCOME_CATEGORIES, getCategoryById, isValidCategory } from '../../utils/categories';
+import { EXPENSE_CATEGORIES, INCOME_CATEGORIES, isValidCategory } from '../../utils/categories';
 import { CategorySelect } from './CategorySelect';
 
 interface TransactionModalProps {

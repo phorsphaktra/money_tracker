@@ -12,7 +12,6 @@ import {
   Filler
 } from 'chart.js';
 import { Line } from 'react-chartjs-2';
-import { formatCurrency } from '../utils/formatters';
 
 // Register ChartJS components
 ChartJS.register(
@@ -43,7 +42,7 @@ export const SpendingChart = ({ transactions, isLoading }: SpendingChartProps) =
       };
     }).reverse();
 
-    const monthlySpending = last6Months.map(({ month, year, monthIndex }) => {
+    const monthlySpending = last6Months.map(({ year, monthIndex }) => {
       return transactions
         .filter(txn => {
           const txnDate = new Date(txn.date);
@@ -54,7 +53,7 @@ export const SpendingChart = ({ transactions, isLoading }: SpendingChartProps) =
         .reduce((sum, txn) => sum + txn.amount, 0);
     });
 
-    const monthlyIncome = last6Months.map(({ month, year, monthIndex }) => {
+    const monthlyIncome = last6Months.map(({ year, monthIndex }) => {
       return transactions
         .filter(txn => {
           const txnDate = new Date(txn.date);
@@ -88,43 +87,6 @@ export const SpendingChart = ({ transactions, isLoading }: SpendingChartProps) =
     };
   }, [transactions]);
 
-  const chartOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    interaction: {
-      intersect: false,
-      mode: 'index' as const
-    },
-    plugins: {
-      tooltip: {
-        callbacks: {
-          label: (context: any) => {
-            return `${context.dataset.label}: ${formatCurrency(context.raw)}`;
-          }
-        }
-      },
-      legend: {
-        position: 'top' as const,
-        align: 'end' as const
-      }
-    },
-    scales: {
-      x: {
-        grid: {
-          display: false
-        }
-      },
-      y: {
-        beginAtZero: true,
-        ticks: {
-          callback: (value: number) => formatCurrency(value)
-        },
-        grid: {
-          borderDash: [5, 5] as [number, number]
-        }
-      }
-    }
-  };
 
   if (isLoading) {
     return (

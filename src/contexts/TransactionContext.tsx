@@ -28,7 +28,7 @@ const TransactionContext = createContext<TransactionContextType | undefined>(und
 
 export const TransactionProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
   const { user } = useAuth();
   const { showLoading, hideLoading } = useLoading();

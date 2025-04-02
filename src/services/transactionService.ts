@@ -1,5 +1,5 @@
 import { db } from '../config/firebase';
-import { collection, addDoc, updateDoc, deleteDoc, doc, getDocs, query, where, getDoc } from 'firebase/firestore';
+import { collection, addDoc, updateDoc, deleteDoc, doc, getDocs, getDoc } from 'firebase/firestore';
 import { Transaction } from '../contexts/TransactionContext';
 
 export class TransactionService {
