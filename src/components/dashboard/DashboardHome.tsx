@@ -39,13 +39,13 @@ export const DashboardHome = () => {
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
             Spending Overview
           </h3>
-          <SpendingChart />
+          <SpendingChart transactions={[]} />
         </div>
         <div className="bg-white rounded-xl shadow-sm p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
             Recent Transactions
           </h3>
-          <TransactionsList />
+          <TransactionsList transactions={[]} />
         </div>
       </div>
     </div>
