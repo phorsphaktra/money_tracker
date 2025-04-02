@@ -1,5 +1,5 @@
-import { CardStats } from '../components/cards/CardStats';
-import { SpendingChart } from '../components/charts/SpendingChart';
+import { CardStats } from '../components/CardStats';
+import { SpendingChart } from '../components/SpendingChart';
 import { TransactionsList } from '../components/transaction/TransactionsList';
 
 export const DashboardScreen = () => {

@@ -1,6 +1,6 @@
-import { CardStats } from '../cards/CardStats';
+import { CardStats } from '../CardStats';
 import { TransactionsList } from '../transaction/TransactionsList';
-import { SpendingChart } from '../charts/SpendingChart';
+import { SpendingChart } from '../SpendingChart';
 
 export const DashboardHome = () => {
   return (
