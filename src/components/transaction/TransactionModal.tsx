@@ -61,7 +61,7 @@ export const TransactionModal = ({ transaction, onClose }: TransactionModalProps
       const transactionData = {
         name: formData.name.trim(),
         description: formData.description.trim(),
-        amount: parseFloat(formData.amount),
+        amount: parseFloat(formData.amount) * (formData.type === 'expense' ? -1 : 1),
         category: formData.category,
         type: formData.type as 'income' | 'expense',
         date: formData.date
@@ -70,7 +70,8 @@ export const TransactionModal = ({ transaction, onClose }: TransactionModalProps
       if (transaction) {
         await updateTransaction(transaction.id, transactionData);
       } else {
-        await addTransaction(transactionData);
+        const newTransaction = await addTransaction(transactionData);
+        // You can do something with the newTransaction if needed
       }
       onClose();
     } catch (err) {

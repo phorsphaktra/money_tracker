@@ -3,9 +3,10 @@ import { useTransactions ,Transaction} from '../contexts/TransactionContext';
 import { Button } from '../components/shared/Button';
 import { TransactionRow } from '../components/transaction/TransactionRow';
 import { TransactionModal } from '../components/transaction/TransactionModal';
+import { LoadingSpinner } from '../components/shared/LoadingSpinner';
 
 export const TransactionsScreen = () => {
-  const { transactions } = useTransactions();
+  const { transactions, isLoading, error } = useTransactions();
   const [filter, setFilter] = useState<'all' | 'income' | 'expense'>('all');
   const [search, setSearch] = useState('');
   const [isAddingNew, setIsAddingNew] = useState(false);
@@ -16,6 +17,22 @@ export const TransactionsScreen = () => {
                          transaction.category.toLowerCase().includes(search.toLowerCase());
     return matchesFilter && matchesSearch;
   });
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <p className="text-red-500">{error.message}</p>
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <LoadingSpinner size="large" className="text-indigo-600" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -61,6 +78,7 @@ export const TransactionsScreen = () => {
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">#</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Description</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Category</th>
@@ -69,12 +87,28 @@ export const TransactionsScreen = () => {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {filteredTransactions.map((transaction) => (
-                <TransactionRow
-                  key={transaction.id}
-                  transaction={transaction}
-                />
-              ))}
+              {filteredTransactions.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="px-6 py-4 text-center text-gray-500">
+                    {isLoading ? (
+                      <div className="flex justify-center items-center">
+                        <LoadingSpinner size="small" className="text-indigo-600 mr-2" />
+                        <span>Loading transactions...</span>
+                      </div>
+                    ) : (
+                      'No transactions found'
+                    )}
+                  </td>
+                </tr>
+              ) : (
+                filteredTransactions.map((transaction, index) => (
+                  <TransactionRow
+                    key={transaction.id}
+                    transaction={transaction}
+                    rowNumber={index + 1}
+                  />
+                ))
+              )}
             </tbody>
           </table>
         </div>

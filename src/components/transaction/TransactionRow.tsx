@@ -1,40 +1,58 @@
+import { useState } from 'react';
 import { useTransactions, Transaction } from '../../contexts/TransactionContext';
 import { Button } from '../shared/Button';
+import { LoadingSpinner } from '../shared/LoadingSpinner';
 
 interface TransactionRowProps {
   transaction: Transaction;
+  rowNumber: number;
 }
 
-export const TransactionRow = ({ transaction }: TransactionRowProps) => {
+export const TransactionRow = ({ transaction, rowNumber }: TransactionRowProps) => {
   const { deleteTransaction } = useTransactions();
-  
+  const [isLoading, setIsLoading] = useState(false);
+
+  const formattedAmount = new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD'
+  }).format(Math.abs(transaction.amount));
+
+  const formattedDate = new Date(transaction.date).toLocaleDateString();
+
   return (
-    <tr className="hover:bg-gray-50">
+    <tr className="hover:bg-gray-50 transition-colors">
       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-        {new Date(transaction.date).toLocaleDateString()}
+        {rowNumber}
       </td>
-      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+        {formattedDate}
+      </td>
+      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
         {transaction.description}
       </td>
-      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-          {transaction.category}
-        </span>
+      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 capitalize">
+        {transaction.category}
       </td>
       <td className={`px-6 py-4 whitespace-nowrap text-sm font-medium text-right ${
         transaction.type === 'income' ? 'text-green-600' : 'text-red-600'
       }`}>
-        {transaction.type === 'income' ? '+' : '-'}
-        ${Math.abs(transaction.amount).toFixed(2)}
+        {transaction.type === 'income' ? '+' : '-'}{formattedAmount}
       </td>
       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-        <Button
-          variant="secondary"
-          onClick={() => deleteTransaction(transaction.id)}
-          className="text-red-600 hover:text-red-900"
-        >
-          Delete
-        </Button>
+        {isLoading ? (
+          <LoadingSpinner size="small" className="ml-auto" />
+        ) : (
+          <div className="flex justify-end space-x-2">
+            <button className="text-indigo-600 hover:text-indigo-900">Edit</button>
+            <Button
+              variant="secondary"
+              onClick={() => deleteTransaction(transaction.id)}
+              className="text-red-600 hover:text-red-900"
+            >
+              Delete
+            </Button>
+          </div>
+        )}
       </td>
     </tr>
   );

@@ -1,120 +1,114 @@
-import { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { transactionService } from '../services/transactionService';
+import { useAuth } from './AuthContext'; // Assuming you have an AuthContext
+import { useLoading } from './LoadingContext';
 
 export interface Transaction {
-  id: number;
+  id: string;
   name: string;
+  description: string;
   amount: number;
-  date: string;
   category: string;
   type: 'income' | 'expense';
-  description: string;
+  date: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
-interface TransactionsContextType {
+interface TransactionContextType {
   transactions: Transaction[];
-  addTransaction: (transaction: Omit<Transaction, 'id'>) => void;
-  updateTransaction: (id: number, updates: Partial<Transaction>) => Promise<Transaction>;
-  deleteTransaction: (id: number) => void;
+  addTransaction: (transaction: Omit<Transaction, 'id'>) => Promise<Transaction>;
+  updateTransaction: (id: string, transaction: Partial<Transaction>) => Promise<void>;
+  deleteTransaction: (id: string) => Promise<void>;
+  isLoading: boolean;
+  error: Error | null;
 }
 
-interface ValidationError {
-  field: string;
-  message: string;
-}
+const TransactionContext = createContext<TransactionContextType | undefined>(undefined);
 
-const validateTransaction = (data: Partial<Transaction>): ValidationError[] => {
-  const errors: ValidationError[] = [];
-
-  if (data.amount !== undefined) {
-    if (isNaN(data.amount)) {
-      errors.push({ field: 'amount', message: 'Amount must be a valid number' });
-    } else if (data.amount === 0) {
-      errors.push({ field: 'amount', message: 'Amount cannot be zero' });
-    }
-  }
-
-  if (data.description && data.description.trim().length < 3) {
-    errors.push({ field: 'description', message: 'Description must be at least 3 characters' });
-  }
-
-  if (data.date && isNaN(Date.parse(data.date))) {
-    errors.push({ field: 'date', message: 'Invalid date format' });
-  }
-
-  if (data.category && data.category.trim().length === 0) {
-    errors.push({ field: 'category', message: 'Category is required' });
-  }
-
-  return errors;
-};
-
-const TransactionsContext = createContext<TransactionsContextType | null>(null);
-
-export const TransactionsProvider = ({ children }: { children: ReactNode }) => {
-  const [transactions, setTransactions] = useState<Transaction[]>([
-    // ...existing mock transactions...
-  ]);
+export const TransactionProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<Error | null>(null);
+  const { user } = useAuth();
+  const { showLoading, hideLoading } = useLoading();
 
-  const addTransaction = (transaction: Omit<Transaction, 'id'>) => {
-    setTransactions(prev => [...prev, { ...transaction, id: Date.now() }]);
-  };
+  useEffect(() => {
+    if (user) {
+      loadTransactions();
+    }
+  }, [user]);
 
-  const updateTransaction = async (id: number, updates: Partial<Transaction>) => {
+  const loadTransactions = async () => {
+    if (!user) return;
+    showLoading();
     try {
-      setIsLoading(true);
-      setError(null);
-
-      const validationErrors = validateTransaction(updates);
-      if (validationErrors.length > 0) {
-        throw new Error(validationErrors[0].message);
-      }
-
-      const existingTransaction = transactions.find(t => t.id === id);
-      if (!existingTransaction) {
-        throw new Error('Transaction not found');
-      }
-
-      // Simulate API call with validation
-      await new Promise(resolve => setTimeout(resolve, 500));
-
-      const updatedTransaction = {
-        ...existingTransaction,
-        ...updates,
-        amount: Math.abs(updates.amount || existingTransaction.amount) * 
-                (updates.type || existingTransaction.type === 'expense' ? -1 : 1),
-        date: updates.date || existingTransaction.date,
-        modifiedAt: new Date().toISOString()
-      };
-
-      setTransactions(prev =>
-        prev.map(t => t.id === id ? updatedTransaction : t)
-      );
-
-      return updatedTransaction;
+      const data = await transactionService.getTransactions(user.uid);
+      setTransactions(data);
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to update transaction';
-      setError(message);
-      throw new Error(message);
+      setError(err instanceof Error ? err : new Error('Failed to load transactions'));
     } finally {
-      setIsLoading(false);
+      hideLoading();
     }
   };
 
-  const deleteTransaction = (id: number) => {
-    setTransactions(prev => prev.filter(t => t.id !== id));
+  const addTransaction = async (transaction: Omit<Transaction, 'id'>) => {
+    if (!user) throw new Error('User not authenticated');
+    showLoading();
+    try {
+      const newTransaction = await transactionService.addTransaction(user.uid, transaction);
+      setTransactions(prev => [newTransaction, ...prev].sort((a, b) => 
+        new Date(b.date).getTime() - new Date(a.date).getTime()
+      ));
+      return newTransaction;
+    } catch (err) {
+      throw err instanceof Error ? err : new Error('Failed to add transaction');
+    } finally {
+      hideLoading();
+    }
+  };
+
+  const updateTransaction = async (id: string, transaction: Partial<Transaction>) => {
+    if (!user) throw new Error('User not authenticated');
+    showLoading();
+    try {
+      await transactionService.updateTransaction(user.uid, id, transaction);
+      setTransactions(prev =>
+        prev.map(t => (t.id === id ? { ...t, ...transaction } : t))
+      );
+    } catch (err) {
+      throw err instanceof Error ? err : new Error('Failed to update transaction');
+    } finally {
+      hideLoading();
+    }
+  };
+
+  const deleteTransaction = async (id: string) => {
+    if (!user) throw new Error('User not authenticated');
+    showLoading();
+    try {
+      await transactionService.deleteTransaction(user.uid, id);
+      setTransactions(prev => prev.filter(t => t.id !== id));
+    } catch (err) {
+      throw err instanceof Error ? err : new Error('Failed to delete transaction');
+    } finally {
+      hideLoading();
+    }
   };
 
   return (
-    <TransactionsContext.Provider value={{ transactions, addTransaction, updateTransaction, deleteTransaction }}>
+    <TransactionContext.Provider
+      value={{ transactions, addTransaction, updateTransaction, deleteTransaction, isLoading, error }}
+    >
       {children}
-    </TransactionsContext.Provider>
+    </TransactionContext.Provider>
   );
 };
 
 export const useTransactions = () => {
-  const context = useContext(TransactionsContext);
-  if (!context) throw new Error('useTransactions must be used within TransactionsProvider');
+  const context = useContext(TransactionContext);
+  if (context === undefined) {
+    throw new Error('useTransactions must be used within a TransactionProvider');
+  }
   return context;
 };

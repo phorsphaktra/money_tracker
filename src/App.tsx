@@ -6,7 +6,8 @@ import { SplashScreen } from './screens/SplashScreen';
 import { DashboardLayout } from './components/dashboard/DashboardLayout';
 import { DashboardScreen } from './screens/DashboardScreen';
 import { TransactionsScreen } from './screens/TransactionScreen'
-import { TransactionsProvider } from './contexts/TransactionContext';
+import { TransactionProvider } from './contexts/TransactionContext';
+import { LoadingProvider } from './contexts/LoadingContext';
 
 const AppContent = () => {
   const [showSplash, setShowSplash] = useState(true);
@@ -37,9 +38,11 @@ const AppContent = () => {
 export default function App() {
   return (
     <AuthProvider>
-      <TransactionsProvider>
-        <AppContent />
-      </TransactionsProvider>
+      <LoadingProvider>
+        <TransactionProvider>
+          <AppContent />
+        </TransactionProvider>
+      </LoadingProvider>
     </AuthProvider>
   );
 }
