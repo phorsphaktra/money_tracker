@@ -1,0 +1,34 @@
+import { createBrowserRouter, Navigate } from 'react-router-dom';
+import { DashboardLayout } from '../components/dashboard/DashboardLayout';
+import { DashboardScreen } from '../screens/DashboardScreen';
+import { TransactionsScreen } from '../screens/TransactionScreen';
+import { AnalyticsView } from '../components/analytics/AnalyticsView';
+import { SettingsScreen } from '../screens/SettingsScreen';
+import { LoginScreen } from '../components/auth/LoginScreen';
+import { SignUpScreen } from '../components/auth/SignUpScreen';
+import { SplashScreen } from '../screens/SplashScreen';
+
+export const router = createBrowserRouter([
+  {
+    path: '/splash',
+    element: <SplashScreen onFinish={() => <Navigate to="/" replace />} />
+  },
+  {
+    path: '/login',
+    element: <LoginScreen onSwitchToSignUp={() => <Navigate to="/signup" />} />
+  },
+  {
+    path: '/signup',
+    element: <SignUpScreen onSwitchToLogin={() => <Navigate to="/login" />} />
+  },
+  {
+    path: '/',
+    element: <DashboardLayout />,
+    children: [
+      { index: true, element: <DashboardScreen /> },
+      { path: 'transactions', element: <TransactionsScreen /> },
+      { path: 'analytics', element: <AnalyticsView /> },
+      { path: 'settings', element: <SettingsScreen /> }
+    ]
+  }
+]);

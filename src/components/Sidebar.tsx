@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { NavLink } from 'react-router-dom';
 
 interface NavItem {
   name: string;
@@ -50,6 +51,13 @@ const navigation: NavItem[] = [
 interface SidebarProps {
   onNavigate: (path: string) => void;
 }
+
+const navItems = [
+  { path: '/', label: 'Dashboard', icon: '📊' },
+  { path: '/transactions', label: 'Transactions', icon: '💰' },
+  { path: '/analytics', label: 'Analytics', icon: '📈' },
+  { path: '/settings', label: 'Settings', icon: '⚙️' },
+];
 
 export const Sidebar = ({ onNavigate }: SidebarProps) => {
   const { logout, user } = useAuth();
@@ -171,20 +179,22 @@ export const Sidebar = ({ onNavigate }: SidebarProps) => {
 
         {/* Navigation */}
         <nav className="p-4 flex-1 space-y-1 overflow-y-auto">
-          {navigation.map((item) => (
-            <button
-              key={item.name}
-              onClick={() => handleNavigation(item.path)}
-              className={`
-                w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200
-                ${activePath === item.path 
-                  ? 'bg-indigo-50 text-indigo-600 shadow-sm' 
-                  : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'}
-              `}
+          {navItems.map(({ path, label, icon }) => (
+            <NavLink
+              key={path}
+              to={path}
+              end={path === '/'}
+              className={({ isActive }) =>
+                `flex items-center px-4 py-3 text-base font-medium rounded-lg transition-colors ${
+                  isActive
+                    ? 'bg-indigo-50 text-indigo-600'
+                    : 'text-gray-700 hover:bg-gray-50'
+                }`
+              }
             >
-              {item.icon}
-              <span className="font-medium tracking-wide">{item.name}</span>
-            </button>
+              <span className="mr-3">{icon}</span>
+              {label}
+            </NavLink>
           ))}
         </nav>
 
