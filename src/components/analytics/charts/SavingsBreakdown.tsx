@@ -29,15 +29,15 @@ export const SavingsBreakdown = ({ netIncome }: SavingsBreakdownProps) => {
   const options = {
     responsive: true,
     maintainAspectRatio: false,
-    cutout: '70%',
+    cutout: '60%',
     plugins: {
       legend: {
         position: 'right' as const,
         labels: {
-          padding: 15,
+          padding: 20,
           usePointStyle: true,
           pointStyle: 'circle',
-          font: { size: 11 }
+          font: { size: 12 }
         }
       },
       tooltip: {

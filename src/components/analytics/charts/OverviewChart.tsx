@@ -1,4 +1,4 @@
-import { Line } from 'react-chartjs-2';
+import { Chart } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -8,7 +8,8 @@ import {
   Title,
   Tooltip,
   Legend,
-  Filler
+  Filler,
+  BarElement
 } from 'chart.js';
 
 ChartJS.register(
@@ -19,7 +20,8 @@ ChartJS.register(
   Title,
   Tooltip,
   Legend,
-  Filler
+  Filler,
+  BarElement
 );
 
 interface ChartData {
@@ -33,77 +35,52 @@ interface OverviewChartProps {
 }
 
 export const OverviewChart = ({ data }: OverviewChartProps) => {
+
+  const netSavings = data.map(d => d.income - d.expense);
+
   const chartData = {
     labels: data.map(d => d.month),
     datasets: [
       {
+        type: 'bar' as const,
+        label: 'Net Savings',
+        data: netSavings,
+        backgroundColor: '#3B82F6',
+        borderRadius: 4,
+        order: 2
+      },
+      {
+        type: 'line' as const,
         label: 'Income',
         data: data.map(d => d.income),
         borderColor: '#22C55E',
         backgroundColor: 'rgba(34, 197, 94, 0.1)',
-        fill: true,
-        tension: 0.4
+        fill: false,
+        tension: 0.4,
+        order: 1,
+        borderWidth: 2,
+        pointRadius: 4
       },
       {
+        type: 'line' as const,
         label: 'Expenses',
         data: data.map(d => d.expense),
         borderColor: '#EF4444',
         backgroundColor: 'rgba(239, 68, 68, 0.1)',
-        fill: true,
-        tension: 0.4
+        fill: false,
+        tension: 0.4,
+        order: 1,
+        borderWidth: 2,
+        pointRadius: 4
       }
     ]
   };
 
-  const options = {
-    responsive: true,
-    maintainAspectRatio: false,
-    interaction: {
-      mode: 'index' as const,
-      intersect: false,
-    },
-    plugins: {
-      legend: {
-        display: false
-      },
-      tooltip: {
-        backgroundColor: 'rgba(0, 0, 0, 0.8)',
-        padding: 12,
-        titleFont: { size: 13 },
-        bodyFont: { size: 12 },
-        callbacks: {
-          label: (context: any) => 
-            `${context.dataset.label}: $${context.raw.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}`
-        }
-      }
-    },
-    scales: {
-      y: {
-        beginAtZero: true,
-        grid: {
-          color: 'rgba(0, 0, 0, 0.05)',
-          drawBorder: false
-        },
-        ticks: {
-          callback: (value: number) => 
-            `$${value.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}`,
-          font: { size: 11 }
-        }
-      },
-      x: {
-        grid: {
-          display: false
-        },
-        ticks: {
-          font: { size: 11 }
-        }
-      }
-    }
-  };
-
   return (
-    <div className="h-[300px]">
-      <Line data={chartData} />
+    <div className="space-y-4">
+      <div className="h-[300px]">
+        <Chart type="bar" data={chartData}/>
+      </div>
     </div>
   );
 };

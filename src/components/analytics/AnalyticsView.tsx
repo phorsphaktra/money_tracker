@@ -74,7 +74,7 @@ export const AnalyticsView = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-1 gap-8">
         <div className="bg-white rounded-2xl shadow-md p-6 hover:shadow-lg transition-shadow">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-xl font-semibold text-gray-900">Monthly Overview</h2>
@@ -91,12 +91,14 @@ export const AnalyticsView = () => {
           </div>
           <OverviewChart data={monthlyData} />
         </div>
+        </div>
 
         <div className="bg-white rounded-2xl shadow-md p-6 hover:shadow-lg transition-shadow">
           <h2 className="text-xl font-semibold mb-6 text-gray-900">Savings Allocation</h2>
           <SavingsBreakdown netIncome={totals.income - totals.expense} />
         </div>
 
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <div className="bg-white rounded-2xl shadow-md p-6 hover:shadow-lg transition-shadow">
           <h2 className="text-xl font-semibold mb-6 text-gray-900">Income Sources</h2>
           <CategoryChart
@@ -115,6 +117,7 @@ export const AnalyticsView = () => {
           />
         </div>
       </div>
-    </div>
+      </div>
+   
   );
 };
