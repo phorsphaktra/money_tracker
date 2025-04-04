@@ -9,7 +9,8 @@ interface LoginScreenProps {
 export const LoginScreen = ({ onSwitchToSignUp }: LoginScreenProps) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const { login, isLoading, error } = useAuth();
+  const { login, error ,loginWithGoogle} = useAuth();
+  const [isLoading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -107,7 +108,32 @@ export const LoginScreen = ({ onSwitchToSignUp }: LoginScreenProps) => {
             Sign up
           </button>
         </p>
+
+        <div className="mt-6">
+                            <div className="relative">
+                                <div className="absolute inset-0 flex items-center">
+                                    <div className="w-full border-t border-gray-300" />
+                                </div>
+                                <div className="relative flex justify-center text-sm">
+                                    <span className="px-2 bg-white text-gray-500">Or continue with</span>
+                                </div>
+                            </div>
+
+                            <button
+                                type="button"
+                                onClick={loginWithGoogle}
+                                className="mt-4 w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+                            >
+                                <img
+                                    className="h-5 w-5 mr-2"
+                                    src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
+                                    alt="Google"
+                                />
+                                Sign up with Google
+                            </button>
+                        </div>
       </div>
+      
     </div>
   );
 };
