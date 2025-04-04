@@ -8,6 +8,7 @@ import { DashboardScreen } from './screens/DashboardScreen';
 import { TransactionsScreen } from './screens/TransactionScreen'
 import { TransactionProvider } from './contexts/TransactionContext';
 import { LoadingProvider } from './contexts/LoadingContext';
+import { AnalyticsView } from './components/analytics/AnalyticsView';
 
 const AppContent = () => {
   const [showSplash, setShowSplash] = useState(true);
@@ -31,6 +32,7 @@ const AppContent = () => {
     <DashboardLayout onNavigate={setCurrentRoute}>
       {currentRoute === '/' && <DashboardScreen />}
       {currentRoute === '/transactions' && <TransactionsScreen />}
+      {currentRoute === '/analytics' && <AnalyticsView />}
     </DashboardLayout>
   );
 };
