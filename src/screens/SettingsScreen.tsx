@@ -1,15 +1,16 @@
 import { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useDarkMode } from '../contexts/DarkModeContext';
+import { useTranslation } from 'react-i18next';
+import { useLanguage } from '../contexts/LanguageContext';
 
 export const SettingsScreen = () => {
   useAuth();
   const { darkMode, toggleDarkMode } = useDarkMode();
+  const { t } = useTranslation();
+  const { language, setLanguage } = useLanguage();
   const [currency, setCurrency] = useState(() => 
     localStorage.getItem('currency') || 'USD'
-  );
-  const [language, setLanguage] = useState(() => 
-    localStorage.getItem('language') || 'en'
   );
 
   const handleCurrencyChange = (value: string) => {
@@ -19,23 +20,28 @@ export const SettingsScreen = () => {
 
   const handleLanguageChange = (value: string) => {
     setLanguage(value);
-    localStorage.setItem('language', value);
   };
 
   return (
     <div className="max-w-4xl mx-auto">
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Settings</h1>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+          {t('settings.title')}
+        </h1>
         <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-          Manage your account settings and preferences
+          {t('settings.subtitle')}
         </p>
       </div>
       
       <div className="space-y-6">
         <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Appearance</h2>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+            {t('settings.appearance.title')}
+          </h2>
           <div className="flex items-center justify-between">
-            <span className="text-gray-700 dark:text-gray-300">Dark Mode</span>
+            <span className="text-gray-700 dark:text-gray-300">
+              {t('settings.appearance.darkMode')}
+            </span>
             <button
               onClick={toggleDarkMode}
               className={`${
@@ -52,10 +58,14 @@ export const SettingsScreen = () => {
         </div>
 
         <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Preferences</h2>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+            {t('settings.preferences.title')}
+          </h2>
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <span className="text-gray-700 dark:text-gray-300">Currency</span>
+              <span className="text-gray-700 dark:text-gray-300">
+                {t('settings.preferences.currency')}
+              </span>
               <select
                 value={currency}
                 onChange={(e) => handleCurrencyChange(e.target.value)}
@@ -69,11 +79,13 @@ export const SettingsScreen = () => {
             </div>
             
             <div className="flex items-center justify-between">
-              <span className="text-gray-700 dark:text-gray-300">Language</span>
+              <span className="text-gray-700 dark:text-gray-300">
+                {t('settings.preferences.language')}
+              </span>
               <select
                 value={language}
                 onChange={(e) => handleLanguageChange(e.target.value)}
-                className="rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900"
+                className="rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
               >
                 <option value="en">English</option>
                 <option value="km">ខ្មែរ</option>

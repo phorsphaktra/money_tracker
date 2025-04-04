@@ -1,0 +1,82 @@
+{
+  "settings": {
+    "title": "Settings",
+    "subtitle": "Manage your account settings and preferences",
+    "appearance": {
+      "title": "Appearance",
+      "darkMode": "Dark Mode"
+    },
+    "preferences": {
+      "title": "Preferences",
+      "language": "Language",
+      "currency": "Currency"
+    }
+  },
+  "common": {
+    "version": "Version"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "navigation": {
+      "dashboard": "Dashboard",
+      "transactions": "Transactions",
+      "analytics": "Analytics",
+      "settings": "Settings"
+    },
+    "header": {
+      "welcome": "Welcome back",
+      "signOut": "Sign out"
+    },
+    "version": "Version",
+    "overview": {
+      "total_balance": "Total Balance",
+      "income": "Income",
+      "expenses": "Expenses",
+      "savings": "Savings",
+      "this_month": "This Month",
+      "view_all": "View All",
+      "recent_transactions": "Recent Transactions",
+      "no_transactions": "No recent transactions"
+    },
+    "stats": {
+      "spending_by_category": "Spending by Category",
+      "monthly_summary": "Monthly Summary"
+    },
+    "subtitle": "Overview of your financial status",
+    "spending_overview": "Spending Overview",
+    "last_6_months": "Last 6 months",
+    "last_3_months": "Last 3 months",
+    "this_year": "This year",
+    "monthly_spending": "Monthly Spending",
+    "monthly_income": "Monthly Income",
+    "savings_rate": "Savings Rate",
+    "loading": "Loading...",
+    "error": "Error: ",
+    "filter": {
+      "select_period": "Select period"
+    }
+  },
+  "transactions": {
+    "title": "Transactions",
+    "subtitle": "Manage and track your transactions",
+    "filters": {
+      "all": "All",
+      "income": "Income",
+      "expense": "Expense",
+      "date": "Date",
+      "category": "Category",
+      "amount": "Amount",
+      "search": "Search transactions..."
+    },
+    "empty": {
+      "title": "No transactions found",
+      "message": "Start adding your transactions to track your spending"
+    },
+    "actions": {
+      "add": "Add Transaction",
+      "edit": "Edit",
+      "delete": "Delete",
+      "confirm_delete": "Are you sure you want to delete this transaction?"
+    }
+  }
+}

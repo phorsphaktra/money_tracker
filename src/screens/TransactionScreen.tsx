@@ -4,12 +4,16 @@ import { Button } from '../components/shared/Button';
 import { TransactionRow } from '../components/transaction/TransactionRow';
 import { TransactionModal } from '../components/transaction/TransactionModal';
 import { LoadingSpinner } from '../components/shared/LoadingSpinner';
+import { useTranslation } from 'react-i18next';
+import { useLanguage } from '../contexts/LanguageContext';
 
 export const TransactionsScreen = () => {
   const { transactions, isLoading, error } = useTransactions();
   const [filter, setFilter] = useState<'all' | 'income' | 'expense'>('all');
   const [search, setSearch] = useState('');
   const [isAddingNew, setIsAddingNew] = useState(false);
+  const { t } = useTranslation();
+  const { language } = useLanguage();
 
   const filteredTransactions = transactions.filter(transaction => {
     const matchesFilter = filter === 'all' || transaction.type === filter;
@@ -38,12 +42,19 @@ export const TransactionsScreen = () => {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold text-gray-900">Transactions</h1>
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+            {t('transactions.title')}
+          </h1>
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            {t('transactions.subtitle')}
+          </p>
+        </div>
         <Button
           variant="primary"
           onClick={() => setIsAddingNew(true)}
         >
-          Add Transaction
+          {t('transactions.actions.add')}
         </Button>
       </div>
 
@@ -52,7 +63,7 @@ export const TransactionsScreen = () => {
         <div className="flex-1">
           <input
             type="text"
-            placeholder="Search transactions..."
+            placeholder={t('transactions.filters.search')}
             className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -66,24 +77,23 @@ export const TransactionsScreen = () => {
               onClick={() => setFilter(type)}
               className="capitalize"
             >
-              {type}
+              {t(`transactions.filters.${type}`)}
             </Button>
           ))}
         </div>
       </div>
 
       {/* Transactions Table */}
-      <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+          <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+            <thead className="bg-gray-50 dark:bg-gray-900">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">#</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Description</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Category</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Amount</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
+                {['no', 'date', 'description', 'category', 'amount', 'actions'].map((header) => (
+                  <th key={header} className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+                    {t(`transactions.table.${header}`)}
+                  </th>
+                ))}
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">

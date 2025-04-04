@@ -10,7 +10,7 @@ interface TransactionRowProps {
 
 export const TransactionRow = ({ transaction, rowNumber }: TransactionRowProps) => {
   const { deleteTransaction } = useTransactions();
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading] = useState(false);
 
   const formattedAmount = new Intl.NumberFormat('en-US', {
     style: 'currency',

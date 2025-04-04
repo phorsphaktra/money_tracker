@@ -1,20 +1,22 @@
 import { useState, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { NavLink } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 interface SidebarProps {
   onNavigate: (path: string) => void;
 }
 
 const navItems = [
-  { path: '/', label: 'Dashboard', icon: '📊' },
-  { path: '/transactions', label: 'Transactions', icon: '💰' },
-  { path: '/analytics', label: 'Analytics', icon: '📈' },
-  { path: '/settings', label: 'Settings', icon: '⚙️' },
+  { path: '/', label: 'dashboard.navigation.dashboard', icon: '📊' },
+  { path: '/transactions', label: 'dashboard.navigation.transactions', icon: '💰' },
+  { path: '/analytics', label: 'dashboard.navigation.analytics', icon: '📈' },
+  { path: '/settings', label: 'dashboard.navigation.settings', icon: '⚙️' },
 ];
 
 export const Sidebar = ({ }: SidebarProps) => {
   const { logout, user } = useAuth();
+  const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const [] = useState('/');
   const [localPhotoURL, setLocalPhotoURL] = useState<string>(() => {
@@ -82,7 +84,7 @@ export const Sidebar = ({ }: SidebarProps) => {
           dark:from-indigo-500/10 dark:to-purple-500/10 border-b border-gray-100/20 dark:border-slate-700/30">
           <h1 className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 
             dark:from-indigo-400 dark:to-purple-400 bg-clip-text text-transparent">
-            Money Tracker
+            {t('dashboard.title')}
           </h1>
         </div>
 
@@ -164,7 +166,7 @@ export const Sidebar = ({ }: SidebarProps) => {
               }
             >
               <span className="mr-3">{icon}</span>
-              {label}
+              {t(label)}
             </NavLink>
           ))}
         </nav>
@@ -182,10 +184,10 @@ export const Sidebar = ({ }: SidebarProps) => {
             <svg className="w-4 h-4 mr-2 group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
             </svg>
-            Sign out
+            {t('dashboard.header.signOut')}
           </button>
           <div className="p-2 text-xs text-center text-gray-400/70 dark:text-slate-500">
-            Version 1.0.0
+            {t('dashboard.version')} 1.0.0
           </div>
         </div>
       </div>
