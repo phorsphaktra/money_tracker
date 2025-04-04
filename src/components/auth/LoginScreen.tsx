@@ -10,7 +10,7 @@ export const LoginScreen = ({ onSwitchToSignUp }: LoginScreenProps) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const { login, error ,loginWithGoogle} = useAuth();
-  const [isLoading, setLoading] = useState(false);
+  const [isLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

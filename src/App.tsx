@@ -2,6 +2,7 @@ import { RouterProvider } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { TransactionProvider } from './contexts/TransactionContext';
 import { LoadingProvider } from './contexts/LoadingContext';
+import { DarkModeProvider } from './contexts/DarkModeContext';
 import { router } from './routes';
 
 export default function App() {
@@ -9,7 +10,9 @@ export default function App() {
     <AuthProvider>
       <LoadingProvider>
         <TransactionProvider>
-          <RouterProvider router={router} />
+          <DarkModeProvider>
+            <RouterProvider router={router} />
+          </DarkModeProvider>
         </TransactionProvider>
       </LoadingProvider>
     </AuthProvider>
