@@ -102,8 +102,23 @@ export const OverviewChart = ({ data }: OverviewChartProps) => {
   };
 
   return (
-    <div className="h-[300px]">
-      <Line data={chartData} />
+    <div className="bg-white rounded-xl shadow-sm p-6">
+      <div className="flex items-center justify-between mb-6">
+        <h3 className="text-lg font-semibold text-gray-800">Monthly Overview</h3>
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 rounded-full bg-[#22C55E]"></div>
+            <span className="text-sm text-gray-600">Income</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 rounded-full bg-[#EF4444]"></div>
+            <span className="text-sm text-gray-600">Expenses</span>
+          </div>
+        </div>
+      </div>
+      <div className="h-[300px]">
+        <Line data={chartData}/>
+      </div>
     </div>
   );
 };

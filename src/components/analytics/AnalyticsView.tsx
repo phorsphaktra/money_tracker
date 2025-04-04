@@ -74,29 +74,19 @@ export const AnalyticsView = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      {/* <div className="grid grid-cols-1 lg:grid-cols-2 gap-8"> */}
+
         <div className="bg-white rounded-2xl shadow-md p-6 hover:shadow-lg transition-shadow">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-semibold text-gray-900">Monthly Overview</h2>
-            <div className="flex items-center gap-4 text-sm">
-              <span className="flex items-center gap-2">
-                <div className="w-3 h-3 bg-emerald-500 rounded-full"></div>
-                <span className="text-gray-600">Income</span>
-              </span>
-              <span className="flex items-center gap-2">
-                <div className="w-3 h-3 bg-rose-500 rounded-full"></div>
-                <span className="text-gray-600">Expenses</span>
-              </span>
-            </div>
-          </div>
           <OverviewChart data={monthlyData} />
         </div>
+      
 
         <div className="bg-white rounded-2xl shadow-md p-6 hover:shadow-lg transition-shadow">
           <h2 className="text-xl font-semibold mb-6 text-gray-900">Savings Allocation</h2>
           <SavingsBreakdown netIncome={totals.income - totals.expense} />
         </div>
 
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <div className="bg-white rounded-2xl shadow-md p-6 hover:shadow-lg transition-shadow">
           <h2 className="text-xl font-semibold mb-6 text-gray-900">Income Sources</h2>
           <CategoryChart
@@ -114,7 +104,8 @@ export const AnalyticsView = () => {
             type="expense"
           />
         </div>
-      </div>
+        </div>
+   
     </div>
   );
 };
