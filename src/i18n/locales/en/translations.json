@@ -13,7 +13,17 @@
     }
   },
   "common": {
-    "version": "Version"
+    "version": "Version",
+    "add": "Add",
+    "edit": "Edit",
+    "update": "Update",
+    "delete": "Delete",
+    "cancel": "Cancel",
+    "save": "Save",
+    "close": "Close",
+    "loading": "Loading...",
+    "confirm": "Confirm",
+    "settings": "Settings"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -77,6 +87,56 @@
       "edit": "Edit",
       "delete": "Delete",
       "confirm_delete": "Are you sure you want to delete this transaction?"
+    },
+    "table": {
+      "no": "No",
+      "date": "Date",
+      "description": "Description",
+      "category": "Category",
+      "amount": "Amount",
+      "actions": "Actions"
+    }
+  },
+  "transaction": {
+    "title": "Transaction",
+    "addNew": "Add Transaction",
+    "edit": "Edit Transaction",
+    "fields": {
+      "description": "Description",
+      "amount": "Amount",
+      "date": "Date",
+      "category": "Category",
+      "type": "Type"
+    },
+    "types": {
+      "income": "Income",
+      "expense": "Expense"
+    }
+  },
+  "validation": {
+    "required": "{{field}} is required",
+    "amountPositive": "Amount must be greater than 0",
+    "validCategory": "Please select a valid category",
+    "validDate": "Please select a valid date",
+    "saveFailed": "Failed to save transaction"
+  },
+  "categories": {
+    "income": {
+      "salary": "Salary",
+      "business": "Business",
+      "investment": "Investment",
+      "rental": "Rental",
+      "other": "Other Income"
+    },
+    "expense": {
+      "food": "Food & Drinks",
+      "transport": "Transportation",
+      "utilities": "Utilities",
+      "shopping": "Shopping",
+      "healthcare": "Healthcare",
+      "education": "Education",
+      "entertainment": "Entertainment",
+      "other": "Other Expense"
     }
   }
 }

@@ -1,11 +1,10 @@
 import { useState } from 'react';
-import { useTransactions ,Transaction} from '../contexts/TransactionContext';
+import { useTransactions} from '../contexts/TransactionContext';
 import { Button } from '../components/shared/Button';
 import { TransactionRow } from '../components/transaction/TransactionRow';
 import { TransactionModal } from '../components/transaction/TransactionModal';
 import { LoadingSpinner } from '../components/shared/LoadingSpinner';
 import { useTranslation } from 'react-i18next';
-import { useLanguage } from '../contexts/LanguageContext';
 
 export const TransactionsScreen = () => {
   const { transactions, isLoading, error } = useTransactions();
@@ -13,7 +12,6 @@ export const TransactionsScreen = () => {
   const [search, setSearch] = useState('');
   const [isAddingNew, setIsAddingNew] = useState(false);
   const { t } = useTranslation();
-  const { language } = useLanguage();
 
   const filteredTransactions = transactions.filter(transaction => {
     const matchesFilter = filter === 'all' || transaction.type === filter;

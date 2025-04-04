@@ -13,7 +13,17 @@
     }
   },
   "common": {
-    "version": "កំណែ"
+    "version": "កំណែ",
+    "add": "បន្ថែម",
+    "edit": "កែប្រែ",
+    "update": "ធ្វើបច្ចុប្បន្នភាព",
+    "delete": "លុប",
+    "cancel": "បោះបង់",
+    "save": "រក្សាទុក",
+    "close": "បិទ",
+    "loading": "កំពុងដំណើរការ...",
+    "confirm": "បញ្ជាក់",
+    "settings": "ការកំណត់"
   },
   "dashboard": {
     "title": "ផ្ទាំងគ្រប់គ្រង",
@@ -109,6 +119,48 @@
     "type": {
       "income": "ចំណូល",
       "expense": "ចំណាយ"
+    }
+  },
+  "transaction": {
+    "title": "ប្រតិបត្តិការ",
+    "addNew": "បន្ថែមប្រតិបត្តិការថ្មី",
+    "edit": "កែប្រែប្រតិបត្តិការ",
+    "fields": {
+      "description": "ការពិពណ៌នា",
+      "amount": "ចំនួនទឹកប្រាក់",
+      "date": "កាលបរិច្ឆេទ",
+      "category": "ប្រភេទ",
+      "type": "ប្រភេទប្រតិបត្តិការ"
+    },
+    "types": {
+      "income": "ចំណូល",
+      "expense": "ចំណាយ"
+    }
+  },
+  "validation": {
+    "required": "សូមបញ្ចូល{{field}}",
+    "amountPositive": "ចំនួនទឹកប្រាក់ត្រូវតែធំជាង ០",
+    "validCategory": "សូមជ្រើសរើសប្រភេទ",
+    "validDate": "សូមជ្រើសរើសកាលបរិច្ឆេទ",
+    "saveFailed": "មិនអាចរក្សាទុកប្រតិបត្តិការបានទេ"
+  },
+  "categories": {
+    "income": {
+      "salary": "ប្រាក់ខែ",
+      "business": "អាជីវកម្ម",
+      "investment": "ការវិនិយោគ",
+      "rental": "ជួល",
+      "other": "ចំណូលផ្សេងៗ"
+    },
+    "expense": {
+      "food": "អាហារនិងភេសជ្ជៈ",
+      "transport": "ការដឹកជញ្ជូន",
+      "utilities": "សេវាសាធារណៈ",
+      "shopping": "ការទិញទំនិញ",
+      "healthcare": "សុខភាព",
+      "education": "ការអប់រំ",
+      "entertainment": "ការកម្សាន្ត",
+      "other": "ចំណាយផ្សេងៗ"
     }
   }
 }
