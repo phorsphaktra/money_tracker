@@ -85,8 +85,8 @@ export const OverviewChart = ({ data }: OverviewChartProps) => {
           drawBorder: false
         },
         ticks: {
-          callback: (value: number) => 
-            `$${value.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}`,
+          callback: (tickValue: string | number) => 
+            `$${Number(tickValue).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}`,
           font: { size: 11 }
         }
       },
@@ -102,22 +102,42 @@ export const OverviewChart = ({ data }: OverviewChartProps) => {
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-sm p-6">
-      <div className="flex items-center justify-between mb-6">
-        <h3 className="text-lg font-semibold text-gray-800">Monthly Overview</h3>
-        <div className="flex items-center gap-4">
+    <div className="w-full bg-white rounded-xl shadow-lg p-6 border border-gray-100">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 space-y-4 sm:space-y-0">
+        <div className="space-y-1">
+          <h3 className="text-2xl font-bold text-gray-800">Monthly Overview</h3>
+          <p className="text-sm text-gray-500">Your financial activity for the past months</p>
+        </div>
+        <div className="flex items-center gap-6 bg-gray-50 px-4 py-2 rounded-lg">
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-[#22C55E]"></div>
-            <span className="text-sm text-gray-600">Income</span>
+            <div className="w-3 h-3 rounded-full bg-[#22C55E] ring-4 ring-green-100"></div>
+            <span className="text-sm font-medium text-gray-700">Income</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-[#EF4444]"></div>
-            <span className="text-sm text-gray-600">Expenses</span>
+            <div className="w-3 h-3 rounded-full bg-[#EF4444] ring-4 ring-red-100"></div>
+            <span className="text-sm font-medium text-gray-700">Expenses</span>
           </div>
         </div>
       </div>
-      <div className="h-[300px]">
-        <Line data={chartData}/>
+      <div className="h-[400px] w-full">
+        <Line 
+          data={chartData} 
+          options={{
+            ...options,
+            plugins: {
+              ...options.plugins,
+              tooltip: {
+                ...options.plugins.tooltip,
+                backgroundColor: 'rgba(17, 24, 39, 0.95)',
+                titleColor: '#ffffff',
+                bodyColor: '#ffffff',
+                padding: 16,
+                cornerRadius: 8,
+                displayColors: false,
+              }
+            }
+          }}
+        />
       </div>
     </div>
   );
