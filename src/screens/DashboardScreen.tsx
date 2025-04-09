@@ -92,10 +92,10 @@ export const DashboardScreen = () => {
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow duration-200">
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-lg font-semibold text-gray-900">
-                {t('dashboard.recent_transactions')}
+                {t('dashboard.overview.recent_transactions')}
               </h3>
               <button onClick={() => {}} className="text-sm text-indigo-600 hover:text-indigo-800 font-medium">
-                {t('dashboard.view_all')}
+                {t('dashboard.overview.view_all')}
               </button>
             </div>
             <TransactionsList 
