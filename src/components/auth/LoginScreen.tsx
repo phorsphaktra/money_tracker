@@ -16,7 +16,7 @@ export const LoginScreen = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-gradient-to-r from-indigo-500 to-purple-600 p-4">
+    <div className="min-h-screen w-full flex items-center justify-center bg-gray-100">
       <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl p-8 space-y-6">
         {/* Header */}
         <div className="space-y-2">
