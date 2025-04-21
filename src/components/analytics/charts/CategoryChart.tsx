@@ -15,7 +15,7 @@ interface CategoryChartProps {
   type: 'income' | 'expense';
 }
 
-export const CategoryChart = ({ categories, categoryTotals, type }: CategoryChartProps) => {
+export const CategoryChart = ({ categories, categoryTotals }: CategoryChartProps) => {
   const activeCategories = categories.filter(cat => categoryTotals[cat.id] > 0);
   const total = Object.values(categoryTotals).reduce((a, b) => a + b, 0);
 

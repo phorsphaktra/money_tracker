@@ -15,9 +15,7 @@ export const DashboardLayout = () => {
     <div className={`flex min-h-screen transition-colors duration-200 
       ${darkMode ? 'dark bg-gray-900' : 'bg-gray-50/80'}`}
     >
-      <Sidebar onNavigate={function (): void {
-        throw new Error('Function not implemented.');
-      } } />
+      <Sidebar />
       <div className="flex-1">
         <main className="p-8">
           <Outlet />
