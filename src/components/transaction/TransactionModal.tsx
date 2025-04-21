@@ -127,8 +127,10 @@ export const TransactionModal = ({ transaction, onClose, type = 'expense' }: Tra
   const categories = formData.type === 'income' ? INCOME_CATEGORIES : EXPENSE_CATEGORIES;
 
   return (
-    <div className="fixed inset-0 bg-gray-600 bg-opacity-50 z-50 flex items-center justify-center">
-      <div className="bg-white rounded-xl shadow-2xl max-w-md w-full mx-4 p-6">
+    <div className="fixed inset-0 bg-gray-600 bg-opacity-50 backdrop-blur-sm z-50 
+      flex items-center justify-center animate-fadeIn">
+      <div className="bg-white rounded-xl shadow-2xl max-w-md w-full mx-4 p-6 
+        animate-slideUp">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold text-gray-900">
             {transaction ? 'Edit' : 'Add'} Transaction

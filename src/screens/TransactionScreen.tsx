@@ -5,6 +5,7 @@ import { TransactionRow } from '../components/transaction/TransactionRow';
 import { TransactionModal } from '../components/transaction/TransactionModal';
 import { LoadingSpinner } from '../components/shared/LoadingSpinner';
 import { useTranslation } from 'react-i18next';
+import { FloatingActionButton } from '../components/shared/FloatingActionButton';
 
 export const TransactionsScreen = () => {
   const { transactions, isLoading, error } = useTransactions();
@@ -37,7 +38,7 @@ export const TransactionsScreen = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-20"> {/* Added pb-20 to make room for FAB */}
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
@@ -48,12 +49,6 @@ export const TransactionsScreen = () => {
             {t('transactions.subtitle')}
           </p>
         </div>
-        <Button
-          variant="primary"
-          onClick={() => setIsAddingNew(true)}
-        >
-          {t('transactions.actions.add')}
-        </Button>
       </div>
 
       {/* Filters */}
@@ -122,7 +117,12 @@ export const TransactionsScreen = () => {
         </div>
       </div>
 
-      {/* Add/Edit Modal */}
+      {/* FAB and Modal */}
+      <FloatingActionButton 
+        onClick={() => setIsAddingNew(true)} 
+        label={t('transactions.actions.add')}
+      />
+      
       {isAddingNew && (
         <TransactionModal
           onClose={() => setIsAddingNew(false)}

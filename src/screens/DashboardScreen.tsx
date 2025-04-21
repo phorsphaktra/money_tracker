@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { CardStats } from '../components/CardStats';
 import { SpendingChart } from '../components/SpendingChart';
 import { TransactionsList } from '../components/transaction/TransactionsList';
@@ -7,6 +7,8 @@ import { calculateDashboardStats } from '../utils/statsCalculator';
 import { useTranslation } from 'react-i18next';
 import { useLanguage } from '../contexts/LanguageContext';
 import { t } from 'i18next';
+import { FloatingActionButton } from '../components/shared/FloatingActionButton';
+import { TransactionModal } from '../components/transaction/TransactionModal';
 
 const formatNumber = (num: number, language: string) => {
   if (language === 'km') {
@@ -33,6 +35,7 @@ export const DashboardScreen = () => {
     const { transactions, isLoading, error } = useTransactions();
     const { t } = useTranslation();
     const { language } = useLanguage();
+    const [isAddingNew, setIsAddingNew] = useState(false);
     
     const stats = useMemo(() => 
       calculateDashboardStats(transactions), [transactions]
@@ -111,6 +114,17 @@ export const DashboardScreen = () => {
             </div>
           </div>
         </div>
+        <FloatingActionButton 
+          onClick={() => setIsAddingNew(true)}
+          label="Add Transaction"
+          position="bottom-right"
+        />
+        
+        {isAddingNew && (
+          <TransactionModal
+            onClose={() => setIsAddingNew(false)}
+          />
+        )}
       </div>
     );
 };
