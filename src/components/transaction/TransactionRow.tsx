@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useTransactions, Transaction } from '../../contexts/TransactionContext';
-import { Button } from '../shared/Button';
 import { LoadingSpinner } from '../shared/LoadingSpinner';
+import { DeleteTransactionModal } from './DeleteTransactionModal';
+import { PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
 
 interface TransactionRowProps {
   transaction: Transaction;
@@ -10,7 +11,18 @@ interface TransactionRowProps {
 
 export const TransactionRow = ({ transaction, rowNumber }: TransactionRowProps) => {
   const { deleteTransaction } = useTransactions();
-  const [isLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+
+  const handleDelete = async () => {
+    setIsLoading(true);
+    try {
+      await deleteTransaction(transaction.id);
+    } finally {
+      setIsLoading(false);
+      setShowDeleteModal(false);
+    }
+  };
 
   const formattedAmount = new Intl.NumberFormat('en-US', {
     style: 'currency',
@@ -21,7 +33,7 @@ export const TransactionRow = ({ transaction, rowNumber }: TransactionRowProps) 
 
   return (
     <tr className="hover:bg-gray-50 transition-colors">
-      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
         {rowNumber}
       </td>
       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
@@ -30,29 +42,42 @@ export const TransactionRow = ({ transaction, rowNumber }: TransactionRowProps) 
       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
         {transaction.description}
       </td>
-      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 capitalize">
+      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
         {transaction.category}
       </td>
-      <td className={`px-6 py-4 whitespace-nowrap text-sm font-medium text-right ${
+      <td className={`px-6 py-4 whitespace-nowrap text-sm text-gray-900 ${
         transaction.type === 'income' ? 'text-green-600' : 'text-red-600'
       }`}>
         {transaction.type === 'income' ? '+' : '-'}{formattedAmount}
       </td>
-      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
         {isLoading ? (
           <LoadingSpinner size="small" className="ml-auto" />
         ) : (
-          <div className="flex justify-end space-x-2">
-            <button className="text-indigo-600 hover:text-indigo-900">Edit</button>
-            <Button
-              variant="secondary"
-              onClick={() => deleteTransaction(transaction.id)}
-              className="text-red-600 hover:text-red-900"
+          <div className="flex items-center gap-2">
+            <button
+              className="p-1 text-gray-400 hover:text-indigo-600 rounded-full hover:bg-indigo-50 dark:hover:bg-indigo-900/20"
+              title="Edit transaction"
             >
-              Delete
-            </Button>
+              <PencilIcon className="h-4 w-4" />
+            </button>
+            <button
+              onClick={() => setShowDeleteModal(true)}
+              className="p-1 text-gray-400 hover:text-red-600 rounded-full hover:bg-red-50 dark:hover:bg-red-900/20"
+              title="Delete transaction"
+            >
+              <TrashIcon className="h-4 w-4" />
+            </button>
           </div>
         )}
+
+        <DeleteTransactionModal
+          transaction={transaction}
+          isOpen={showDeleteModal}
+          onClose={() => setShowDeleteModal(false)}
+          onConfirm={handleDelete}
+          isLoading={isLoading}
+        />
       </td>
     </tr>
   );

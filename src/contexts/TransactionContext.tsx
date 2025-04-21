@@ -1,8 +1,9 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
 import { transactionService } from '../services/transactionService';
 import { useAuth } from './AuthContext'; // Assuming you have an AuthContext
 import { useLoading } from './LoadingContext';
 import { CategoryId } from '../utils/categories';
+import { DeleteTransactionModal } from '../components/transaction/DeleteTransactionModal';
 
 export interface Transaction {
   id: string;
@@ -15,6 +16,14 @@ export interface Transaction {
   updatedAt?: string;
 }
 
+export interface TransactionFilters {
+  startDate?: Date;
+  endDate?: Date;
+  type?: 'income' | 'expense' | 'all';
+  category?: CategoryId;
+  search?: string;
+}
+
 interface TransactionContextType {
   transactions: Transaction[];
   addTransaction: (transaction: Omit<Transaction, 'id'>) => Promise<Transaction>;
@@ -22,6 +31,16 @@ interface TransactionContextType {
   deleteTransaction: (id: string) => Promise<void>;
   isLoading: boolean;
   error: Error | null;
+  filters: TransactionFilters;
+  setFilters: (filters: TransactionFilters) => void;
+  sortBy: 'date' | 'amount' | 'category';
+  setSortBy: (sort: 'date' | 'amount' | 'category') => void;
+  sortDirection: 'asc' | 'desc';
+  setSortDirection: (direction: 'asc' | 'desc') => void;
+  filteredTransactions: Transaction[];
+  deleteTransactionWithConfirmation: (transaction: Transaction) => void;
+  transactionToDelete: Transaction | null;
+  setTransactionToDelete: (transaction: Transaction | null) => void;
 }
 
 const TransactionContext = createContext<TransactionContextType | undefined>(undefined);
@@ -32,6 +51,10 @@ export const TransactionProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const [error, setError] = useState<Error | null>(null);
   const { user } = useAuth();
   const { showLoading, hideLoading } = useLoading();
+  const [filters, setFilters] = useState<TransactionFilters>({});
+  const [sortBy, setSortBy] = useState<'date' | 'amount' | 'category'>('date');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+  const [transactionToDelete, setTransactionToDelete] = useState<Transaction | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -96,11 +119,82 @@ export const TransactionProvider: React.FC<{ children: React.ReactNode }> = ({ c
     }
   };
 
+  const deleteTransactionWithConfirmation = (transaction: Transaction) => {
+    setTransactionToDelete(transaction);
+  };
+
+  const filteredTransactions = useMemo(() => {
+    let filtered = [...transactions];
+
+    if (filters.search) {
+      filtered = filtered.filter(t => 
+        t.description.toLowerCase().includes(filters.search!.toLowerCase())
+      );
+    }
+
+    if (filters.type && filters.type !== 'all') {
+      filtered = filtered.filter(t => t.type === filters.type);
+    }
+
+    if (filters.category) {
+      filtered = filtered.filter(t => t.category === filters.category);
+    }
+
+    if (filters.startDate) {
+      filtered = filtered.filter(t => new Date(t.date) >= filters.startDate!);
+    }
+
+    if (filters.endDate) {
+      filtered = filtered.filter(t => new Date(t.date) <= filters.endDate!);
+    }
+
+    return filtered.sort((a, b) => {
+      const modifier = sortDirection === 'asc' ? 1 : -1;
+      switch (sortBy) {
+        case 'amount':
+          return (a.amount - b.amount) * modifier;
+        case 'category':
+          return a.category.localeCompare(b.category) * modifier;
+        default:
+          return (new Date(a.date).getTime() - new Date(b.date).getTime()) * modifier;
+      }
+    });
+  }, [transactions, filters, sortBy, sortDirection]);
+
   return (
     <TransactionContext.Provider
-      value={{ transactions, addTransaction, updateTransaction, deleteTransaction, isLoading, error }}
+      value={{
+        transactions,
+        filteredTransactions,
+        addTransaction,
+        updateTransaction,
+        deleteTransaction,
+        isLoading,
+        error,
+        filters,
+        setFilters,
+        sortBy,
+        setSortBy,
+        sortDirection,
+        setSortDirection,
+        deleteTransactionWithConfirmation,
+        transactionToDelete,
+        setTransactionToDelete,
+      }}
     >
       {children}
+      {transactionToDelete && (
+        <DeleteTransactionModal
+          transaction={transactionToDelete}
+          isOpen={!!transactionToDelete}
+          onClose={() => setTransactionToDelete(null)}
+          onConfirm={async () => {
+            await deleteTransaction(transactionToDelete.id);
+            setTransactionToDelete(null);
+          }}
+          isLoading={isLoading}
+        />
+      )}
     </TransactionContext.Provider>
   );
 };
