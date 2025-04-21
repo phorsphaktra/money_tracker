@@ -7,6 +7,13 @@ import { SettingsScreen } from '../screens/SettingsScreen';
 import { LoginScreen } from '../components/auth/LoginScreen';
 import { SignUpScreen } from '../components/auth/SignUpScreen';
 import { SplashScreen } from '../screens/SplashScreen';
+import { PrivateRoute } from './PrivateRoute';
+import { useAuth } from '../contexts/AuthContext';
+
+const AuthRedirect = () => {
+  const { isAuthenticated } = useAuth();
+  return isAuthenticated ? <Navigate to="/" replace /> : null;
+};
 
 export const router = createBrowserRouter([
   {
@@ -15,15 +22,29 @@ export const router = createBrowserRouter([
   },
   {
     path: '/login',
-    element: <LoginScreen onSwitchToSignUp={() => <Navigate to="/signup" />} />
+    element: (
+      <>
+        <AuthRedirect />
+        <LoginScreen onSwitchToSignUp={() => <Navigate to="/signup" />} />
+      </>
+    )
   },
   {
     path: '/signup',
-    element: <SignUpScreen onSwitchToLogin={() => <Navigate to="/login" />} />
+    element: (
+      <>
+        <AuthRedirect />
+        <SignUpScreen onSwitchToLogin={() => <Navigate to="/login" />} />
+      </>
+    )
   },
   {
     path: '/',
-    element: <DashboardLayout />,
+    element: (
+      <PrivateRoute>
+        <DashboardLayout />
+      </PrivateRoute>
+    ),
     children: [
       { index: true, element: <DashboardScreen /> },
       { path: 'transactions', element: <TransactionsScreen /> },
