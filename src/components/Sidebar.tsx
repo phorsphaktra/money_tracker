@@ -73,12 +73,12 @@ export const Sidebar = () => {
         lg:translate-x-0 transition-transform duration-200 ease-out z-30
         flex flex-col
       `}>
-        <div className="p-6">
+        {/* <div className="p-6">
           <h1 className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-violet-500 
             dark:from-indigo-400 dark:to-violet-400 bg-clip-text text-transparent">
             {t('dashboard.title')}
           </h1>
-        </div>
+        </div> */}
 
         <div className="px-6 py-4">
           <div className="flex flex-col items-center">
