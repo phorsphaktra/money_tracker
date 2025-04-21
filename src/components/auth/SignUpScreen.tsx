@@ -1,11 +1,8 @@
 import { useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
-interface SignUpScreenProps {
-    onSwitchToLogin: () => void;
-}
-
-export const SignUpScreen = ({ onSwitchToLogin }: SignUpScreenProps) => {
+export const SignUpScreen = () => {
     const [formData, setFormData] = useState({
         email: '',
         password: '',
@@ -26,6 +23,7 @@ export const SignUpScreen = ({ onSwitchToLogin }: SignUpScreenProps) => {
             [e.target.name]: e.target.value
         }));
     };
+    const navigate = useNavigate();
 
     const validateForm = () => {
         if (formData.password !== formData.confirmPassword) {
@@ -200,7 +198,7 @@ export const SignUpScreen = ({ onSwitchToLogin }: SignUpScreenProps) => {
 
                 <div className="text-sm text-center">
                     <button
-                        onClick={onSwitchToLogin}
+                        onClick={() => navigate('/login')}
                         className="font-medium text-indigo-600 hover:text-indigo-500"
                     >
                         Already have an account? Sign in

@@ -25,7 +25,7 @@ export const router = createBrowserRouter([
     element: (
       <>
         <AuthRedirect />
-        <LoginScreen onSwitchToSignUp={() => <Navigate to="/signup" />} />
+        <LoginScreen />
       </>
     )
   },
@@ -34,7 +34,7 @@ export const router = createBrowserRouter([
     element: (
       <>
         <AuthRedirect />
-        <SignUpScreen onSwitchToLogin={() => <Navigate to="/login" />} />
+        <SignUpScreen />
       </>
     )
   },

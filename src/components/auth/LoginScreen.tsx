@@ -1,12 +1,8 @@
 import { useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
-// Add prop type for switching screens
-interface LoginScreenProps {
-  onSwitchToSignUp: () => void;
-}
-
-export const LoginScreen = ({ onSwitchToSignUp }: LoginScreenProps) => {
+export const LoginScreen = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const { login, error ,loginWithGoogle} = useAuth();
@@ -16,6 +12,8 @@ export const LoginScreen = ({ onSwitchToSignUp }: LoginScreenProps) => {
     e.preventDefault();
     await login(email, password);
   };
+
+  const navigate = useNavigate();
 
   return (
     <div className="min-h-screen w-full flex items-center justify-center bg-gradient-to-r from-indigo-500 to-purple-600 p-4">
@@ -102,7 +100,7 @@ export const LoginScreen = ({ onSwitchToSignUp }: LoginScreenProps) => {
         <p className="text-center text-sm text-gray-600">
           Don't have an account?{' '}
           <button
-            onClick={onSwitchToSignUp}
+            onClick={() => navigate('/signup')}
             className="text-indigo-600 hover:text-indigo-500 font-medium"
           >
             Sign up
