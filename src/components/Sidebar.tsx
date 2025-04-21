@@ -126,7 +126,7 @@ export const Sidebar = () => {
           </div>
         </div>
 
-        <nav className="flex-1 px-4 py-2 overflow-y-auto">
+        <nav className="flex-1 px-4 py-2 overflow-y-auto border-t border-slate-200/50">
           {navItems.map(({ path, label, icon: Icon }) => (
             <NavLink
               key={path}
