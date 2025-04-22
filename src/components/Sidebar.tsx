@@ -9,6 +9,7 @@ import {
   Cog6ToothIcon,
   ArrowRightOnRectangleIcon,
   CameraIcon,
+  ClipboardDocumentCheckIcon
 } from '@heroicons/react/24/outline';
 
 interface SidebarProps {
@@ -21,8 +22,8 @@ const navItems = [
   { path: '/', label: 'dashboard.navigation.dashboard', icon: HomeIcon },
   { path: '/transactions', label: 'dashboard.navigation.transactions', icon: CurrencyDollarIcon },
   { path: '/analytics', label: 'dashboard.navigation.analytics', icon: ChartBarIcon },
+  { path: '/task', label: 'task.title', icon: ClipboardDocumentCheckIcon },
   { path: '/settings', label: 'dashboard.navigation.settings', icon: Cog6ToothIcon },
-  { path: '/task', label: 'dashboard.navigation.task', icon: Cog6ToothIcon },
 ];
 
 export const Sidebar = ({ isOpen, setIsOpen, isCollapsed }: SidebarProps) => {
