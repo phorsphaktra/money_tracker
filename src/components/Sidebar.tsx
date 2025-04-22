@@ -22,6 +22,7 @@ const navItems = [
   { path: '/transactions', label: 'dashboard.navigation.transactions', icon: CurrencyDollarIcon },
   { path: '/analytics', label: 'dashboard.navigation.analytics', icon: ChartBarIcon },
   { path: '/settings', label: 'dashboard.navigation.settings', icon: Cog6ToothIcon },
+  { path: '/task', label: 'dashboard.navigation.task', icon: Cog6ToothIcon },
 ];
 
 export const Sidebar = ({ isOpen, setIsOpen, isCollapsed }: SidebarProps) => {

@@ -5,6 +5,7 @@ import { TransactionProvider } from './contexts/TransactionContext';
 import { LoadingProvider } from './contexts/LoadingContext';
 import { DarkModeProvider } from './contexts/DarkModeContext';
 import { LanguageProvider } from './contexts/LanguageContext';
+import { TaskProvider } from './contexts/TaskContext';
 import { router } from './routes';
 
 export default function App() {
@@ -14,7 +15,9 @@ export default function App() {
         <TransactionProvider>
           <LanguageProvider>
             <DarkModeProvider>
-              <RouterProvider router={router} />
+              <TaskProvider>
+                <RouterProvider router={router} />
+              </TaskProvider>
             </DarkModeProvider>
           </LanguageProvider>
         </TransactionProvider>

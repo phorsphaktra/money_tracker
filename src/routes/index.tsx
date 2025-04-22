@@ -9,6 +9,7 @@ import { SignUpScreen } from '../components/auth/SignUpScreen';
 import { SplashScreen } from '../screens/SplashScreen';
 import { PrivateRoute } from './PrivateRoute';
 import { useAuth } from '../contexts/AuthContext';
+import { TasksScreen } from '../screens/TasksScreen';
 
 const AuthRedirect = () => {
   const { isAuthenticated } = useAuth();
@@ -49,7 +50,9 @@ export const router = createBrowserRouter([
       { index: true, element: <DashboardScreen /> },
       { path: 'transactions', element: <TransactionsScreen /> },
       { path: 'analytics', element: <AnalyticsView /> },
-      { path: 'settings', element: <SettingsScreen /> }
+      { path: 'settings', element: <SettingsScreen /> },
+      { path: 'task', element: <TasksScreen /> }
+
     ]
   }
 ]);
