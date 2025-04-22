@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { Transaction } from '../contexts/TransactionContext';
+import { Transaction } from '../../contexts/TransactionContext';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -90,7 +90,7 @@ export const SpendingChart = ({ transactions, isLoading }: SpendingChartProps) =
 
   if (isLoading) {
     return (
-      <div className="h-64 animate-pulse bg-gray-100 rounded flex items-center justify-center">
+      <div className="h-64 animate-pulse bg-gra">
         <p className="text-gray-500">Loading chart...</p>
       </div>
     );
@@ -98,7 +98,7 @@ export const SpendingChart = ({ transactions, isLoading }: SpendingChartProps) =
 
   if (!transactions.length) {
     return (
-      <div className="h-64 flex items-center justify-center border-2 border-dashed border-gray-200 rounded">
+      <div className="h-64 flex items-center">
         <p className="text-gray-500">No data available</p>
       </div>
     );

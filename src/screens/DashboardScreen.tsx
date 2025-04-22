@@ -1,6 +1,5 @@
 import { useMemo, useState } from 'react';
 import { CardStats } from '../components/dashboard/CardStats';
-import { SpendingChart } from '../components/SpendingChart';
 import { TransactionsList } from '../components/transaction/TransactionsList';
 import { useTransactions } from '../contexts/TransactionContext';
 import { calculateDashboardStats } from '../utils/statsCalculator';
@@ -9,6 +8,7 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { t } from 'i18next';
 import { FloatingActionButton } from '../components/shared/FloatingActionButton';
 import { TransactionModal } from '../components/transaction/TransactionModal';
+import { SpendingChart } from '../components/dashboard/SpendingChart';
 
 const formatNumber = (num: number, language: string) => {
   if (language === 'km') {
@@ -74,7 +74,7 @@ export const DashboardScreen = () => {
         
         <StatsGrid stats={stats} isLoading={isLoading} language={language} />
         
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 hover:shadow-lg transition-all duration-300 border border-gray-100 dark:border-gray-700">
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
