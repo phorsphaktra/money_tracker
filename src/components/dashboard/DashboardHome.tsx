@@ -1,4 +1,4 @@
-import { CardStats } from '../CardStats';
+import { CardStats } from './CardStats';
 import { TransactionsList } from '../transaction/TransactionsList';
 import { SpendingChart } from '../SpendingChart';
 

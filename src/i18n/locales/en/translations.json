@@ -1,4 +1,24 @@
 {
+  "main": {
+    "appName": "Expense Tracker",
+    "welcome": "Welcome to Expense Tracker",
+    "login": {
+      "title": "Login",
+      "subtitle": "Please enter your credentials to continue",
+      "email": "Email",
+      "password": "Password",
+      "rememberMe": "Remember me",
+      "forgotPassword": "Forgot password?",
+      "loginButton": "Login"
+    },
+    "register": {
+      "title": "Register",
+      "subtitle": "Create a new account",
+      "name": "Name",
+      "confirmPassword": "Confirm Password",
+      "registerButton": "Register"
+    }
+  },
   "settings": {
     "title": "Settings",
     "subtitle": "Manage your account settings and preferences",

@@ -1,16 +1,16 @@
 import { useState, useEffect } from 'react';
-import { useTransactions } from '../../contexts/TransactionContext';
+import { useTransactions } from '../contexts/TransactionContext';
 import { 
   calculateTotalsByType, 
   getMonthlyData, 
   getCategoryTotals,
   getAvailableYears,
   filterTransactionsByYear 
-} from '../../utils/analytics';
-import { EXPENSE_CATEGORIES, INCOME_CATEGORIES } from '../../utils/categories';
-import { OverviewChart } from './charts/OverviewChart';
-import { CategoryChart } from './charts/CategoryChart';
-import { SavingsBreakdown } from './charts/SavingsBreakdown';
+} from '../utils/analytics';
+import { EXPENSE_CATEGORIES, INCOME_CATEGORIES } from '../utils/categories';
+import { OverviewChart } from '../components/analytics/charts/OverviewChart';
+import { CategoryChart } from '../components/analytics/charts/CategoryChart';
+import { SavingsBreakdown } from '../components/analytics/charts/SavingsBreakdown';
 
 export const AnalyticsView = () => {
   const { transactions } = useTransactions();

@@ -1,8 +1,8 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom';
-import { DashboardLayout } from '../components/dashboard/DashboardLayout';
+import { DashboardLayout } from '../components/Layout';
 import { DashboardScreen } from '../screens/DashboardScreen';
 import { TransactionsScreen } from '../screens/TransactionScreen';
-import { AnalyticsView } from '../components/analytics/AnalyticsView';
+import { AnalyticsView } from '../screens/AnalyticsScreen';
 import { SettingsScreen } from '../screens/SettingsScreen';
 import { LoginScreen } from '../components/auth/LoginScreen';
 import { SignUpScreen } from '../components/auth/SignUpScreen';

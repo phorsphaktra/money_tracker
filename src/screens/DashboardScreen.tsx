@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { CardStats } from '../components/CardStats';
+import { CardStats } from '../components/dashboard/CardStats';
 import { SpendingChart } from '../components/SpendingChart';
 import { TransactionsList } from '../components/transaction/TransactionsList';
 import { useTransactions } from '../contexts/TransactionContext';
