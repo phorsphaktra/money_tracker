@@ -4,7 +4,7 @@ import { useTaskContext } from '../contexts/TaskContext';
 export const TasksScreen = () => {
   const { tasks, loading, error, addTask, updateTask, deleteTask } = useTaskContext();
   const [newTask, setNewTask] = useState({ title: '', description: '' });
-  const [filter, setFilter] = useState<'all' | 'completed' | 'active'>('all');
+  const [filter] = useState<'all' | 'completed' | 'active'>('all');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const handleAddTask = async (e: React.FormEvent) => {
