@@ -20,7 +20,7 @@ export const DashboardLayout = () => {
       <Navbar onToggle={handleToggle} isCollapsed={isCollapsed} />
       <div className="flex">
         <Sidebar isOpen={isOpen} setIsOpen={setIsOpen} isCollapsed={isCollapsed} />
-        <main className="flex-1 p-6 lg:p-8 mt-16">
+        <main className="flex-1 p-6 lg:p-8">
           <Outlet />
         </main>
       </div>

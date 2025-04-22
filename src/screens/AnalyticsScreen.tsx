@@ -29,7 +29,7 @@ export const AnalyticsView = () => {
   const categoryTotals = getCategoryTotals(filteredTransactions);
 
   return (
-    <div className="p-4 space-y-6 max-w-7xl mx-auto min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+    <div className="p-4 space-y-6 max-w-7xl mx-auto px-4 sm:px-6 min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       <div className="bg-gradient-to-br from-violet-600 to-indigo-700 rounded-2xl shadow-xl p-8 text-white backdrop-blur-xl relative overflow-hidden">
         <div className="absolute inset-0 bg-white/5 backdrop-blur-3xl"></div>
         <div className="relative z-10">

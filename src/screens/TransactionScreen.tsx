@@ -38,7 +38,8 @@ export const TransactionsScreen = () => {
   }
 
   return (
-    <div className="space-y-6 pb-20"> {/* Added pb-20 to make room for FAB */}
+    // <div className="max-w-7xl mx-auto px-4 sm:px-6"></div>
+    <div className="space-y-6 pb-20 max-w-7xl mx-auto px-4 sm:px-6"> {/* Added pb-20 to make room for FAB */}
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>

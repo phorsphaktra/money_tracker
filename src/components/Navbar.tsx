@@ -1,4 +1,4 @@
-import { Bars3Icon, BellIcon, MagnifyingGlassIcon, SunIcon, MoonIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { Bars3Icon, BellIcon, SunIcon, MoonIcon } from '@heroicons/react/24/outline';
 import { useAuth } from '../contexts/AuthContext';
 import { useTranslation } from 'react-i18next';
 import { useState } from 'react';
@@ -18,7 +18,7 @@ export const Navbar = ({ onToggle, isCollapsed }: NavbarProps) => {
     document.documentElement.classList.toggle('dark');
   };
 
-  const [localPhotoURL, setLocalPhotoURL] = useState<string>(() => 
+  const [] = useState<string>(() => 
     localStorage.getItem(`userPhoto_${user?.email}`) || ''
   );
 
@@ -43,21 +43,6 @@ export const Navbar = ({ onToggle, isCollapsed }: NavbarProps) => {
           </h1>
         </div>
 
-        {/* <div className="flex-1 max-w-lg">
-          <div className="relative">
-            <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-            <input
-              type="search"
-              placeholder={t('dashboard.search')}
-              className="w-full bg-slate-50 dark:bg-slate-800/50 rounded-full pl-10 pr-4 py-2 text-sm
-                border border-slate-200 dark:border-slate-700/50
-                focus:outline-none focus:ring-2 focus:ring-indigo-500/50 dark:focus:ring-indigo-400/50
-                placeholder:text-slate-400 dark:placeholder:text-slate-500"
-            />
-          </div>
-        </div> */}
-
-
         <div className="flex items-center gap-2">
           <button
             onClick={toggleTheme}
@@ -69,30 +54,6 @@ export const Navbar = ({ onToggle, isCollapsed }: NavbarProps) => {
             <BellIcon className="w-5 h-5" />
             <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-indigo-500" />
           </button>
-{/*           
-          <div className="h-8 border-l border-slate-200 dark:border-slate-700/50" />
-          <div className="flex items-center gap-3">
-            <span className="text-sm font-medium text-slate-700 dark:text-slate-200">
-              {user?.displayName}
-            </span>
-            <div className="w-9 h-9 rounded-full bg-indigo-500/10 ring-2 ring-indigo-500/20 overflow-hidden">
-              {(user?.photoURL || localPhotoURL) ? (
-                    <img 
-                      src={localPhotoURL || user?.photoURL || ''}
-                      alt="Profile"
-                      className="w-full h-full object-cover"
-                      onError={() => setLocalPhotoURL('')}
-                    />
-                  ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-indigo-500 to-violet-500
-                      flex items-center justify-center">
-                      <span className="text-2xl text-white font-medium">
-                        {user?.displayName?.[0].toUpperCase() || '?'}
-                      </span>
-                    </div>
-                  )}
-            </div>
-          </div> */}
         </div>
       </div>
     </nav>
