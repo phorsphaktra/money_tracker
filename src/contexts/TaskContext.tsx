@@ -1,18 +1,21 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import * as taskService from '../services/taskService';
-import { Task } from '../types/task'
+import { Task, TaskProject } from '../types/task';
 import { useAuth } from './AuthContext';
 
 interface TaskContextType {
   tasks: Task[];
-  groupedTasks: { [date: string]: Task[] };
+  projects: TaskProject[];
   loading: boolean;
   error: string | null;
-  addTask: (task: Omit<Task, 'id'>) => Promise<void>;
-  updateTask: (taskId: string, completed: boolean) => Promise<void>;
+  addTask: (task: Partial<Task>) => Promise<void>;
+  updateTask: (taskId: string, updates: Partial<Task>) => Promise<void>;
   deleteTask: (taskId: string) => Promise<void>;
-  refreshTasks: () => Promise<void>;
-  getTasksByDate: (date: string) => Promise<Task[]>;
+  addProject: (project: Omit<TaskProject, 'id'>) => Promise<void>;
+  updateProject: (projectId: string, updates: Partial<TaskProject>) => Promise<void>;
+  deleteProject: (projectId: string) => Promise<void>;
+  getProjectTasks: (projectId: string) => Task[];
+  refreshData: () => Promise<void>;
 }
 
 const TaskContext = createContext<TaskContextType | undefined>(undefined);
@@ -28,66 +31,146 @@ export const useTaskContext = () => {
 export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user } = useAuth();
   const [tasks, setTasks] = useState<Task[]>([]);
-  const [groupedTasks, setGroupedTasks] = useState<{ [date: string]: Task[] }>({});
+  const [projects, setProjects] = useState<TaskProject[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const refreshTasks = async () => {
+  const validateAndTransformTask = useCallback((task: Partial<Task>): Task => {
+    const now = new Date().toISOString();
+    const errors: string[] = [];
+
+    // Required field validation
+    if (!task.title?.trim()) errors.push('Task title is required');
+    if (!task.projectId) errors.push('Project ID is required');
+
+    // Date validation
+    const dueDate = task.dueDate ? new Date(task.dueDate) : new Date();
+    if (isNaN(dueDate.getTime())) errors.push('Invalid due date');
+
+    // Status validation
+    const validStatuses = ['initial', 'in_progress', 'review', 'completed', 'blocked'];
+    if (task.status && !validStatuses.includes(task.status)) {
+      errors.push('Invalid status');
+    }
+
+    // Priority validation
+    const validPriorities = ['Low', 'Medium', 'High'];
+    if (task.priority && !validPriorities.includes(task.priority)) {
+      errors.push('Invalid priority');
+    }
+
+    // if (errors.length > 0) {
+    //   throw new Error(`Invalid task data: ${errors.join(', ')}`);
+    // }
+
+    // Transform and sanitize data
+    return {
+      id: task.id || '',
+      projectId: task.projectId || '',
+      title: task.title?.trim() || '',
+      description: task.description?.trim() || '',
+      status: task.status || 'initial',
+      priority: task.priority || 'Medium',
+      assignedTo: task.assignedTo || '',
+      dueDate: dueDate.toISOString(),
+      createdAt: task.createdAt || now,
+      updatedAt: now,
+      date: task.date || now,
+      comments: Array.isArray(task.comments) 
+        ? task.comments.map(comment => ({
+            ...comment,
+            message: comment.message?.trim() || '',
+            createdAt: comment.createdAt || now
+          }))
+        : []
+    };
+  }, []);
+
+  const updateTasksOptimistically = useCallback((updatedTask: Task) => {
+    setTasks(prevTasks => {
+      const taskIndex = prevTasks.findIndex(t => t.id === updatedTask.id);
+      if (taskIndex === -1) return [...prevTasks, updatedTask];
+      const newTasks = [...prevTasks];
+      newTasks[taskIndex] = updatedTask;
+      return newTasks;
+    });
+  }, []);
+
+  const refreshData = async () => {
     if (!user?.uid) return;
 
     try {
       setLoading(true);
-      const [tasksResponse, groupedResponse] = await Promise.all([
+      const [tasksResponse, projectsResponse] = await Promise.all([
         taskService.getTasks(user.uid),
-        taskService.getGroupedTasks(user.uid)
+        taskService.getProjects(user.uid)
       ]);
 
-      if (!tasksResponse.success) {
-        throw new Error(tasksResponse.error);
+      if (!tasksResponse.success || !projectsResponse.success) {
+        throw new Error(tasksResponse.error || projectsResponse.error);
       }
 
-      if (!groupedResponse.success) {
-        throw new Error(groupedResponse.error);
-      }
+      const validatedTasks = (tasksResponse.data || [])
+        .map(validateAndTransformTask)
+        .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
 
-      setTasks(tasksResponse.data || []);
-      setGroupedTasks(groupedResponse.data || {});
+      setTasks(prevTasks => {
+        const taskMap = new Map([...prevTasks, ...validatedTasks].map(task => [task.id, task]));
+        return Array.from(taskMap.values());
+      });
+
+      setProjects(projectsResponse.data || []);
       setError(null);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch tasks');
+      setError(err instanceof Error ? err.message : 'Failed to fetch data');
     } finally {
       setLoading(false);
     }
   };
 
-  const addTask = async (task: Omit<Task, 'id'>) => {
+  const addTask = async (task: Partial<Task>) => {
     if (!user?.uid) return;
 
+    const validatedTask = validateAndTransformTask(task);
+    const optimisticId = `temp-${Date.now()}`;
+    const optimisticTask = { ...validatedTask, id: optimisticId };
+
     try {
-      setLoading(true);
-      const response = await taskService.createTask(user.uid, task);
+      updateTasksOptimistically(optimisticTask);
+      const response = await taskService.createTask(user.uid, validatedTask);
+      
       if (!response.success) {
         throw new Error(response.error);
       }
-      await refreshTasks();
+      
+      await refreshData();
     } catch (err) {
+      // Rollback optimistic update
+      setTasks(prevTasks => prevTasks.filter(t => t.id !== optimisticId));
       setError(err instanceof Error ? err.message : 'Failed to add task');
     } finally {
       setLoading(false);
     }
   };
 
-  const updateTask = async (taskId: string, completed: boolean) => {
+  const updateTask = async (taskId: string, updates: Partial<Task>) => {
     if (!user?.uid) return;
 
+    const originalTask = tasks.find(t => t.id === taskId);
+    if (!originalTask) return;
+
+    const updatedTask = { ...originalTask, ...updates, updatedAt: new Date().toISOString() };
+
     try {
-      setLoading(true);
-      const response = await taskService.updateTask(user.uid, taskId, { completed });
+      updateTasksOptimistically(updatedTask);
+      const response = await taskService.updateTask(user.uid, taskId, updates);
+      
       if (!response.success) {
         throw new Error(response.error);
       }
-      await refreshTasks();
     } catch (err) {
+      // Rollback to original state
+      updateTasksOptimistically(originalTask);
       setError(err instanceof Error ? err.message : 'Failed to update task');
     } finally {
       setLoading(false);
@@ -103,7 +186,7 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (!response.success) {
         throw new Error(response.error);
       }
-      await refreshTasks();
+      await refreshData();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to delete task');
     } finally {
@@ -111,27 +194,67 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const getTasksByDate = async (date: string): Promise<Task[]> => {
-    if (!user?.uid) return [];
+  const addProject = async (project: Omit<TaskProject, 'id'>) => {
+    if (!user?.uid) return;
 
     try {
-      const response = await taskService.getTasksByDate(user.uid, date);
+      setLoading(true);
+      const response = await taskService.createProject(user.uid, project);
       if (!response.success) {
         throw new Error(response.error);
       }
-      return response.data || [];
+      await refreshData();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch tasks by date');
-      return [];
+      setError(err instanceof Error ? err.message : 'Failed to add project');
+    } finally {
+      setLoading(false);
     }
+  };
+
+  const updateProject = async (projectId: string, updates: Partial<TaskProject>) => {
+    if (!user?.uid) return;
+
+    try {
+      setLoading(true);
+      const response = await taskService.updateProject(user.uid, projectId, updates);
+      if (!response.success) {
+        throw new Error(response.error);
+      }
+      await refreshData();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update project');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const deleteProject = async (projectId: string) => {
+    if (!user?.uid) return;
+
+    try {
+      setLoading(true);
+      const response = await taskService.deleteProject(user.uid, projectId);
+      if (!response.success) {
+        throw new Error(response.error);
+      }
+      await refreshData();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to delete project');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getProjectTasks = (projectId: string) => {
+    return tasks.filter(task => task.projectId === projectId);
   };
 
   useEffect(() => {
     if (user?.uid) {
-      refreshTasks();
+      refreshData();
     } else {
       setTasks([]);
-      setGroupedTasks({});
+      setProjects([]);
     }
   }, [user?.uid]);
 
@@ -139,14 +262,17 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
     <TaskContext.Provider
       value={{
         tasks,
-        groupedTasks,
+        projects,
         loading,
         error,
         addTask,
         updateTask,
         deleteTask,
-        refreshTasks,
-        getTasksByDate,
+        addProject,
+        updateProject,
+        deleteProject,
+        getProjectTasks,
+        refreshData,
       }}
     >
       {children}
