@@ -1,7 +1,26 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Helper functions
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    match /stats/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    match /monthly_tracker/{userId}/transactions/{transactionId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    match /users/{userId}/tasks/{taskId} {
+      allow read: if request.auth != null && request.auth.uid == userId;
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    match /users/{userId}/projects/{projectId} {
+      allow read: if request.auth != null && request.auth.uid == userId;
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+
     function isSignedIn() {
       return request.auth != null;
     }
@@ -18,56 +37,24 @@ service cloud.firestore {
         incoming.title.size() > 0 &&
         incoming.projectId is string &&
         incoming.status in ['initial', 'in_progress', 'review', 'completed', 'blocked'] &&
-        incoming.priority in ['Low', 'Medium', 'High'] &&
-        incoming.createdAt is timestamp &&
-        incoming.updatedAt is timestamp;
+        incoming.priority in ['Low', 'Medium', 'High'];
     }
 
-    function getProject(userId, projectId) {
-      return get(/databases/$(database)/documents/tasks/$(userId)/projects/$(projectId)).data;
-    }
-
-    // Tasks collection rules
     match /tasks/{userId} {
-      // Project rules
+      allow read: if isSignedIn() && request.auth.uid == userId;
+
       match /projects/{projectId} {
         allow read: if isSignedIn() && request.auth.uid == userId;
-        allow create: if isSignedIn() && 
-          request.auth.uid == userId && 
-          request.resource.data.name is string &&
-          request.resource.data.name.size() > 0;
-        allow update: if isSignedIn() && 
-          request.auth.uid == userId && 
-          isProjectMember(resource.data);
-        allow delete: if isSignedIn() && 
-          request.auth.uid == userId && 
-          resource.data.createdBy == request.auth.uid;
-      }
+        allow create: if isSignedIn() && request.auth.uid == userId;
+        allow update: if isSignedIn() && request.auth.uid == userId;
+        allow delete: if isSignedIn() && request.auth.uid == userId;
 
-      // Task rules
-      match /user_tasks/{taskId} {
-        allow read: if isSignedIn() && (
-          request.auth.uid == userId || 
-          isProjectMember(getProject(userId, resource.data.projectId))
-        );
-        
-        allow create: if isSignedIn() && 
-          request.auth.uid == userId &&
-          isValidTask() &&
-          exists(/databases/$(database)/documents/tasks/$(userId)/projects/$(request.resource.data.projectId)) &&
-          isProjectMember(getProject(userId, request.resource.data.projectId));
-        
-        allow update: if isSignedIn() && 
-          (request.auth.uid == userId || request.auth.uid == resource.data.assignedTo) &&
-          isProjectMember(getProject(userId, resource.data.projectId)) &&
-          (
-            !('projectId' in request.resource.data) || 
-            request.resource.data.projectId == resource.data.projectId
-          );
-        
-        allow delete: if isSignedIn() && 
-          request.auth.uid == userId &&
-          isProjectMember(getProject(userId, resource.data.projectId));
+        match /user_tasks/{taskId} {
+          allow read: if isSignedIn() && request.auth.uid == userId;
+          allow create: if isSignedIn() && request.auth.uid == userId && isValidTask();
+          allow update: if isSignedIn() && request.auth.uid == userId;
+          allow delete: if isSignedIn() && request.auth.uid == userId;
+        }
       }
     }
   }

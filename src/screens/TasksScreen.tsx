@@ -1,42 +1,27 @@
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { useTaskContext } from '../contexts/TaskContext';
+import { useTaskFilters } from '../hooks/useTaskFilters';
 import { TaskList } from '../components/TaskList';
 import { TaskModal } from '../components/TaskModal';
-import { Task, TaskProject } from '../types/task';
+import { ProjectModal } from '../components/ProjectModal';
+import { Task, TaskProject, TaskStatus, TaskPriority, TaskFilters } from '../types/task';
 
 export const TasksScreen = () => {
-  const { tasks, projects, loading, error: contextError, addTask, updateTask, deleteTask } = useTaskContext();
+  const { tasks, projects, loading, error: contextError, addTask, updateTask, deleteTask, addProject } = useTaskContext();
   const [showNewTaskForm, setShowNewTaskForm] = useState(false);
+  const [showNewProjectForm, setShowNewProjectForm] = useState(false);
   const [selectedProject, setSelectedProject] = useState<TaskProject | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [filters] = useState({
+  const [filters] = useState<TaskFilters>({
     status: 'all',
     priority: 'all',
     search: '',
     assignedTo: 'all',
-    dueDate: null as Date | null
+    dueDate: null
   });
   const [error, setError] = useState<string | null>(null);
 
-  const filteredTasks = useMemo(() => {
-    return tasks.filter(task => {
-      if (selectedProject && task.projectId !== selectedProject.id) return false;
-      if (filters.status !== 'all' && task.status !== filters.status) return false;
-      if (filters.priority !== 'all' && task.priority !== filters.priority) return false;
-      if (filters.assignedTo !== 'all' && task.assignedTo !== filters.assignedTo) return false;
-      if (filters.search) {
-        const search = filters.search.toLowerCase();
-        return task.title.toLowerCase().includes(search) ||
-               task.description.toLowerCase().includes(search);
-      }
-      if (filters.dueDate) {
-        const taskDate = new Date(task.dueDate);
-        const filterDate = new Date(filters.dueDate);
-        if (taskDate.toDateString() !== filterDate.toDateString()) return false;
-      }
-      return true;
-    });
-  }, [tasks, filters, selectedProject]);
+  const filteredTasks = useTaskFilters(tasks, filters, selectedProject);
 
   const handleCreateTask = async (newTask: Partial<Task>) => {
     if (!selectedProject?.id) {
@@ -45,23 +30,41 @@ export const TasksScreen = () => {
     }
 
     try {
-      setError(null);
       const taskData: Partial<Task> = {
         ...newTask,
         projectId: selectedProject.id,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
-        status: newTask.status || 'initial',
-        priority: newTask.priority || 'Medium',
+        status: newTask.status || TaskStatus.Initial,
+        priority: newTask.priority || TaskPriority.Medium,
         comments: []
       };
       
       await addTask(taskData);
       setShowNewTaskForm(false);
+      setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create task');
     }
   };
+
+  const handleCreateProject = async (projectData: Omit<TaskProject, 'id'>) => {
+    try {
+      setError(null);
+      await addProject(projectData);
+      setShowNewProjectForm(false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to create project');
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500" />
+      </div>
+    );
+  }
 
   if (contextError || error) {
     return (
@@ -91,6 +94,17 @@ export const TasksScreen = () => {
       `}>
         <h2 className="text-xl font-bold mb-4">Projects</h2>
         <div className="space-y-2">
+          <div className="flex justify-between items-center">
+            <h2 className="text-lg font-semibold">Projects</h2>
+            <button
+              onClick={() => setShowNewProjectForm(true)}
+              className="p-2 hover:bg-gray-100 rounded-md text-blue-600"
+            >
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+            </button>
+          </div>
           {projects.map(project => (
             <button
               key={project.id}
@@ -156,10 +170,16 @@ export const TasksScreen = () => {
           onSubmit={handleCreateTask}
           projectMembers={selectedProject.members}
           projectId={selectedProject.id}
-          initialStatus="initial"
-          initialPriority="Medium"
+         
         />
       ) : null}
+
+      {showNewProjectForm && (
+        <ProjectModal
+          onClose={() => setShowNewProjectForm(false)}
+          onSubmit={handleCreateProject}
+        />
+      )}
     </div>
   );
 };

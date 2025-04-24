@@ -2,6 +2,8 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import * as taskService from '../services/taskService';
 import { Task, TaskProject } from '../types/task';
 import { useAuth } from './AuthContext';
+import { createTask } from '../services/taskService';
+import { auth } from '../config/firebase';
 
 interface TaskContextType {
   tasks: Task[];
@@ -128,26 +130,24 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const addTask = async (task: Partial<Task>) => {
-    if (!user?.uid) return;
-
-    const validatedTask = validateAndTransformTask(task);
-    const optimisticId = `temp-${Date.now()}`;
-    const optimisticTask = { ...validatedTask, id: optimisticId };
-
+  const addTask = async (taskData: Partial<Task>) => {
+    setLoading(true);
     try {
-      updateTasksOptimistically(optimisticTask);
-      const response = await taskService.createTask(user.uid, validatedTask);
-      
-      if (!response.success) {
-        throw new Error(response.error);
+      if (!auth.currentUser?.uid) {
+        throw new Error('User not authenticated');
       }
-      
-      await refreshData();
-    } catch (err) {
-      // Rollback optimistic update
-      setTasks(prevTasks => prevTasks.filter(t => t.id !== optimisticId));
-      setError(err instanceof Error ? err.message : 'Failed to add task');
+
+      const result = await createTask(auth.currentUser.uid, taskData as Omit<Task, 'id'>);
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+
+      // Refresh tasks after creation
+      setTasks([]);
+      // Task added successfully, no need to return data
+    } catch (error) {
+      console.error('Error in addTask:', error);
+      throw error;
     } finally {
       setLoading(false);
     }
@@ -163,7 +163,7 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     try {
       updateTasksOptimistically(updatedTask);
-      const response = await taskService.updateTask(user.uid, taskId, updates);
+      const response = await taskService.updateTask(user.uid, taskId, originalTask.projectId,updates, );
       
       if (!response.success) {
         throw new Error(response.error);
@@ -182,7 +182,8 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     try {
       setLoading(true);
-      const response = await taskService.deleteTask(user.uid, taskId);
+      const projectId = tasks.find(task => task.id === taskId)?.projectId || '';
+      const response = await taskService.deleteTask(user.uid, taskId, projectId);
       if (!response.success) {
         throw new Error(response.error);
       }

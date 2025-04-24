@@ -46,13 +46,17 @@ const checkPermissions = async (userId: string, projectId: string): Promise<Task
   }
 };
 
+const getTasksCollection = (userId: string, projectId: string) => 
+  collection(db, 'tasks', userId, 'projects', projectId, 'project_tasks');
+
 export const getTasks = async (userId: string): Promise<ApiResponse<Task[]>> => {
   try {
     if (!userId) throw new Error('User ID is required');
     
-    const tasksCollection = collection(db, 'tasks', userId, 'user_tasks');
-    const q = query(tasksCollection, orderBy('date', 'desc'));
-    const taskSnapshot = await getDocs(q);
+    // Get tasks from projects collection
+    const tasksRef = collection(db, 'users', userId, 'tasks');
+    const taskQuery = query(tasksRef, orderBy('createdAt', 'desc'));
+    const taskSnapshot = await getDocs(taskQuery);
     
     const tasks = taskSnapshot.docs.map(doc => ({
       id: doc.id,
@@ -73,26 +77,16 @@ export const getTasks = async (userId: string): Promise<ApiResponse<Task[]>> => 
 export const createTask = async (userId: string, task: Omit<Task, 'id'>): Promise<ApiResponse<string>> => {
   try {
     if (!userId) throw new Error('User ID is required');
-    if (!task.projectId) throw new Error('Project ID is required');
     
-    const permissions = await checkPermissions(userId, task.projectId);
-    if (!permissions.canCreate) {
-      throw new Error('Insufficient permissions to create task');
-    }
-
-    const now = new Date().toISOString();
+    const tasksRef = collection(db, 'users', userId, 'tasks');
     const taskData = {
       ...task,
-      createdAt: now,
-      updatedAt: now,
-      status: task.status || 'initial',
-      priority: task.priority || 'Medium',
-      comments: [] as TaskComment[]
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      createdBy: userId
     };
-    
-    const tasksCollection = collection(db, 'tasks', userId, 'user_tasks');
-    const docRef = await addDoc(tasksCollection, taskData);
 
+    const docRef = await addDoc(tasksRef, taskData);
     return { success: true, data: docRef.id };
   } catch (error) {
     console.error('Error creating task:', error);
@@ -107,26 +101,19 @@ export const createTask = async (userId: string, task: Omit<Task, 'id'>): Promis
 export const updateTask = async (
   userId: string, 
   taskId: string, 
+  projectId: string,
   updates: Partial<Task>
 ): Promise<ApiResponse<void>> => {
   try {
-    if (!userId) throw new Error('User ID is required');
-    
-    const taskRef = doc(db, 'tasks', userId, 'user_tasks', taskId);
-    const taskSnap = await getDoc(taskRef);
-    
-    if (!taskSnap.exists()) {
-      throw new Error('Task not found');
+    if (!userId || !taskId || !projectId) {
+      throw new Error('Missing required parameters');
     }
-
-    const task = taskSnap.data() as Task;
-    const permissions = await checkPermissions(userId, task.projectId);
     
-    if (!permissions.canUpdate) {
-      throw new Error('Insufficient permissions to update task');
-    }
-
-    await updateDoc(taskRef, updates);
+    const taskRef = doc(db, 'users', userId, 'tasks', taskId);
+    await updateDoc(taskRef, {
+      ...updates,
+      updatedAt: new Date().toISOString()
+    });
     
     return { success: true };
   } catch (error) {
@@ -139,24 +126,17 @@ export const updateTask = async (
 };
 
 // Update deleteTask with permissions
-export const deleteTask = async (userId: string, taskId: string): Promise<ApiResponse<void>> => {
+export const deleteTask = async (
+  userId: string, 
+  taskId: string, 
+  projectId: string
+): Promise<ApiResponse<void>> => {
   try {
-    if (!userId) throw new Error('User ID is required');
-    
-    const taskRef = doc(db, 'tasks', userId, 'user_tasks', taskId);
-    const taskSnap = await getDoc(taskRef);
-    
-    if (!taskSnap.exists()) {
-      throw new Error('Task not found');
+    if (!userId || !taskId || !projectId) {
+      throw new Error('Missing required parameters');
     }
-
-    const task = taskSnap.data() as Task;
-    const permissions = await checkPermissions(userId, task.projectId);
     
-    if (!permissions.canDelete) {
-      throw new Error('Insufficient permissions to delete task');
-    }
-
+    const taskRef = doc(getTasksCollection(userId, projectId), taskId);
     await deleteDoc(taskRef);
     
     return { success: true };

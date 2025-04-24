@@ -1,5 +1,16 @@
-export type TaskStatus = 'initial' | 'in_progress' | 'review' | 'completed' | 'blocked';
-export type TaskPriority = 'Low' | 'Medium' | 'High';
+export enum TaskStatus {
+  Initial = 'initial',
+  InProgress = 'in_progress',
+  Review = 'review',
+  Completed = 'completed',
+  Blocked = 'blocked'
+}
+
+export enum TaskPriority {
+  Low = 'Low',
+  Medium = 'Medium',
+  High = 'High'
+}
 
 export interface TaskComment {
   [x: string]: string | number | Date;
@@ -15,8 +26,8 @@ export interface Task {
   projectId: string;
   title: string;
   description: string;
-  status: TaskStatus;
-  priority: TaskPriority;
+  status: string;
+  priority: string;
   assignedTo: string;
   dueDate: string;
   createdAt: string;
@@ -45,8 +56,14 @@ export interface UpdateTaskDTO {
 export interface TaskProject {
   id: string;
   name: string;
+  description?: string; // Added description property
   createdBy: string;
+  createdAt: string;
+  updatedAt: string;
   members: string[];
+  status: string;
+  color?: string; // Added color property
+  type?: string; // Added type property
 }
 
 export interface GroupedTasks {
@@ -66,4 +83,12 @@ export interface TasksState {
     assignedTo?: string;
     search?: string;
   };
+}
+
+export interface TaskFilters {
+  status: string;
+  priority: string;
+  search: string;
+  assignedTo: string;
+  dueDate: Date | null;
 }

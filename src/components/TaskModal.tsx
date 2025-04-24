@@ -31,12 +31,16 @@ export const TaskModal: React.FC<TaskModalProps> = ({
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting) return; // Prevent double submission
     
+    setIsSubmitting(true);
     if (!projectId) {
       setError('Project ID is required');
+      setIsSubmitting(false);
       return;
     }
 
@@ -60,6 +64,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({
       setError(err instanceof Error ? err.message : 'Failed to save task');
     } finally {
       setLoading(false);
+      setIsSubmitting(false);
     }
   };
 
@@ -69,7 +74,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-2xl font-bold">{task ? 'Edit Task' : 'New Task'}</h2>
-            <button type="button" onClick={onClose} className="text-gray-500 hover:text-gray-700">✕</button>
+            <button type="button" onClick={onClose} className="text-gray-500 hover:text-gray-700" disabled={isSubmitting}>✕</button>
           </div>
 
           {error && (
@@ -84,6 +89,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({
               placeholder="Task title"
               className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500"
               required
+              disabled={isSubmitting}
             />
 
             <textarea
@@ -91,6 +97,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({
               onChange={e => setFormData({...formData, description: e.target.value})}
               placeholder="Task description"
               className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 h-32"
+              disabled={isSubmitting}
             />
 
             <div className="grid grid-cols-2 gap-4">
@@ -98,6 +105,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({
                 value={formData.priority}
                 onChange={e => setFormData({...formData, priority: e.target.value as TaskPriority})}
                 className="p-2 border rounded"
+                disabled={isSubmitting}
               >
                 <option value="Low">Low Priority</option>
                 <option value="Medium">Medium Priority</option>
@@ -108,6 +116,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({
                 value={formData.assignedTo}
                 onChange={e => setFormData({...formData, assignedTo: e.target.value})}
                 className="p-2 border rounded"
+                disabled={isSubmitting}
               >
                 <option value="">Assign to...</option>
                 {projectMembers.map(member => (
@@ -121,12 +130,14 @@ export const TaskModal: React.FC<TaskModalProps> = ({
                 onChange={e => setFormData({...formData, dueDate: e.target.value})}
                 className="p-2 border rounded"
                 required
+                disabled={isSubmitting}
               />
 
               <select
                 value={formData.status}
                 onChange={e => setFormData({...formData, status: e.target.value as TaskStatus})}
                 className="p-2 border rounded"
+                disabled={isSubmitting}
               >
                 <option value="initial">Initial</option>
                 <option value="in_progress">In Progress</option>
@@ -141,12 +152,13 @@ export const TaskModal: React.FC<TaskModalProps> = ({
               type="button"
               onClick={onClose}
               className="px-4 py-2 text-gray-600 hover:text-gray-800"
+              disabled={isSubmitting}
             >
               Cancel
             </button>
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || isSubmitting}
               className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50"
             >
               {loading ? 'Saving...' : task ? 'Update Task' : 'Create Task'}
