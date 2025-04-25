@@ -6,6 +6,9 @@ interface ConfirmDialogProps {
   onConfirm: () => void;
   title: string;
   message: string;
+  confirmLabel?: string;
+  confirmButtonClass?: string;
+  loading?: boolean;
 }
 
 export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
@@ -13,7 +16,10 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
   onClose,
   onConfirm,
   title,
-  message
+  message,
+  confirmLabel = 'Confirm',
+  confirmButtonClass = 'bg-blue-500 hover:bg-blue-600',
+  loading = false
 }) => {
   if (!isOpen) return null;
 
@@ -25,15 +31,19 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
         <div className="flex justify-end gap-3">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-gray-600"
+            disabled={loading}
+            className="px-4 py-2 text-gray-600 hover:text-gray-800 disabled:opacity-50"
           >
             Cancel
           </button>
           <button
             onClick={onConfirm}
-            className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+            disabled={loading}
+            className={`px-4 py-2 text-white rounded disabled:opacity-50 ${confirmButtonClass}`}
           >
-            Delete
+            {loading ? (
+              <div className="animate-spin h-5 w-5 border-2 border-white rounded-full" />
+            ) : confirmLabel}
           </button>
         </div>
       </div>

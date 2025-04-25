@@ -31,7 +31,7 @@ export interface Task {
   title: string;
   description: string;
   status: string;
-  previousStatus?: string | null; // Add this field
+  previousStatus: TaskStatus | null;
   priority: string;
   assignedTo: string;
   dueDate: string;
@@ -53,6 +53,7 @@ export interface UpdateTaskDTO {
   description?: string;
   dueDate?: string;
   status?: TaskStatus;
+  previousStatus?: TaskStatus | null;
   priority?: TaskPriority;
   assignedTo?: string;
   comments?: TaskComment[];

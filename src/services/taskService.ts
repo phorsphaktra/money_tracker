@@ -106,16 +106,13 @@ export const updateTask = async (
 
 // Update deleteTask with permissions
 export const deleteTask = async (
-  userId: string, 
-  taskId: string, 
-  projectId: string
-): Promise<ApiResponse<void>> => {
+userId: string, taskId: string, projectId: string): Promise<ApiResponse<void>> => {
   try {
-    if (!userId || !taskId || !projectId) {
-      throw new Error('Missing required parameters');
+    if (!userId || !taskId) {
+      throw new Error('User ID and Task ID are required');
     }
-    
-    const taskRef = doc(getTasksCollection(userId, projectId), taskId);
+
+    const taskRef = doc(db, 'users', userId, 'tasks', taskId);
     await deleteDoc(taskRef);
     
     return { success: true };

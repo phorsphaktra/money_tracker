@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Task, TaskPriority, TaskStatus } from '../../types/task';
+import { Task, TaskPriority, TaskStatus, TaskComment } from '../../types/task';
+import { useAuth } from '../../contexts/AuthContext';
 
 interface TaskModalProps {
   onClose: () => void;
@@ -20,6 +21,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({
   initialPriority = 'Medium',
   task
 }) => {
+  const { user } = useAuth();
   const [formData, setFormData] = useState({
     title: task?.title || '',
     description: task?.description || '',
@@ -27,11 +29,31 @@ export const TaskModal: React.FC<TaskModalProps> = ({
     status: task?.status || initialStatus,
     assignedTo: task?.assignedTo || '',
     dueDate: task?.dueDate?.split('T')[0] || new Date().toISOString().split('T')[0],
-    projectId: projectId // Only use the passed projectId
+    projectId: projectId, // Only use the passed projectId
+    comments: task?.comments || []
   });
+  const [newComment, setNewComment] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleAddComment = () => {
+    if (!newComment.trim() || !user) return;
+
+    const comment: TaskComment = {
+      id: Date.now().toString(),
+      userId: user.uid,
+      userName: user.displayName || user.email || 'Anonymous',
+      message: newComment.trim(),
+      createdAt: new Date().toISOString()
+    };
+
+    setFormData(prev => ({
+      ...prev,
+      comments: [...prev.comments, comment]
+    }));
+    setNewComment('');
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,7 +75,8 @@ export const TaskModal: React.FC<TaskModalProps> = ({
       dueDate: new Date(formData.dueDate).toISOString(),
       projectId: projectId,
       createdAt: task?.createdAt || new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+      updatedAt: new Date().toISOString(),
+      comments: formData.comments
     };
 
     setLoading(true);
@@ -144,6 +167,42 @@ export const TaskModal: React.FC<TaskModalProps> = ({
                 <option value="review">Review</option>
                 <option value="completed">Completed</option>
               </select>
+            </div>
+          </div>
+
+          {/* Add Comments Section */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-medium">Comments</h3>
+            <div className="space-y-2 max-h-60 overflow-y-auto">
+              {formData.comments.map(comment => (
+                <div key={comment.id} className="bg-gray-50 p-3 rounded">
+                  <div className="flex justify-between items-center">
+                    <span className="font-medium text-sm">{comment.userId}</span>
+                    <span className="text-xs text-gray-500">
+                      {new Date(comment.createdAt).toLocaleString()}
+                    </span>
+                  </div>
+                  <p className="text-sm mt-1">{comment.message}</p>
+                </div>
+              ))}
+            </div>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={newComment}
+                onChange={e => setNewComment(e.target.value)}
+                placeholder="Add a comment..."
+                className="flex-1 p-2 border rounded focus:ring-2 focus:ring-blue-500"
+                disabled={isSubmitting}
+              />
+              <button
+                type="button"
+                onClick={handleAddComment}
+                disabled={isSubmitting || !newComment.trim()}
+                className="px-4 py-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 disabled:opacity-50"
+              >
+                Add Comment
+              </button>
             </div>
           </div>
 

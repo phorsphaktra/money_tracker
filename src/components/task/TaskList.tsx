@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { Task, TaskStatus, TaskStatusTransitions } from '../../types/task';
+import { Task, TaskStatus } from '../../types/task';
 import { TaskStatusBadge } from './TaskStatusBadge';
 import { ConfirmDialog } from '../ConfirmDialog';
+import { TaskModal } from './TaskModal';
 
 interface TaskListProps {
   tasks: Task[];
@@ -13,19 +14,27 @@ export const TaskList: React.FC<TaskListProps> = ({ tasks, onUpdateTask, onDelet
   const [loading, setLoading] = useState<{ [key: string]: boolean }>({});
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [statusMenuOpen, setStatusMenuOpen] = useState<string | null>(null);
+  const [editingTask, setEditingTask] = useState<Task | null>(null);
+  const [statusUpdateTask, setStatusUpdateTask] = useState<{task: Task, newStatus: TaskStatus} | null>(null);
 
-  const handleCheckboxChange = async (task: Task) => {
+  const handleStatusChange = async (task: Task) => {
     try {
       setLoading(prev => ({ ...prev, [task.id]: true }));
       
-      const updates: Partial<Task> = {
-        status: task.status === 'completed' ? (task.previousStatus || 'initial') : 'completed',
-        previousStatus: task.status === 'completed' ? null : task.status,
-        updatedAt: new Date().toISOString()
-      };
-
-      await onUpdateTask(task.id, updates);
+      if (task.status === TaskStatus.Completed) {
+        // When unchecking, revert to previous status or Initial
+        await onUpdateTask(task.id, { 
+          status: task.previousStatus || TaskStatus.Initial,
+          previousStatus: null, // Clear previous status
+          updatedAt: new Date().toISOString()
+        });
+      } else {
+        // When checking, store current status and set to completed
+        await onUpdateTask(task.id, { 
+          status: TaskStatus.Completed,
+          updatedAt: new Date().toISOString()
+        });
+      }
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update task');
@@ -34,39 +43,35 @@ export const TaskList: React.FC<TaskListProps> = ({ tasks, onUpdateTask, onDelet
     }
   };
 
-  const handleStatusSelect = async (task: Task, newStatus: TaskStatus) => {
+  const handleStatusConfirm = async () => {
+    if (!statusUpdateTask) return;
+    const { task } = statusUpdateTask;
+    
     try {
       setLoading(prev => ({ ...prev, [task.id]: true }));
-      setStatusMenuOpen(null);
-
-      const updates: Partial<Task> = {
-        status: newStatus,
-        previousStatus: task.status === 'completed' ? null: task.status,
+      await onUpdateTask(task.id, {
+        status: TaskStatus.Completed,
         updatedAt: new Date().toISOString()
-      };
-
-      await onUpdateTask(task.id, updates);
+      });
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update task');
     } finally {
       setLoading(prev => ({ ...prev, [task.id]: false }));
+      setStatusUpdateTask(null);
     }
-  };
-
-  const getNextStatuses = (currentStatus: string): TaskStatus[] => {
-    return TaskStatusTransitions[currentStatus as TaskStatus] || [];
   };
 
   const handleDelete = async (taskId: string) => {
     try {
       setLoading(prev => ({ ...prev, [taskId]: true }));
       await onDeleteTask(taskId);
-      setDeleteConfirm(null);
+      setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to delete task');
     } finally {
       setLoading(prev => ({ ...prev, [taskId]: false }));
+      setDeleteConfirm(null);
     }
   };
 
@@ -86,7 +91,7 @@ export const TaskList: React.FC<TaskListProps> = ({ tasks, onUpdateTask, onDelet
               <input
                 type="checkbox"
                 checked={task.status === 'completed'}
-                onChange={() => handleCheckboxChange(task)}
+                onChange={() => handleStatusChange(task)}
                 disabled={loading[task.id]}
                 className="w-5 h-5 text-blue-600 rounded focus:ring-blue-500"
               />
@@ -113,31 +118,14 @@ export const TaskList: React.FC<TaskListProps> = ({ tasks, onUpdateTask, onDelet
               </div>
 
               <div className="flex items-center gap-2">
-                <div className="relative">
-                  <button
-                    onClick={() => setStatusMenuOpen(statusMenuOpen === task.id ? null : task.id)}
-                    disabled={loading[task.id]}
-                    className="px-3 py-1 text-sm rounded-full border hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <TaskStatusBadge status={task.status} />
-                    <span className="ml-1">▼</span>
-                  </button>
-                  
-                  {statusMenuOpen === task.id && (
-                    <div className="absolute right-0 mt-1 py-1 w-48 bg-white rounded-md shadow-lg z-10 border">
-                      {getNextStatuses(task.status).map(status => (
-                        <button
-                          key={status}
-                          onClick={() => handleStatusSelect(task, status)}
-                          className="w-full px-4 py-2 text-left text-sm hover:bg-gray-50"
-                        >
-                          <TaskStatusBadge status={status} />
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-                
+                <TaskStatusBadge status={task.status} />
+                <button
+                  onClick={() => setEditingTask(task)}
+                  className="p-2 text-gray-400 hover:text-blue-500"
+                  disabled={loading[task.id]}
+                >
+                  ✎
+                </button>
                 <button
                   onClick={() => setDeleteConfirm(task.id)}
                   disabled={loading[task.id]}
@@ -153,12 +141,47 @@ export const TaskList: React.FC<TaskListProps> = ({ tasks, onUpdateTask, onDelet
         ))}
       </div>
 
+      {editingTask && (
+        <TaskModal
+          task={editingTask}
+          onClose={() => setEditingTask(null)}
+          onSubmit={async (updates) => {
+            await onUpdateTask(editingTask.id, updates);
+            setEditingTask(null);
+          }}
+          projectMembers={[]} // Pass actual project members
+          projectId={editingTask.projectId}
+        />
+      )}
+
       <ConfirmDialog
         isOpen={!!deleteConfirm}
         onClose={() => setDeleteConfirm(null)}
         onConfirm={() => deleteConfirm && handleDelete(deleteConfirm)}
         title="Delete Task"
-        message="Are you sure you want to delete this task? This action cannot be undone."
+        message={
+          deleteConfirm 
+            ? `Are you sure you want to delete "${tasks.find(t => t.id === deleteConfirm)?.title}"? This action cannot be undone.`
+            : ''
+        }
+        confirmLabel="Delete"
+        confirmButtonClass="bg-red-500 hover:bg-red-600"
+        loading={deleteConfirm ? loading[deleteConfirm] : false}
+      />
+
+      <ConfirmDialog
+        isOpen={!!statusUpdateTask}
+        onClose={() => setStatusUpdateTask(null)}
+        onConfirm={handleStatusConfirm}
+        title="Complete Task"
+        message={
+          statusUpdateTask 
+            ? `Are you sure you want to mark "${statusUpdateTask.task.title}" as completed?`
+            : ''
+        }
+        confirmLabel="Complete"
+        confirmButtonClass="bg-green-500 hover:bg-green-600"
+        loading={statusUpdateTask ? loading[statusUpdateTask.task.id] : false}
       />
     </>
   );

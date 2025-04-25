@@ -68,25 +68,27 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     // Transform and sanitize data
     return {
-      id: task.id || '',
-      projectId: task.projectId || '',
-      title: task.title?.trim() || '',
-      description: task.description?.trim() || '',
-      status: task.status || 'initial',
-      priority: task.priority || 'Medium',
-      assignedTo: task.assignedTo || '',
-      dueDate: dueDate.toISOString(),
-      createdAt: task.createdAt || now,
-      updatedAt: now,
-      date: task.date || now,
-      comments: Array.isArray(task.comments) 
-        ? task.comments.map(comment => ({
-            ...comment,
-            message: comment.message?.trim() || '',
-            createdAt: comment.createdAt || now
-          }))
-        : []
-    };
+  id: task.id || '',
+  projectId: task.projectId || '',
+  title: task.title?.trim() || '',
+  description: task.description?.trim() || '',
+  status: task.status || 'initial',
+  previousStatus: null,
+  priority: task.priority || 'Medium',
+  assignedTo: task.assignedTo || '',
+  dueDate: dueDate.toISOString(),
+  createdAt: task.createdAt || now,
+  updatedAt: now,
+  date: task.date || now,
+  comments: Array.isArray(task.comments)
+    ? task.comments.map(comment => ({
+      ...comment,
+      message: comment.message?.trim() || '',
+      createdAt: comment.createdAt || now
+    }))
+    : [],
+ 
+};
   }, []);
 
   const updateTasksOptimistically = useCallback((updatedTask: Task) => {
