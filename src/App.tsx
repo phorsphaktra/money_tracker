@@ -6,22 +6,21 @@ import { LoadingProvider } from './contexts/LoadingContext';
 import { DarkModeProvider } from './contexts/DarkModeContext';
 import { LanguageProvider } from './contexts/LanguageContext';
 import { TaskProvider } from './contexts/TaskContext';
+import { NotificationProvider } from './contexts/NotificationContext';
 import { router } from './routes';
 
-export default function App() {
+function App() {
   return (
     <AuthProvider>
-      <LoadingProvider>
-        <TransactionProvider>
-          <LanguageProvider>
-            <DarkModeProvider>
-              <TaskProvider>
-                <RouterProvider router={router} />
-              </TaskProvider>
-            </DarkModeProvider>
-          </LanguageProvider>
-        </TransactionProvider>
-      </LoadingProvider>
+      <TaskProvider>
+        <NotificationProvider>
+          <AuthProvider>
+            <RouterProvider router={router} />
+          </AuthProvider>
+        </NotificationProvider>
+      </TaskProvider>
     </AuthProvider>
   );
 }
+
+export default App;

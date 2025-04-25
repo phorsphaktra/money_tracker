@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useState } from 'react';
 import { NotificationPanel } from './NotificationPanel';
 import { useTaskContext } from '../contexts/TaskContext';
+import { useNotifications } from '../contexts/NotificationContext';
 
 interface NavbarProps {
   onToggle: () => void;
@@ -16,6 +17,13 @@ export const Navbar = ({ onToggle, isCollapsed }: NavbarProps) => {
   const [isDark, setIsDark] = useState(document.documentElement.classList.contains('dark'));
   const { tasks } = useTaskContext();
   const [showNotifications, setShowNotifications] = useState(false);
+  const { 
+    notificationCounts, 
+    totalNotifications, 
+    isLoading,
+    error: notificationError 
+  } = useNotifications();
+  const [showNotificationTooltip, setShowNotificationTooltip] = useState(false);
 
   const dueTodayCount = tasks.filter(task => {
     const today = new Date();
@@ -31,6 +39,11 @@ export const Navbar = ({ onToggle, isCollapsed }: NavbarProps) => {
   const [] = useState<string>(() => 
     localStorage.getItem(`userPhoto_${user?.email}`) || ''
   );
+
+  const toggleNotifications = () => {
+    setShowNotifications(!showNotifications);
+    setShowNotificationTooltip(false);
+  };
 
   return (
     <nav className="sticky top-0 z-40 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200/50 dark:border-slate-700/50">
@@ -54,25 +67,26 @@ export const Navbar = ({ onToggle, isCollapsed }: NavbarProps) => {
         </div>
 
         <div className="flex items-center gap-2">
-          <button
-            onClick={toggleTheme}
-            className="p-2 rounded-full text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
-          >
+          <button onClick={toggleTheme}>
             {isDark ? <SunIcon className="w-5 h-5" /> : <MoonIcon className="w-5 h-5" />}
           </button>
           <div className="relative">
-            <button 
-              onClick={() => setShowNotifications(!showNotifications)}
+            <button
+              onClick={toggleNotifications}
               className="relative p-2 rounded-full text-slate-500 hover:text-slate-700 
-                dark:text-slate-400 dark:hover:text-slate-200 
-                hover:bg-slate-100 dark:hover:bg-slate-800 
-                transition-colors"
+                dark:text-slate-400 dark:hover:text-slate-200
+                hover:bg-slate-100 dark:hover:bg-slate-700/50
+                transition-all"
             >
               <BellIcon className="w-5 h-5" />
-              {dueTodayCount > 0 && (
-                <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-amber-500 
-                  flex items-center justify-center text-xs text-white font-medium">
-                  {dueTodayCount}
+              {!isLoading && totalNotifications > 0 && (
+                <span className={`absolute -top-1 -right-1 min-w-[20px] h-5 px-1
+                  flex items-center justify-center rounded-full text-xs font-medium
+                  ${notificationCounts.overdue > 0 
+                    ? 'bg-red-500 text-white animate-pulse' 
+                    : 'bg-indigo-500 text-white'}`}
+                >
+                  {totalNotifications}
                 </span>
               )}
             </button>
@@ -83,8 +97,8 @@ export const Navbar = ({ onToggle, isCollapsed }: NavbarProps) => {
                   onClick={() => setShowNotifications(false)} 
                 />
                 <NotificationPanel 
-                  tasks={tasks} 
-                  onClose={() => setShowNotifications(false)} 
+                  onClose={() => setShowNotifications(false)}
+                  onRefresh={() => setShowNotifications(!showNotifications)}
                 />
               </>
             )}
