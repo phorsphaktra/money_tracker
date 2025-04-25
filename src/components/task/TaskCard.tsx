@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Task } from '../types/task';
+import { Task } from '../../types/task';
 import { TaskComments } from './TaskComments';
 
 interface TaskCardProps {

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Task, TaskPriority, TaskStatus } from '../types/task';
+import { Task, TaskPriority, TaskStatus } from '../../types/task';
 
 interface TaskModalProps {
   onClose: () => void;

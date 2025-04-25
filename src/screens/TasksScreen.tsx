@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useTaskContext } from '../contexts/TaskContext';
 import { useTaskFilters } from '../hooks/useTaskFilters';
-import { TaskList } from '../components/TaskList';
-import { TaskModal } from '../components/TaskModal';
+import { TaskList } from '../components/task/TaskList';
+import { TaskModal } from '../components/task/TaskModal';
 import { ProjectModal } from '../components/ProjectModal';
 import { Task, TaskProject, TaskStatus, TaskPriority, TaskFilters } from '../types/task';
 

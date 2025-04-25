@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { TaskComment } from '../types/task';
+import { TaskComment } from '../../types/task';
 
 interface TaskCommentsProps {
   taskId: string;

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { Task, TaskStatus, TaskStatusTransitions } from '../types/task';
+import { Task, TaskStatus, TaskStatusTransitions } from '../../types/task';
 import { TaskStatusBadge } from './TaskStatusBadge';
-import { ConfirmDialog } from '././ConfirmDialog';
+import { ConfirmDialog } from '../ConfirmDialog';
 
 interface TaskListProps {
   tasks: Task[];
