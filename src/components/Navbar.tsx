@@ -15,21 +15,14 @@ export const Navbar = ({ onToggle, isCollapsed }: NavbarProps) => {
   const { user } = useAuth();
   const { t } = useTranslation();
   const [isDark, setIsDark] = useState(document.documentElement.classList.contains('dark'));
-  const { tasks } = useTaskContext();
+  useTaskContext();
   const [showNotifications, setShowNotifications] = useState(false);
   const { 
     notificationCounts, 
     totalNotifications, 
-    isLoading,
-    error: notificationError 
-  } = useNotifications();
-  const [showNotificationTooltip, setShowNotificationTooltip] = useState(false);
+    isLoading  } = useNotifications();
+  const [, setShowNotificationTooltip] = useState(false);
 
-  const dueTodayCount = tasks.filter(task => {
-    const today = new Date();
-    const dueDate = new Date(task.dueDate);
-    return today.toDateString() === dueDate.toDateString();
-  }).length;
 
   const toggleTheme = () => {
     setIsDark(!isDark);

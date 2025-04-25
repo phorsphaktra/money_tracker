@@ -9,7 +9,7 @@ interface NotificationPanelProps {
   onRefresh?: () => void;
 }
 
-export const NotificationPanel = ({ onClose, onRefresh }: NotificationPanelProps) => {
+export const NotificationPanel = ({ onRefresh }: NotificationPanelProps) => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const { 
     notificationCounts, 
@@ -38,7 +38,7 @@ export const NotificationPanel = ({ onClose, onRefresh }: NotificationPanelProps
     );
   }
 
-  function handleTaskClick(task: Task): void {
+  function handleTaskClick(_task: Task): void {
     throw new Error('Function not implemented.');
   }
 
