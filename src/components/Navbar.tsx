@@ -2,7 +2,7 @@ import { Bars3Icon, BellIcon, SunIcon, MoonIcon } from '@heroicons/react/24/outl
 import { useAuth } from '../contexts/AuthContext';
 import { useTranslation } from 'react-i18next';
 import { useState } from 'react';
-import { NotificationPanel } from './NotificationPanel';
+import { NotificationPanel } from './notification/NotificationPanel';
 import { useTaskContext } from '../contexts/TaskContext';
 import { useNotifications } from '../contexts/NotificationContext';
 

@@ -1,8 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
-import { useNotifications } from '../contexts/NotificationContext';
-import { Task } from '../types/task';
+import { useNotifications } from '../../contexts/NotificationContext';
+import { Task } from '../../types/task';
 import { ArrowPathIcon, ExclamationCircleIcon, ClockIcon } from '@heroicons/react/24/outline';
-import { NotificationItem } from './task/NotificationItem';
+import { NotificationItem } from './NotificationItem';
 
 interface NotificationPanelProps {
   onClose: () => void;
