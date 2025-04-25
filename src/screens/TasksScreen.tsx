@@ -23,7 +23,7 @@ export const TasksScreen = () => {
   const [showNewTaskForm, setShowNewTaskForm] = useState(false);
   const [showNewProjectForm, setShowNewProjectForm] = useState(false);
   const [selectedProject, setSelectedProject] = useState<TaskProject | null>(null);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isSidebarOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [filters] = useState<TaskFilters>({
     status: 'all',
