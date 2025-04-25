@@ -25,6 +25,7 @@ export interface TaskComment {
 }
 
 export interface Task {
+  completedBy: any;
   date: string | number | Date;
   id: string;
   projectId: string;
@@ -52,8 +53,8 @@ export interface UpdateTaskDTO {
   title?: string;
   description?: string;
   dueDate?: string;
-  status?: TaskStatus;
-  previousStatus?: TaskStatus | null;
+  status?: string;
+  previousStatus?: string;
   priority?: TaskPriority;
   assignedTo?: string;
   comments?: TaskComment[];

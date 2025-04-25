@@ -4,6 +4,7 @@ import { useTaskFilters } from '../hooks/useTaskFilters';
 import { TaskList } from '../components/task/TaskList';
 import { TaskModal } from '../components/task/TaskModal';
 import { ProjectModal } from '../components/ProjectModal';
+// import { TaskDueAlert } from '../components/task/TaskDueAlert';
 import { Task, TaskProject, TaskStatus, TaskPriority, TaskFilters } from '../types/task';
 
 export const TasksScreen = () => {
@@ -144,7 +145,7 @@ export const TasksScreen = () => {
       {/* Main content */}
       <main className="flex-1 overflow-x-hidden p-6 lg:p-8">
         <div className="max-w-6xl mx-auto space-y-6">
-          <div className="flex justify-between items-center">
+                    <div className="flex justify-between items-center">
             <div>
               <h1 className="text-2xl font-semibold text-slate-900 dark:text-white">
                 {selectedProject ? selectedProject.name : 'All Tasks'}

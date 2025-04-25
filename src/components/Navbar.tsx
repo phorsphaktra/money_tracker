@@ -2,6 +2,8 @@ import { Bars3Icon, BellIcon, SunIcon, MoonIcon } from '@heroicons/react/24/outl
 import { useAuth } from '../contexts/AuthContext';
 import { useTranslation } from 'react-i18next';
 import { useState } from 'react';
+import { NotificationPanel } from './NotificationPanel';
+import { useTaskContext } from '../contexts/TaskContext';
 
 interface NavbarProps {
   onToggle: () => void;
@@ -12,6 +14,14 @@ export const Navbar = ({ onToggle, isCollapsed }: NavbarProps) => {
   const { user } = useAuth();
   const { t } = useTranslation();
   const [isDark, setIsDark] = useState(document.documentElement.classList.contains('dark'));
+  const { tasks } = useTaskContext();
+  const [showNotifications, setShowNotifications] = useState(false);
+
+  const dueTodayCount = tasks.filter(task => {
+    const today = new Date();
+    const dueDate = new Date(task.dueDate);
+    return today.toDateString() === dueDate.toDateString();
+  }).length;
 
   const toggleTheme = () => {
     setIsDark(!isDark);
@@ -50,10 +60,35 @@ export const Navbar = ({ onToggle, isCollapsed }: NavbarProps) => {
           >
             {isDark ? <SunIcon className="w-5 h-5" /> : <MoonIcon className="w-5 h-5" />}
           </button>
-          <button className="relative p-2 rounded-full text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200">
-            <BellIcon className="w-5 h-5" />
-            <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-indigo-500" />
-          </button>
+          <div className="relative">
+            <button 
+              onClick={() => setShowNotifications(!showNotifications)}
+              className="relative p-2 rounded-full text-slate-500 hover:text-slate-700 
+                dark:text-slate-400 dark:hover:text-slate-200 
+                hover:bg-slate-100 dark:hover:bg-slate-800 
+                transition-colors"
+            >
+              <BellIcon className="w-5 h-5" />
+              {dueTodayCount > 0 && (
+                <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-amber-500 
+                  flex items-center justify-center text-xs text-white font-medium">
+                  {dueTodayCount}
+                </span>
+              )}
+            </button>
+            {showNotifications && (
+              <>
+                <div 
+                  className="fixed inset-0" 
+                  onClick={() => setShowNotifications(false)} 
+                />
+                <NotificationPanel 
+                  tasks={tasks} 
+                  onClose={() => setShowNotifications(false)} 
+                />
+              </>
+            )}
+          </div>
         </div>
       </div>
     </nav>
