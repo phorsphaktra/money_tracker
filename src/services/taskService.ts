@@ -15,9 +15,6 @@ interface GroupedTasks {
 
 const COLLECTION_NAME = 'tasks';
 
-const getTasksCollection = (userId: string, projectId: string) => 
-  collection(db, 'tasks', userId, 'projects', projectId, 'project_tasks');
-
 export const getTasks = async (userId: string): Promise<ApiResponse<Task[]>> => {
   try {
     if (!userId) throw new Error('User ID is required');
@@ -106,7 +103,7 @@ export const updateTask = async (
 
 // Update deleteTask with permissions
 export const deleteTask = async (
-userId: string, taskId: string, projectId: string): Promise<ApiResponse<void>> => {
+userId: string, taskId: string, _projectId: string): Promise<ApiResponse<void>> => {
   try {
     if (!userId || !taskId) {
       throw new Error('User ID and Task ID are required');
