@@ -40,20 +40,32 @@ service cloud.firestore {
         incoming.priority in ['Low', 'Medium', 'High'];
     }
 
+    function isValidTaskUpdate() {
+      let incoming = request.resource.data;
+      let existing = resource.data;
+      let statusTransitions = {
+        'initial': ['in_progress', 'blocked'],
+        'in_progress': ['review', 'blocked'],
+        'review': ['completed', 'in_progress', 'blocked'],
+        'blocked': ['in_progress'],
+        'completed': ['in_progress']
+      };
+      
+      return incoming.diff(existing).affectedKeys()
+        .hasOnly(['status', 'title', 'description', 'priority', 'dueDate', 'assignedTo', 'updatedAt']) &&
+        (
+          !incoming.diff(existing).affectedKeys().hasAny(['status']) ||
+          (incoming.status in statusTransitions[existing.status])
+        );
+    }
+
     match /tasks/{userId} {
-      allow read: if isSignedIn() && request.auth.uid == userId;
-
       match /projects/{projectId} {
-        allow read: if isSignedIn() && request.auth.uid == userId;
-        allow create: if isSignedIn() && request.auth.uid == userId;
-        allow update: if isSignedIn() && request.auth.uid == userId;
-        allow delete: if isSignedIn() && request.auth.uid == userId;
-
         match /user_tasks/{taskId} {
-          allow read: if isSignedIn() && request.auth.uid == userId;
-          allow create: if isSignedIn() && request.auth.uid == userId && isValidTask();
-          allow update: if isSignedIn() && request.auth.uid == userId;
-          allow delete: if isSignedIn() && request.auth.uid == userId;
+          allow read: if isSignedIn() && isProjectMember(get(/databases/$(database)/documents/tasks/$(userId)/projects/$(projectId)).data);
+          allow create: if isSignedIn() && isValidTask() && isProjectMember(get(/databases/$(database)/documents/tasks/$(userId)/projects/$(projectId)).data);
+          allow update: if isSignedIn() && isValidTaskUpdate() && isProjectMember(get(/databases/$(database)/documents/tasks/$(userId)/projects/$(projectId)).data);
+          allow delete: if isSignedIn() && isProjectMember(get(/databases/$(database)/documents/tasks/$(userId)/projects/$(projectId)).data);
         }
       }
     }

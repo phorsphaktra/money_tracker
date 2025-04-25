@@ -7,11 +7,24 @@ import { ProjectModal } from '../components/ProjectModal';
 import { Task, TaskProject, TaskStatus, TaskPriority, TaskFilters } from '../types/task';
 
 export const TasksScreen = () => {
-  const { tasks, projects, loading, error: contextError, addTask, updateTask, deleteTask, addProject } = useTaskContext();
+  // Context and state
+  const { 
+    tasks, 
+    projects, 
+    loading, 
+    error: contextError, 
+    addTask, 
+    updateTask, 
+    deleteTask, 
+    addProject 
+  } = useTaskContext();
+
+  // Local state
   const [showNewTaskForm, setShowNewTaskForm] = useState(false);
   const [showNewProjectForm, setShowNewProjectForm] = useState(false);
   const [selectedProject, setSelectedProject] = useState<TaskProject | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [filters] = useState<TaskFilters>({
     status: 'all',
     priority: 'all',
@@ -19,10 +32,11 @@ export const TasksScreen = () => {
     assignedTo: 'all',
     dueDate: null
   });
-  const [error, setError] = useState<string | null>(null);
 
+  // Filtered tasks
   const filteredTasks = useTaskFilters(tasks, filters, selectedProject);
 
+  // Handlers
   const handleCreateTask = async (newTask: Partial<Task>) => {
     if (!selectedProject?.id) {
       setError('Please select a project first');
@@ -58,6 +72,8 @@ export const TasksScreen = () => {
     }
   };
 
+
+  // Render loading state
   if (loading) {
     return (
       <div className="flex h-screen items-center justify-center">
@@ -66,6 +82,7 @@ export const TasksScreen = () => {
     );
   }
 
+  // Render error state
   if (contextError || error) {
     return (
       <div className="container mx-auto px-4 py-8">
@@ -144,35 +161,23 @@ export const TasksScreen = () => {
             </button>
           </div>
 
-          {/* <TaskFilters 
-            filters={filters} 
-            onChange={setFilters}
-            projectMembers={selectedProject?.members || []}
-          /> */}
-
-          {loading ? (
-            <div className="flex justify-center py-4">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500" />
-            </div>
-          ) : (
-            <TaskList
-              tasks={filteredTasks}
-              onUpdateTask={updateTask}
-              onDeleteTask={deleteTask}
-            />
-          )}
+          <TaskList
+            tasks={filteredTasks}
+            onUpdateTask={updateTask}
+            onDeleteTask={deleteTask}
+          />
         </div>
       </div>
 
-      {showNewTaskForm && selectedProject?.id ? (
+      {/* Modals */}
+      {showNewTaskForm && selectedProject?.id && (
         <TaskModal
           onClose={() => setShowNewTaskForm(false)}
           onSubmit={handleCreateTask}
           projectMembers={selectedProject.members}
           projectId={selectedProject.id}
-         
         />
-      ) : null}
+      )}
 
       {showNewProjectForm && (
         <ProjectModal
@@ -183,5 +188,4 @@ export const TasksScreen = () => {
     </div>
   );
 };
-
 

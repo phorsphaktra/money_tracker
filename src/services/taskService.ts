@@ -1,6 +1,6 @@
-import { collection, addDoc, deleteDoc, doc, getDocs, updateDoc, query, where, orderBy, getDoc } from 'firebase/firestore';
+import { collection, addDoc, deleteDoc, doc, getDocs, updateDoc, query, where, orderBy } from 'firebase/firestore';
 import { db } from '../config/firebase';
-import { Task, TaskProject, TaskComment } from '../types/task';
+import { Task, TaskComment, TaskProject } from '../types/task';
 
 interface ApiResponse<T> {
   success: boolean;
@@ -12,39 +12,8 @@ interface GroupedTasks {
   [date: string]: Task[];
 }
 
-interface TaskPermissions {
-  canCreate: boolean;
-  canUpdate: boolean;
-  canDelete: boolean;
-  isProjectMember: boolean;
-}
 
 const COLLECTION_NAME = 'tasks';
-
-// Add permission check helper
-const checkPermissions = async (userId: string, projectId: string): Promise<TaskPermissions> => {
-  try {
-    const projectRef = doc(db, 'tasks', userId, 'projects', projectId);
-    const projectSnap = await getDoc(projectRef);
-    
-    if (!projectSnap.exists()) {
-      throw new Error('Project not found');
-    }
-
-    const project = projectSnap.data() as TaskProject;
-    const isMember = project.members.includes(userId);
-    const isOwner = project.createdBy === userId;
-
-    return {
-      canCreate: isMember,
-      canUpdate: isMember,
-      canDelete: isOwner,
-      isProjectMember: isMember
-    };
-  } catch (error) {
-    throw new Error('Failed to check permissions');
-  }
-};
 
 const getTasksCollection = (userId: string, projectId: string) => 
   collection(db, 'tasks', userId, 'projects', projectId, 'project_tasks');
@@ -97,7 +66,7 @@ export const createTask = async (userId: string, task: Omit<Task, 'id'>): Promis
   }
 };
 
-// Update updateTask with permissions
+// Update updateTask to handle previousStatus properly
 export const updateTask = async (
   userId: string, 
   taskId: string, 
@@ -108,10 +77,20 @@ export const updateTask = async (
     if (!userId || !taskId || !projectId) {
       throw new Error('Missing required parameters');
     }
+
+    // Clean up updates object to remove undefined values
+    const cleanUpdates = Object.fromEntries(
+      Object.entries(updates).filter(([_, value]) => value !== undefined)
+    );
+
+    // If previousStatus is being cleared, explicitly set to null
+    if ('previousStatus' in updates && updates.previousStatus === undefined) {
+      cleanUpdates.previousStatus = null as unknown as string | number | Date | TaskComment[];
+    }
     
     const taskRef = doc(db, 'users', userId, 'tasks', taskId);
     await updateDoc(taskRef, {
-      ...updates,
+      ...cleanUpdates,
       updatedAt: new Date().toISOString()
     });
     

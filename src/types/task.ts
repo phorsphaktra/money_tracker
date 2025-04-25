@@ -1,10 +1,14 @@
 export enum TaskStatus {
   Initial = 'initial',
   InProgress = 'in_progress',
-  Review = 'review',
   Completed = 'completed',
-  Blocked = 'blocked'
 }
+
+export const TaskStatusTransitions: Record<TaskStatus, TaskStatus[]> = {
+  [TaskStatus.Initial]: [TaskStatus.InProgress, TaskStatus.Completed],
+  [TaskStatus.InProgress]: [TaskStatus.Completed],
+  [TaskStatus.Completed]: [TaskStatus.InProgress],
+};
 
 export enum TaskPriority {
   Low = 'Low',
@@ -27,6 +31,7 @@ export interface Task {
   title: string;
   description: string;
   status: string;
+  previousStatus?: string | null; // Add this field
   priority: string;
   assignedTo: string;
   dueDate: string;

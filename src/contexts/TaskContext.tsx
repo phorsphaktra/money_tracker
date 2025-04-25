@@ -7,6 +7,7 @@ import { auth } from '../config/firebase';
 
 interface TaskContextType {
   tasks: Task[];
+  setTasks: (tasks: Task[]) => void;  // Add this line
   projects: TaskProject[];
   loading: boolean;
   error: string | null;
@@ -263,6 +264,7 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
     <TaskContext.Provider
       value={{
         tasks,
+        setTasks, // Add this line
         projects,
         loading,
         error,
