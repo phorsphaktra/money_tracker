@@ -48,13 +48,13 @@ export const NotificationPanel = ({ onRefresh }: NotificationPanelProps) => {
       <div className="p-4 border-b border-slate-200/50 dark:border-slate-700/50 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <h3 className="font-semibold text-slate-900 dark:text-white">Notifications</h3>
-          {totalNotifications > 0 && (
+          {/* {totalNotifications > 0 && (
             <span className="px-1.5 py-0.5 text-xs font-medium bg-indigo-500 text-white rounded-full">
               {totalNotifications}
             </span>
-          )}
+          )} */}
         </div>
-        <button
+        {/* <button
           onClick={handleRefresh}
           disabled={isRefreshing}
           className={`p-1.5 rounded-lg text-slate-500 hover:text-slate-700 
@@ -63,7 +63,7 @@ export const NotificationPanel = ({ onRefresh }: NotificationPanelProps) => {
             transition-all ${isRefreshing ? 'animate-spin' : ''}`}
         >
           <ArrowPathIcon className="w-4 h-4" />
-        </button>
+        </button> */}
       </div>
 
       <div className="max-h-[400px] overflow-y-auto">
