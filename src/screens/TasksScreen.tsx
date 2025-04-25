@@ -76,8 +76,8 @@ export const TasksScreen = () => {
   // Render loading state
   if (loading) {
     return (
-      <div className="flex h-screen items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500" />
+      <div className="flex h-screen items-center justify-center bg-gray-50">
+        <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -94,70 +94,67 @@ export const TasksScreen = () => {
   }
 
   return (
-    <div className="flex h-screen overflow-hidden">
-      {/* Mobile sidebar toggle */}
-      <button 
-        className="lg:hidden fixed top-4 left-4 z-50 p-2 bg-blue-500 text-white rounded"
-        onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-      >
-        {isSidebarOpen ? '✕' : '☰'}
-      </button>
-
+    <div className="flex h-screen bg-gray-50">
       {/* Sidebar */}
-      <div className={`
-        ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
-        lg:translate-x-0 transform transition-transform duration-200 ease-in-out
-        fixed lg:static top-0 left-0 h-full w-64 bg-gray-50 border-r p-4 z-40
+      <aside className={`
+        fixed lg:static top-0 left-0 h-full w-72
+        bg-white shadow-lg p-6 z-40 overflow-y-auto
+        transform lg:transform-none transition-transform duration-200
+        ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
       `}>
-        <h2 className="text-xl font-bold mb-4">Projects</h2>
-        <div className="space-y-2">
-          <div className="flex justify-between items-center">
-            <h2 className="text-lg font-semibold">Projects</h2>
+        <div className="flex flex-col space-y-6">
+          <div className="flex items-center justify-between">
+            <h2 className="text-2xl font-bold text-gray-800">Projects</h2>
             <button
               onClick={() => setShowNewProjectForm(true)}
-              className="p-2 hover:bg-gray-100 rounded-md text-blue-600"
+              className="p-2 bg-blue-50 hover:bg-blue-100 rounded-lg text-blue-600 transition-colors"
             >
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
               </svg>
             </button>
           </div>
-          {projects.map(project => (
-            <button
-              key={project.id}
-              onClick={() => setSelectedProject(project)}
-              className={`w-full text-left px-3 py-2 rounded ${
-                selectedProject?.id === project.id
-                  ? 'bg-blue-500 text-white'
-                  : 'hover:bg-gray-100'
-              }`}
-            >
-              {project.name}
-            </button>
-          ))}
+
+          <div className="space-y-2">
+            {projects.map(project => (
+              <button
+                key={project.id}
+                onClick={() => setSelectedProject(project)}
+                className={`w-full text-left px-4 py-3 rounded-lg transition-colors
+                  ${selectedProject?.id === project.id
+                    ? 'bg-blue-500 text-white shadow-md'
+                    : 'hover:bg-gray-100 text-gray-700'
+                  }`}
+              >
+                {project.name}
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
+      </aside>
 
       {/* Main content */}
-      <div className="flex-1 overflow-y-auto p-4 lg:p-8">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex justify-between items-center mb-6">
+      <main className="flex-1 overflow-x-hidden p-6 lg:p-8">
+        <div className="max-w-6xl mx-auto space-y-6">
+          <div className="flex justify-between items-center">
             <div>
-              <h1 className="text-3xl font-bold">
+              <h1 className="text-3xl font-bold text-gray-900">
                 {selectedProject ? selectedProject.name : 'All Tasks'}
               </h1>
               {selectedProject && (
-                <p className="text-gray-500 text-sm mt-1">
-                  {selectedProject.members.length} members
+                <p className="text-gray-500 mt-1">
+                  {selectedProject.members.length} team members
                 </p>
               )}
             </div>
             <button
               onClick={() => setShowNewTaskForm(true)}
-              className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded"
               disabled={!selectedProject}
+              className="px-6 py-2.5 bg-blue-500 text-white rounded-lg shadow-md
+                hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed
+                transition-colors"
             >
-              New Task
+              Add New Task
             </button>
           </div>
 
@@ -167,7 +164,7 @@ export const TasksScreen = () => {
             onDeleteTask={deleteTask}
           />
         </div>
-      </div>
+      </main>
 
       {/* Modals */}
       {showNewTaskForm && selectedProject?.id && (
