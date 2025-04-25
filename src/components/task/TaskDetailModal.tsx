@@ -9,7 +9,7 @@ interface TaskDetailModalProps {
   onUpdate: (task: Task) => void;
 }
 
-export const TaskDetailModal = ({ task, onClose, onUpdate }: TaskDetailModalProps) => {
+export const TaskDetailModal = ({ task, onClose }: TaskDetailModalProps) => {
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto">
       <div className="fixed inset-0 bg-black/20 dark:bg-black/40 backdrop-blur-sm" onClick={onClose} />

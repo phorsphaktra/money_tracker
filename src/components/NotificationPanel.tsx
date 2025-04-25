@@ -6,7 +6,7 @@ interface NotificationPanelProps {
   onClose: () => void;
 }
 
-export const NotificationPanel = ({ tasks, onClose }: NotificationPanelProps) => {
+export const NotificationPanel = ({ tasks }: NotificationPanelProps) => {
   const dueTodayTasks = tasks.filter(task => {
     const today = new Date();
     const dueDate = new Date(task.dueDate);

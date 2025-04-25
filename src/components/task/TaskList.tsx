@@ -213,7 +213,7 @@ export const TaskList = ({ tasks, onUpdateTask, onDeleteTask }: TaskListProps) =
         <TaskDetailModal
           task={selectedTask}
           onClose={() => setSelectedTask(null)}
-          onUpdate={(updatedTask) => {
+          onUpdate={() => {
             // onUpdateTask(updatedTask);
             setSelectedTask(null);
           }}
