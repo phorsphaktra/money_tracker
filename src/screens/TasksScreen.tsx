@@ -170,6 +170,13 @@ export const TasksScreen = () => {
       {/* Main content */}
       <main className="flex-1 overflow-auto">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          {/* Error Message */}
+          {error && (
+            <div className="mb-4 p-4 bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/30 rounded-xl">
+              <p className="text-red-600 dark:text-red-400">{error}</p>
+            </div>
+          )}
+
           {/* Header with Stats */}
           <div className="mb-8 space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
