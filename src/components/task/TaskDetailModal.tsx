@@ -1,6 +1,6 @@
 import { Task } from '../../types/task';
 import { format } from 'date-fns';
-import { XMarkIcon, CalendarIcon, ChatBubbleLeftIcon, ClockIcon, UserGroupIcon, TagIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
+import { XMarkIcon, CalendarIcon, ChatBubbleLeftIcon, ClockIcon, TagIcon } from '@heroicons/react/24/outline';
 import { TaskStatusBadge } from './TaskStatusBadge';
 
 interface TaskDetailModalProps {
@@ -79,7 +79,7 @@ export const TaskDetailModal = ({ task, onClose }: TaskDetailModalProps) => {
                 </div>
               </div>
 
-              <div className="space-y-2">
+              {/* <div className="space-y-2">
                 <h3 className="font-medium text-slate-900 dark:text-white">Team</h3>
                 <div className="space-y-3">
                   <div className="flex items-center gap-2">
@@ -97,7 +97,7 @@ export const TaskDetailModal = ({ task, onClose }: TaskDetailModalProps) => {
                     </div>
                   )}
                 </div>
-              </div>
+              </div> */}
             </div>
 
             {/* Activity Timeline */}

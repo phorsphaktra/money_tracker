@@ -1,10 +1,9 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useTaskContext } from '../contexts/TaskContext';
 import { useTaskFilters } from '../hooks/useTaskFilters';
 import { TaskList } from '../components/task/TaskList';
 import { TaskModal } from '../components/task/TaskModal';
 import { ProjectModal } from '../components/ProjectModal';
-// import { TaskDueAlert } from '../components/task/TaskDueAlert';
 import { Task, TaskProject, TaskStatus, TaskPriority, TaskFilters } from '../types/task';
 
 export const TasksScreen = () => {
@@ -13,7 +12,6 @@ export const TasksScreen = () => {
     tasks, 
     projects, 
     loading, 
-    error: contextError, 
     addTask, 
     updateTask, 
     deleteTask, 
@@ -24,7 +22,7 @@ export const TasksScreen = () => {
   const [showNewTaskForm, setShowNewTaskForm] = useState(false);
   const [showNewProjectForm, setShowNewProjectForm] = useState(false);
   const [selectedProject, setSelectedProject] = useState<TaskProject | null>(null);
-  const [isSidebarOpen] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [filters] = useState<TaskFilters>({
     status: 'all',
@@ -33,9 +31,20 @@ export const TasksScreen = () => {
     assignedTo: 'all',
     dueDate: null
   });
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Filtered tasks
   const filteredTasks = useTaskFilters(tasks, filters, selectedProject);
+
+  // Task statistics
+  const taskStats = useMemo(() => {
+    return {
+      total: filteredTasks.length,
+      completed: filteredTasks.filter(t => t.status === 'completed').length,
+      inProgress: filteredTasks.filter(t => t.status === 'in_progress').length,
+      blocked: filteredTasks.filter(t => t.status === 'blocked').length
+    };
+  }, [filteredTasks]);
 
   // Handlers
   const handleCreateTask = async (newTask: Partial<Task>) => {
@@ -74,21 +83,17 @@ export const TasksScreen = () => {
   };
 
 
-  // Render loading state
+  // Render loading state with skeleton
   if (loading) {
     return (
       <div className="flex h-screen items-center justify-center bg-gray-50 dark:bg-slate-900">
-        <div className="w-16 h-16 border-4 border-indigo-500 dark:border-indigo-400 border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
-  }
-
-  // Render error state
-  if (contextError || error) {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 text-red-600 dark:text-red-400 px-4 py-3 rounded-xl">
-          <p>{contextError || error}</p>
+        <div className="space-y-4 w-full max-w-lg px-4">
+          {[...Array(3)].map((_, i) => (
+            <div key={i} className="animate-pulse">
+              <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-3/4 mb-2"></div>
+              <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-1/2"></div>
+            </div>
+          ))}
         </div>
       </div>
     );
@@ -96,14 +101,34 @@ export const TasksScreen = () => {
 
   return (
     <div className="flex h-screen bg-gray-50 dark:bg-slate-900">
-      {/* Sidebar */}
-      <aside className={`
-        fixed lg:static top-0 left-0 h-full w-72
-        bg-white dark:bg-slate-900
-        border-r border-slate-200/50 dark:border-slate-700/50
-        transform lg:transform-none transition-all duration-200
-        ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
-      `}>
+      {/* Mobile Sidebar Toggle */}
+      <button
+        onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+        className="lg:hidden fixed z-50 bottom-4 right-4 p-3 rounded-full bg-indigo-600 text-white shadow-lg"
+      >
+        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+            d={isSidebarOpen ? "M6 18L18 6M6 6l12 12" : "M4 6h16M4 12h16M4 18h16"} />
+        </svg>
+      </button>
+
+      {/* Backdrop */}
+      {isSidebarOpen && (
+        <div
+          onClick={() => setIsSidebarOpen(false)}
+          className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 lg:hidden
+            transition-opacity duration-300 ease-in-out"
+        />
+      )}
+
+      {/* Sidebar - replace motion.aside with regular aside */}
+      <aside
+        className={`fixed lg:static inset-y-0 left-0 z-40 w-72 
+          bg-white dark:bg-slate-800/50 backdrop-blur-xl 
+          border-r border-slate-200/50 dark:border-slate-700/50
+          transform transition-transform duration-300 ease-in-out
+          ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}
+      >
         <div className="flex flex-col h-full">
           <div className="flex items-center justify-between p-6">
             <h2 className="text-xl font-semibold text-slate-900 dark:text-white">Projects</h2>
@@ -143,32 +168,81 @@ export const TasksScreen = () => {
       </aside>
 
       {/* Main content */}
-      <main className="flex-1 overflow-x-hidden p-6 lg:p-8">
-        <div className="max-w-6xl mx-auto space-y-6">
-                    <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-2xl font-semibold text-slate-900 dark:text-white">
-                {selectedProject ? selectedProject.name : 'All Tasks'}
-              </h1>
-              {selectedProject && (
-                <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-                  {selectedProject.members.length} team members
-                </p>
-              )}
+      <main className="flex-1 overflow-auto">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          {/* Header with Stats */}
+          <div className="mb-8 space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div>
+                <h1 className="text-2xl font-semibold text-slate-900 dark:text-white">
+                  {selectedProject ? selectedProject.name : 'All Tasks'}
+                </h1>
+                {selectedProject && (
+                  <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+                    {selectedProject.members.length} team members
+                  </p>
+                )}
+              </div>
+              <button
+                onClick={() => setShowNewTaskForm(true)}
+                disabled={!selectedProject}
+                className="px-4 py-2 bg-gradient-to-r from-indigo-500 to-violet-500
+                  hover:from-indigo-600 hover:to-violet-600
+                  disabled:from-slate-400 disabled:to-slate-500
+                  text-white rounded-lg shadow-sm disabled:opacity-50 
+                  disabled:cursor-not-allowed transition-all duration-200"
+              >
+                Add New Task
+              </button>
             </div>
-            <button
-              onClick={() => setShowNewTaskForm(true)}
-              disabled={!selectedProject}
-              className="px-4 py-2 bg-gradient-to-r from-indigo-500 to-violet-500
-                hover:from-indigo-600 hover:to-violet-600
-                disabled:from-slate-400 disabled:to-slate-500
-                text-white rounded-lg shadow-sm disabled:opacity-50 
-                disabled:cursor-not-allowed transition-all duration-200"
-            >
-              Add New Task
-            </button>
+
+            {/* Task Statistics */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              {[
+                { label: 'Total Tasks', value: taskStats.total, color: 'slate' },
+                { label: 'Completed', value: taskStats.completed, color: 'green' },
+                { label: 'In Progress', value: taskStats.inProgress, color: 'blue' },
+                { label: 'Blocked', value: taskStats.blocked, color: 'red' },
+              ].map(({ label, value, color }) => (
+                <div key={label} className={`bg-${color}-50 dark:bg-${color}-500/10 
+                  border border-${color}-200/50 dark:border-${color}-500/30 
+                  rounded-xl p-4`}>
+                  <dt className={`text-${color}-600 dark:text-${color}-400 text-sm font-medium`}>
+                    {label}
+                  </dt>
+                  <dd className={`text-${color}-700 dark:text-${color}-300 text-2xl font-semibold`}>
+                    {value}
+                  </dd>
+                </div>
+              ))}
+            </div>
+
+            {/* Search and Filters */}
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="flex-1">
+                <input
+                  type="search"
+                  placeholder="Search tasks..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full px-4 py-2 rounded-xl border border-slate-200/50 
+                    dark:border-slate-700/50 bg-white dark:bg-slate-800/50 
+                    focus:ring-2 focus:ring-indigo-500/50 outline-none"
+                />
+              </div>
+              {/* <div className="flex-none">
+                <select className="block w-full px-4 py-2 rounded-xl border border-slate-200/50 
+                  dark:border-slate-700/50 bg-white dark:bg-slate-800/50">
+                  <option value="all">All Members</option>
+                  {projectMembers.map(member => (
+                    <option key={member.id} value={member.id}>{member.name}</option>
+                  ))}
+                </select>
+              </div> */}
+            </div>
           </div>
 
+          {/* Task List */}
           <TaskList
             tasks={filteredTasks}
             onUpdateTask={updateTask}
