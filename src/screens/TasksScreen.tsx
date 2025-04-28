@@ -42,7 +42,7 @@ export const TasksScreen = () => {
       total: filteredTasks.length,
       completed: filteredTasks.filter(t => t.status === 'completed').length,
       inProgress: filteredTasks.filter(t => t.status === 'in_progress').length,
-      blocked: filteredTasks.filter(t => t.status === 'blocked').length
+      initial: filteredTasks.filter(t => t.status === 'initial').length
     };
   }, [filteredTasks]);
 
@@ -202,7 +202,7 @@ export const TasksScreen = () => {
                 { label: 'Total Tasks', value: taskStats.total, color: 'slate' },
                 { label: 'Completed', value: taskStats.completed, color: 'green' },
                 { label: 'In Progress', value: taskStats.inProgress, color: 'blue' },
-                { label: 'Blocked', value: taskStats.blocked, color: 'red' },
+                { label: 'Initial', value: taskStats.initial, color: 'red' },
               ].map(({ label, value, color }) => (
                 <div key={label} className={`bg-${color}-50 dark:bg-${color}-500/10 
                   border border-${color}-200/50 dark:border-${color}-500/30 
