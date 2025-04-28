@@ -144,9 +144,8 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
         throw new Error(result.error);
       }
 
-      // Refresh tasks after creation
-      setTasks([]);
-      // Task added successfully, no need to return data
+      // Refresh data to get the updated task list
+      await refreshData();
     } catch (error) {
       console.error('Error in addTask:', error);
       throw error;
