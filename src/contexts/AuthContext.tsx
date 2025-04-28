@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from 'react';
+import { createContext, useContext, useEffect, useState, ReactNode, useCallback, useRef } from 'react';
 import { User } from 'firebase/auth';
 import { auth } from '../config/firebase';
 import { authService } from '../services/authService';
@@ -20,6 +20,8 @@ interface AuthContextType extends AuthState {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+const INACTIVITY_TIMEOUT = 15 * 60 * 1000; // 15 minutes in milliseconds
+
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const [state, setState] = useState<AuthState>({
         user: null,
@@ -27,6 +29,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         isAuthenticated: false,
         error: null
     });
+    const activityTimeoutRef = useRef<NodeJS.Timeout>();
 
     const handleError = useCallback((error: Error) => {
         setState(prev => ({ ...prev, error: error.message }));
@@ -66,12 +69,61 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         }
     }, [clearError, handleError]);
 
+    const resetActivityTimer = useCallback(() => {
+        if (activityTimeoutRef.current) {
+            clearTimeout(activityTimeoutRef.current);
+        }
+        
+        if (state.isAuthenticated) {
+            activityTimeoutRef.current = setTimeout(async () => {
+                await authService.logout();
+            }, INACTIVITY_TIMEOUT);
+        }
+    }, [state.isAuthenticated]);
+
+    useEffect(() => {
+        const activities = ['mousedown', 'mousemove', 'keydown', 'scroll', 'touchstart'];
+        
+        const handleActivity = () => {
+            resetActivityTimer();
+        };
+
+        activities.forEach(activity => {
+            document.addEventListener(activity, handleActivity);
+        });
+
+        // Initial timer setup
+        resetActivityTimer();
+
+        return () => {
+            activities.forEach(activity => {
+                document.removeEventListener(activity, handleActivity);
+            });
+            if (activityTimeoutRef.current) {
+                clearTimeout(activityTimeoutRef.current);
+            }
+        };
+    }, [resetActivityTimer]);
+
+    const logout = useCallback(async () => {
+        try {
+            await authService.logout();
+            if (activityTimeoutRef.current) {
+                clearTimeout(activityTimeoutRef.current);
+            }
+            clearError();
+        } catch (error) {
+            handleError(error as Error);
+        }
+    }, [clearError, handleError]);
+
     const value = {
         ...state,
         login,
         register: async (email: string, password: string, displayName: string) => {
             try {
                 await authService.registerWithProfile(email, password, displayName);
+                resetActivityTimer();
                 clearError();
             } catch (error) {
                 handleError(error as Error);
@@ -80,19 +132,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         loginWithGoogle: async () => {
             try {
                 await authService.loginWithGoogle();
+                resetActivityTimer();
                 clearError();
             } catch (error) {
                 handleError(error as Error);
             }
         },
-        logout: async () => {
-            try {
-                await authService.logout();
-                clearError();
-            } catch (error) {
-                handleError(error as Error);
-            }
-        },
+        logout,
         clearError
     };
 
