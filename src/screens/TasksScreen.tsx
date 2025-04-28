@@ -31,7 +31,6 @@ export const TasksScreen = () => {
     assignedTo: 'all',
     dueDate: null
   });
-  const [searchQuery, setSearchQuery] = useState('');
 
   // Filtered tasks
   const filteredTasks = useTaskFilters(tasks, filters, selectedProject);
@@ -222,30 +221,6 @@ export const TasksScreen = () => {
                   </dd>
                 </div>
               ))}
-            </div>
-
-            {/* Search and Filters */}
-            <div className="flex flex-col sm:flex-row gap-4">
-              <div className="flex-1">
-                <input
-                  type="search"
-                  placeholder="Search tasks..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full px-4 py-2 rounded-xl border border-slate-200/50 
-                    dark:border-slate-700/50 bg-white dark:bg-slate-800/50 
-                    focus:ring-2 focus:ring-indigo-500/50 outline-none"
-                />
-              </div>
-              {/* <div className="flex-none">
-                <select className="block w-full px-4 py-2 rounded-xl border border-slate-200/50 
-                  dark:border-slate-700/50 bg-white dark:bg-slate-800/50">
-                  <option value="all">All Members</option>
-                  {projectMembers.map(member => (
-                    <option key={member.id} value={member.id}>{member.name}</option>
-                  ))}
-                </select>
-              </div> */}
             </div>
           </div>
 

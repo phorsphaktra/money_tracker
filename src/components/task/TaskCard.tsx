@@ -65,25 +65,6 @@ export const TaskCard: React.FC<TaskCardProps> = ({
 
             <div className="mt-3 flex flex-wrap items-center gap-2">
               <select
-                value={task.status}
-                onChange={(e) => onStatusChange(e.target.value as TaskStatus)}
-                onClick={(e) => e.stopPropagation()}
-                disabled={loading}
-                className="text-xs px-2.5 py-1.5 rounded-lg bg-white/50 dark:bg-slate-800/50 
-                  border border-slate-200 dark:border-slate-700 
-                  text-slate-700 dark:text-slate-300 cursor-pointer
-                  focus:ring-2 focus:ring-indigo-500/50 outline-none
-                  hover:border-indigo-500/50 dark:hover:border-indigo-500/50
-                  transition-all duration-200"
-              >
-                {Object.values(TaskStatus).map(status => (
-                  <option key={status} value={status}>
-                    {status.replace('_', ' ')}
-                  </option>
-                ))}
-              </select>
-
-              <select
                 value={task.priority}
                 onChange={(e) => onPriorityChange(e.target.value)}
                 onClick={(e) => e.stopPropagation()}
@@ -100,6 +81,25 @@ export const TaskCard: React.FC<TaskCardProps> = ({
                 <option value="High">High Priority</option>
                 <option value="Medium">Medium Priority</option>
                 <option value="Low">Low Priority</option>
+              </select>
+
+              <select
+                value={task.status}
+                onChange={(e) => onStatusChange(e.target.value as TaskStatus)}
+                onClick={(e) => e.stopPropagation()}
+                disabled={loading}
+                className="text-xs px-2.5 py-1.5 rounded-lg bg-white/50 dark:bg-slate-800/50 
+                  border border-slate-200 dark:border-slate-700 
+                  text-slate-700 dark:text-slate-300 cursor-pointer
+                  focus:ring-2 focus:ring-indigo-500/50 outline-none
+                  hover:border-indigo-500/50 dark:hover:border-indigo-500/50
+                  transition-all duration-200"
+              >
+                {Object.values(TaskStatus).map(status => (
+                  <option key={status} value={status}>
+                    {status.replace('_', ' ')}
+                  </option>
+                ))}
               </select>
 
               <span className="text-xs px-2.5 py-1.5 text-slate-500 dark:text-slate-400 
