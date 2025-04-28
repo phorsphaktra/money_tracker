@@ -11,16 +11,6 @@ service cloud.firestore {
       allow read, write: if request.auth != null && request.auth.uid == userId;
     }
 
-    match /users/{userId}/tasks/{taskId} {
-      allow read: if request.auth != null && request.auth.uid == userId;
-      allow write: if request.auth != null && request.auth.uid == userId;
-    }
-    
-    match /users/{userId}/projects/{projectId} {
-      allow read: if request.auth != null && request.auth.uid == userId;
-      allow write: if request.auth != null && request.auth.uid == userId;
-    }
-
     function isSignedIn() {
       return request.auth != null;
     }
@@ -48,27 +38,20 @@ service cloud.firestore {
          task.assignedTo == request.auth.uid);
     }
 
-    match /users/{userId}/tasks/{taskId} {
-      allow read: if isSignedIn() && request.auth.uid == userId;
-      allow create: if isSignedIn() && request.auth.uid == userId && isValidTask();
-      allow update: if isSignedIn() && request.auth.uid == userId;
-      allow delete: if isSignedIn() && canDeleteTask();
-    }
-
     match /tasks/{userId} {
-      allow read: if isSignedIn() && request.auth.uid == userId;
+      allow read: if request.auth != null && request.auth.uid == userId;
 
       match /projects/{projectId} {
-        allow read: if isSignedIn() && request.auth.uid == userId;
-        allow create: if isSignedIn() && request.auth.uid == userId;
-        allow update: if isSignedIn() && request.auth.uid == userId;
-        allow delete: if isSignedIn() && request.auth.uid == userId;
+        allow read: if request.auth != null && request.auth.uid == userId;
+        allow create: if request.auth != null && request.auth.uid == userId;
+        allow update: if request.auth != null && request.auth.uid == userId;
+        allow delete: if request.auth != null && request.auth.uid == userId;
 
-        match /user_tasks/{taskId} {
-          allow read: if isSignedIn() && request.auth.uid == userId;
-          allow create: if isSignedIn() && request.auth.uid == userId && isValidTask();
-          allow update: if isSignedIn() && request.auth.uid == userId;
-          allow delete: if isSignedIn() && request.auth.uid == userId  && isValidTask();
+        match /tasks/{taskId} {
+          allow read: if request.auth != null && request.auth.uid == userId;
+          allow create: if request.auth != null && request.auth.uid == userId;
+          allow update: if request.auth != null && request.auth.uid == userId;
+          allow delete: if request.auth != null && request.auth.uid == userId;
         }
       }
     }

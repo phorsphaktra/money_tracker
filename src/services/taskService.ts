@@ -15,21 +15,43 @@ interface GroupedTasks {
 
 const COLLECTION_NAME = 'tasks';
 
-export const getTasks = async (userId: string): Promise<ApiResponse<Task[]>> => {
+export const getTasks = async (userId: string, projectId?: string): Promise<ApiResponse<Task[]>> => {
   try {
     if (!userId) throw new Error('User ID is required');
     
-    // Get tasks from projects collection
-    const tasksRef = collection(db, 'users', userId, 'tasks');
-    const taskQuery = query(tasksRef, orderBy('createdAt', 'desc'));
-    const taskSnapshot = await getDocs(taskQuery);
+    let allTasks: Task[] = [];
     
-    const tasks = taskSnapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    } as Task));
-
-    return { success: true, data: tasks };
+    if (projectId) {
+      // Get tasks for specific project
+      const tasksRef = collection(db, 'tasks', userId, 'projects', projectId, 'tasks');
+      const taskQuery = query(tasksRef, orderBy('createdAt', 'desc'));
+      const taskSnapshot = await getDocs(taskQuery);
+      allTasks = taskSnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        projectId // Ensure projectId is included
+      } as Task));
+    } else {
+      // Get tasks from all projects
+      const projectsRef = collection(db, 'tasks', userId, 'projects');
+      const projectSnapshot = await getDocs(projectsRef);
+      
+      const taskPromises = projectSnapshot.docs.map(async projectDoc => {
+        const tasksRef = collection(projectDoc.ref, 'tasks');
+        const taskQuery = query(tasksRef, orderBy('createdAt', 'desc'));
+        const taskSnapshot = await getDocs(taskQuery);
+        return taskSnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+          projectId: projectDoc.id
+        } as Task));
+      });
+      
+      const tasksByProject = await Promise.all(taskPromises);
+      allTasks = tasksByProject.flat();
+    }
+    
+    return { success: true, data: allTasks };
   } catch (error) {
     console.error('Error fetching tasks:', error);
     return {
@@ -43,8 +65,9 @@ export const getTasks = async (userId: string): Promise<ApiResponse<Task[]>> => 
 export const createTask = async (userId: string, task: Omit<Task, 'id'>): Promise<ApiResponse<string>> => {
   try {
     if (!userId) throw new Error('User ID is required');
+    if (!task.projectId) throw new Error('Project ID is required');
     
-    const tasksRef = collection(db, 'users', userId, 'tasks');
+    const tasksRef = collection(db, 'tasks', userId, 'projects', task.projectId, 'tasks');
     const taskData = {
       ...task,
       createdAt: new Date().toISOString(),
@@ -85,7 +108,7 @@ export const updateTask = async (
       cleanUpdates.previousStatus = null as unknown as string | number | Date | TaskComment[];
     }
     
-    const taskRef = doc(db, 'users', userId, 'tasks', taskId);
+    const taskRef = doc(db, 'tasks', userId, 'projects', projectId, 'tasks', taskId);
     await updateDoc(taskRef, {
       ...cleanUpdates,
       updatedAt: new Date().toISOString()
@@ -103,13 +126,13 @@ export const updateTask = async (
 
 // Update deleteTask with permissions
 export const deleteTask = async (
-userId: string, taskId: string, _projectId: string): Promise<ApiResponse<void>> => {
+userId: string, taskId: string, projectId: string): Promise<ApiResponse<void>> => {
   try {
-    if (!userId || !taskId) {
-      throw new Error('User ID and Task ID are required');
+    if (!userId || !taskId || !projectId) {
+      throw new Error('User ID, Task ID and Project ID are required');
     }
 
-    const taskRef = doc(db, 'users', userId, 'tasks', taskId);
+    const taskRef = doc(db, 'tasks', userId, 'projects', projectId, 'tasks', taskId);
     await deleteDoc(taskRef);
     
     return { success: true };
@@ -260,20 +283,17 @@ export const deleteProject = async (
   projectId: string
 ): Promise<ApiResponse<void>> => {
   try {
-    if (!userId) throw new Error('User ID is required');
-    if (!projectId) throw new Error('Project ID is required');
+    if (!userId || !projectId) {
+      throw new Error('User ID and Project ID are required');
+    }
     
-    // Delete all tasks in the project first
-    const tasksCollection = collection(db, 'tasks', userId, 'user_tasks');
-    const q = query(tasksCollection, where('projectId', '==', projectId));
-    const taskSnapshot = await getDocs(q);
-    
-    const deletePromises = taskSnapshot.docs.map(doc => 
-      deleteDoc(doc.ref)
-    );
+    // Delete all tasks in the project
+    const tasksRef = collection(db, 'tasks', userId, 'projects', projectId, 'tasks');
+    const taskSnapshot = await getDocs(tasksRef);
+    const deletePromises = taskSnapshot.docs.map(doc => deleteDoc(doc.ref));
     await Promise.all(deletePromises);
     
-    // Then delete the project
+    // Delete the project
     const projectRef = doc(db, 'tasks', userId, 'projects', projectId);
     await deleteDoc(projectRef);
     
