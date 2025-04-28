@@ -86,8 +86,7 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
       message: comment.message?.trim() || '',
       createdAt: comment.createdAt || now
     }))
-    : [],
- 
+    : []
 };
   }, []);
 

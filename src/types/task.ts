@@ -25,7 +25,6 @@ export interface TaskComment {
 }
 
 export interface Task {
-  completedBy: any;
   date: string | number | Date;
   id: string;
   projectId: string;
