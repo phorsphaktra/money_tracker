@@ -1,16 +1,16 @@
 import { useState, useEffect } from 'react';
-import { useTransactions } from '../../contexts/TransactionContext';
+import { useTransactions } from '../contexts/TransactionContext';
 import { 
   calculateTotalsByType, 
   getMonthlyData, 
   getCategoryTotals,
   getAvailableYears,
   filterTransactionsByYear 
-} from '../../utils/analytics';
-import { EXPENSE_CATEGORIES, INCOME_CATEGORIES } from '../../utils/categories';
-import { OverviewChart } from './charts/OverviewChart';
-import { CategoryChart } from './charts/CategoryChart';
-import { SavingsBreakdown } from './charts/SavingsBreakdown';
+} from '../utils/analytics';
+import { EXPENSE_CATEGORIES, INCOME_CATEGORIES } from '../utils/categories';
+import { OverviewChart } from '../components/analytics/charts/OverviewChart';
+import { CategoryChart } from '../components/analytics/charts/CategoryChart';
+import { SavingsBreakdown } from '../components/analytics/charts/SavingsBreakdown';
 
 export const AnalyticsView = () => {
   const { transactions } = useTransactions();
@@ -29,7 +29,7 @@ export const AnalyticsView = () => {
   const categoryTotals = getCategoryTotals(filteredTransactions);
 
   return (
-    <div className="p-4 space-y-6 max-w-7xl mx-auto min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+    <div className="p-4 space-y-6 max-w-7xl mx-auto px-4 sm:px-6 min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       <div className="bg-gradient-to-br from-violet-600 to-indigo-700 rounded-2xl shadow-xl p-8 text-white backdrop-blur-xl relative overflow-hidden">
         <div className="absolute inset-0 bg-white/5 backdrop-blur-3xl"></div>
         <div className="relative z-10">
