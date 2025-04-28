@@ -1,10 +1,9 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
+import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 import { TaskDetailModal } from './TaskDetailModal';
 import { Task, TaskStatus } from '../../types/task';
-import { TaskStatusBadge } from './TaskStatusBadge';
 import { ConfirmDialog } from '../ConfirmDialog';
 import { TaskModal } from './TaskModal';
-import { format } from 'date-fns';
 import { TaskCard } from './TaskCard';
 
 interface TaskListProps {
@@ -17,9 +16,16 @@ export const TaskList = ({ tasks, onUpdateTask, onDeleteTask }: TaskListProps) =
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [loading, setLoading] = useState<{ [key: string]: boolean }>({});
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [, setError] = useState<string | null>(null);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [statusUpdateTask, setStatusUpdateTask] = useState<{task: Task, newStatus: TaskStatus} | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const filteredTasks = useMemo(() => {
+    return tasks.filter(task => 
+      task.title.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [tasks, searchQuery]);
 
   const handleTaskClick = (task: Task, event: React.MouseEvent) => {
     // Prevent opening detail modal when clicking checkbox or buttons
@@ -121,13 +127,40 @@ export const TaskList = ({ tasks, onUpdateTask, onDeleteTask }: TaskListProps) =
   };
 
   return (
-    <>
-      {error && (
-        <div className="mb-4 p-3 bg-red-100 text-red-700 rounded">{error}</div>
+    <div className="space-y-4">
+      {/* Search Input */}
+      <div className="relative">
+        <input
+          type="search"
+          placeholder="Search tasks..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="w-full pl-10 pr-4 py-2 rounded-xl border border-slate-200 
+            dark:border-slate-700/50 bg-white dark:bg-slate-800/50
+            focus:ring-2 focus:ring-indigo-500/50 outline-none
+            placeholder-slate-400 dark:placeholder-slate-500"
+        />
+        <MagnifyingGlassIcon className="absolute left-3 top-2.5 w-5 h-5 text-slate-400" />
+      </div>
+
+      {/* Empty State */}
+      {filteredTasks.length === 0 && (
+        <div className="text-center py-12">
+          <div className="text-slate-400 dark:text-slate-500">
+            <svg className="mx-auto h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} 
+                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+            </svg>
+            <p className="mt-2 text-sm">
+              {searchQuery ? 'No tasks found matching your search' : 'No tasks yet'}
+            </p>
+          </div>
+        </div>
       )}
-      
-      <div className="grid gap-2 grid-cols-1">
-        {tasks.map(task => (
+
+      {/* Task List */}
+      <div className="grid gap-2">
+        {filteredTasks.map(task => (
           <TaskCard
             key={task.id}
             task={task}
@@ -195,6 +228,6 @@ export const TaskList = ({ tasks, onUpdateTask, onDeleteTask }: TaskListProps) =
           }}
         />
       )}
-    </>
+    </div>
   );
 };

@@ -109,13 +109,13 @@ export const TaskDetailModal = ({ task, onClose }: TaskDetailModalProps) => {
                     <div key={index} className="flex gap-4">
                       <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center">
                         {comment.userId[0].toUpperCase()}
-                      </div>
+            u  </div>
                       <div className="flex-1">
                         <div className="flex items-center gap-2">
                           <span className="font-medium text-slate-900 dark:text-white">
                             {comment.userId}
                           </span>
-                          <span className="text-xs text-slate-500">
+  userId                <span className="text-xs text-slate-500">
                             {format(new Date(comment.createdAt), 'PP')}
                           </span>
                         </div>
