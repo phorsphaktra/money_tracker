@@ -79,7 +79,8 @@
     "this_year": "This year",
     "monthly_spending": "Monthly Spending",
     "monthly_income": "Monthly Income",
-    "savings_rate": "Savings Rate",
+    "savings_rate": "Savings",
+    "net_balance": "Net Balance",
     "loading": "Loading...",
     "error": "Error: ",
     "filter": {

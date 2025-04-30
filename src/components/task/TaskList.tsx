@@ -127,39 +127,42 @@ export const TaskList = ({ tasks, onUpdateTask, onDeleteTask }: TaskListProps) =
   };
 
   return (
-    <div className="space-y-4">
-      {/* Search Input */}
+    <div className="space-y-3 sm:space-y-4">
+      {/* Search Input with improved mobile handling */}
       <div className="relative">
         <input
           type="search"
           placeholder="Search tasks..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full pl-10 pr-4 py-2 rounded-xl border border-slate-200 
-            dark:border-slate-700/50 bg-white dark:bg-slate-800/50
-            focus:ring-2 focus:ring-indigo-500/50 outline-none
+          className="w-full pl-10 pr-4 py-2.5 sm:py-2 text-sm sm:text-base rounded-xl 
+            border border-slate-200 dark:border-slate-700/50 
+            bg-white dark:bg-slate-800/50 focus:ring-2 
+            focus:ring-indigo-500/50 outline-none
             placeholder-slate-400 dark:placeholder-slate-500"
         />
-        <MagnifyingGlassIcon className="absolute left-3 top-2.5 w-5 h-5 text-slate-400" />
+        <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 
+          w-5 h-5 text-slate-400" />
       </div>
 
-      {/* Empty State */}
+      {/* Empty State with responsive design */}
       {filteredTasks.length === 0 && (
-        <div className="text-center py-12">
-          <div className="text-slate-400 dark:text-slate-500">
-            <svg className="mx-auto h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <div className="text-center py-8 sm:py-12">
+          <div className="text-slate-400 dark:text-slate-500 px-4">
+            <svg className="mx-auto h-10 w-10 sm:h-12 sm:w-12" fill="none" viewBox="0 0 24 24" 
+              stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} 
                 d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
             </svg>
-            <p className="mt-2 text-sm">
+            <p className="mt-2 text-sm sm:text-base">
               {searchQuery ? 'No tasks found matching your search' : 'No tasks yet'}
             </p>
           </div>
         </div>
       )}
 
-      {/* Task List */}
-      <div className="grid gap-2">
+      {/* Task List with improved spacing */}
+      <div className="grid gap-2 sm:gap-3">
         {filteredTasks.map(task => (
           <TaskCard
             key={task.id}

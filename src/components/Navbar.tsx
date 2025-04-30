@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { NotificationPanel } from './notification/NotificationPanel';
 import { useTaskContext } from '../contexts/TaskContext';
 import { useNotifications } from '../contexts/NotificationContext';
+import { useDarkMode } from '../contexts/DarkModeContext';
 
 interface NavbarProps {
   onToggle: () => void;
@@ -14,7 +15,6 @@ interface NavbarProps {
 export const Navbar = ({ onToggle, isCollapsed }: NavbarProps) => {
   const { user } = useAuth();
   const { t } = useTranslation();
-  const [isDark, setIsDark] = useState(document.documentElement.classList.contains('dark'));
   useTaskContext();
   const [showNotifications, setShowNotifications] = useState(false);
   const { 
@@ -22,12 +22,7 @@ export const Navbar = ({ onToggle, isCollapsed }: NavbarProps) => {
     totalNotifications, 
     isLoading  } = useNotifications();
   const [, setShowNotificationTooltip] = useState(false);
-
-
-  const toggleTheme = () => {
-    setIsDark(!isDark);
-    document.documentElement.classList.toggle('dark');
-  };
+  const { darkMode, toggleDarkMode } = useDarkMode();
 
   const [] = useState<string>(() => 
     localStorage.getItem(`userPhoto_${user?.email}`) || ''
@@ -60,8 +55,8 @@ export const Navbar = ({ onToggle, isCollapsed }: NavbarProps) => {
         </div>
 
         <div className="flex items-center gap-2">
-          <button onClick={toggleTheme}>
-            {isDark ? <SunIcon className="w-5 h-5" /> : <MoonIcon className="w-5 h-5" />}
+          <button onClick={toggleDarkMode}>
+            {darkMode ? <SunIcon className="w-5 h-5 dark:text-slate-400" /> : <MoonIcon className="w-5 h-5 dark:text-slate-400" />}
           </button>
           <div className="relative">
             <button

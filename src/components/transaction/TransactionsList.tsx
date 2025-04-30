@@ -13,9 +13,7 @@ interface TransactionsListProps {
 export const TransactionsList = ({ 
   transactions,
   isLoading,
-  limit,
-  showFilters = false
-}: TransactionsListProps) => {
+  limit}: TransactionsListProps) => {
   const displayTransactions = limit 
     ? transactions.slice(0, limit)
     : transactions;
@@ -35,8 +33,7 @@ export const TransactionsList = ({
   }
 
   return (
-    <div className="space-y-4">
-      {showFilters && <TransactionFilters />}
+    <div className="divide-y divide-gray-200 dark:divide-gray-700">
       {displayTransactions.map((transaction) => (
         <TransactionItem key={transaction.id} transaction={transaction} />
       ))}
@@ -48,26 +45,37 @@ const TransactionItem = ({ transaction }: { transaction: Transaction }) => {
   const category = getCategoryById(transaction.category, transaction.type);
   
   return (
-    <div className="flex items-center justify-between p-4 rounded-lg bg-gray-50 hover:bg-gray-100 transition-all duration-200 group cursor-pointer">
-      <div className="flex items-center space-x-4">
-        <CategoryIcon category={category} />
-        <div>
-          <p className="text-sm font-medium text-gray-900 group-hover:text-indigo-600 transition-colors">
+    <div className="flex items-center justify-between p-4 hover:bg-gray-50 
+      dark:hover:bg-gray-700/50 transition-colors duration-200">
+      <div className="flex items-center gap-3 min-w-0">
+        <div className="flex-shrink-0">
+          <CategoryIcon category={category} />
+        </div>
+        <div className="min-w-0">
+          <p className="font-medium text-gray-900 dark:text-white truncate">
             {transaction.description || category.label}
           </p>
-          <div className="flex items-center gap-2 text-xs text-gray-500">
+          <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
             <span>{new Date(transaction.date).toLocaleDateString()}</span>
+            <span className="hidden sm:inline">•</span>
+            <span className="hidden sm:inline">{category.label}</span>
           </div>
         </div>
       </div>
-      <span className={`text-sm font-medium whitespace-nowrap ${
-        transaction.type === 'income' 
-          ? 'text-green-600 group-hover:text-green-700' 
-          : 'text-red-600 group-hover:text-red-700'
-      } transition-colors`}>
-        {transaction.type === 'income' ? '+' : '-'}
-        {formatCurrency(Math.abs(transaction.amount))}
-      </span>
+      <div className="flex flex-col items-end ml-3">
+        <span className={`text-sm font-medium whitespace-nowrap ${
+          transaction.type === 'income' 
+            ? 'text-green-600 dark:text-green-400' 
+            : 'text-red-600 dark:text-red-400'
+        }`}>
+          {transaction.type === 'income' ? '+' : '-'}
+          {formatCurrency(Math.abs(transaction.amount))}
+        </span>
+        <div className="flex gap-2 mt-1">
+          <button className="text-xs text-blue-600 dark:text-blue-400">Edit</button>
+          <button className="text-xs text-red-600 dark:text-red-400">Delete</button>
+        </div>
+      </div>
     </div>
   );
 };
@@ -89,12 +97,4 @@ const EmptyState = () => (
   </div>
 );
 
-const TransactionFilters = () => (
-  <div className="flex gap-2 mb-4">
-    <input
-      type="text"
-      placeholder="Search transactions..."
-      className="px-3 py-2 border rounded-lg flex-1"
-    />
-  </div>
-);
+

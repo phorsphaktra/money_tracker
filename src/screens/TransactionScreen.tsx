@@ -6,6 +6,7 @@ import { TransactionModal } from '../components/transaction/TransactionModal';
 import { LoadingSpinner } from '../components/shared/LoadingSpinner';
 import { useTranslation } from 'react-i18next';
 import { FloatingActionButton } from '../components/shared/FloatingActionButton';
+import { TransactionsList } from '../components/transaction/TransactionsList';
 
 export const TransactionsScreen = () => {
   const { transactions, isLoading, error } = useTransactions();
@@ -38,12 +39,11 @@ export const TransactionsScreen = () => {
   }
 
   return (
-    // <div className="max-w-7xl mx-auto px-4 sm:px-6"></div>
-    <div className="space-y-6 pb-20 max-w-7xl mx-auto px-4 sm:px-6"> {/* Added pb-20 to make room for FAB */}
+    <div className="space-y-4 sm:space-y-6 pb-20 w-full max-w-7xl mx-auto px-3 sm:px-6 py-4 sm:py-6">
       {/* Header */}
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
             {t('transactions.title')}
           </h1>
           <p className="text-sm text-gray-500 dark:text-gray-400">
@@ -53,17 +53,18 @@ export const TransactionsScreen = () => {
       </div>
 
       {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-4">
-        <div className="flex-1">
+      <div className="flex flex-col sm:flex-row gap-3">
+        <div className="w-full sm:flex-1">
           <input
             type="text"
             placeholder={t('transactions.filters.search')}
-            className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500"
+            className="w-full px-4 py-2.5 text-sm rounded-xl border border-gray-300 
+              focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:border-gray-700"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 overflow-x-auto py-1 -mx-3 px-3 sm:mx-0 sm:px-0">
           {(['all', 'income', 'expense'] as const).map((type) => (
             <Button
               key={type}
@@ -77,9 +78,9 @@ export const TransactionsScreen = () => {
         </div>
       </div>
 
-      {/* Transactions Table */}
+      {/* List Container */}
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
+        <div className="hidden sm:block">
           <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
             <thead className="bg-gray-50 dark:bg-gray-900">
               <tr>
@@ -115,6 +116,14 @@ export const TransactionsScreen = () => {
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* Mobile List View */}
+        <div className="sm:hidden">
+          <TransactionsList 
+            transactions={filteredTransactions}
+            isLoading={isLoading}
+          />
         </div>
       </div>
 

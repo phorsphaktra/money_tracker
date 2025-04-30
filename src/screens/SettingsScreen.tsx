@@ -44,10 +44,13 @@ export const SettingsScreen = () => {
             </span>
             <button
               onClick={toggleDarkMode}
+              role="switch"
+              aria-checked={darkMode}
               className={`${
                 darkMode ? 'bg-indigo-600' : 'bg-gray-200'
-              } relative inline-flex h-6 w-11 items-center rounded-full transition-colors`}
+              } relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2`}
             >
+              <span className="sr-only">Enable dark mode</span>
               <span
                 className={`${
                   darkMode ? 'translate-x-6' : 'translate-x-1'
@@ -72,8 +75,6 @@ export const SettingsScreen = () => {
                 className="rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900"
               >
                 <option value="USD">USD ($)</option>
-                <option value="EUR">EUR (€)</option>
-                <option value="GBP">GBP (£)</option>
                 <option value="KHR">KHR (៛)</option>
               </select>
             </div>

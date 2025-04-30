@@ -29,25 +29,25 @@ export const AnalyticsView = () => {
   const categoryTotals = getCategoryTotals(filteredTransactions);
 
   return (
-    <div className="p-4 space-y-6 max-w-7xl mx-auto px-4 sm:px-6 min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-      <div className="bg-gradient-to-br from-violet-600 to-indigo-700 rounded-2xl shadow-xl p-8 text-white backdrop-blur-xl relative overflow-hidden">
+    <div className="p-2 sm:p-4 space-y-4 sm:space-y-6 max-w-7xl mx-auto px-2 sm:px-6 min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+      <div className="bg-gradient-to-br from-violet-600 to-indigo-700 rounded-xl sm:rounded-2xl shadow-lg sm:shadow-xl p-4 sm:p-8 text-white backdrop-blur-xl relative overflow-hidden">
         <div className="absolute inset-0 bg-white/5 backdrop-blur-3xl"></div>
         <div className="relative z-10">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-            <div className="space-y-1">
-              <h1 className="text-3xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white to-indigo-200">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
+            <div className="space-y-0.5 sm:space-y-1">
+              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white to-indigo-200">
                 Financial Analytics
               </h1>
-              <p className="text-sm text-indigo-100">
+              <p className="text-xs sm:text-sm text-indigo-100">
                 Comprehensive overview for {selectedYear}
               </p>
             </div>
             <select
               value={selectedYear}
               onChange={(e) => setSelectedYear(Number(e.target.value))}
-              className="px-4 py-2 bg-white/10 backdrop-blur-xl rounded-xl border
-                border-white/20 text-white focus:ring-2 focus:ring-white/30
-                focus:border-transparent transition-all cursor-pointer hover:bg-white/20
+              className="w-full sm:w-auto px-3 sm:px-4 py-1.5 sm:py-2 bg-white/10 backdrop-blur-xl 
+                rounded-lg sm:rounded-xl border border-white/20 text-white focus:ring-2 
+                focus:ring-white/30 focus:border-transparent transition-all hover:bg-white/20
                 text-sm font-medium"
             >
               {availableYears.map(year => (
@@ -56,7 +56,7 @@ export const AnalyticsView = () => {
             </select>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 mt-4 sm:mt-6">
             {[
               { label: 'Total Income', amount: totals.income, icon: '💰', trend: '+', 
                 color: 'from-emerald-400/30', shadowColor: 'shadow-emerald-500/20' },
@@ -92,29 +92,31 @@ export const AnalyticsView = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-        <div className="bg-white/80 backdrop-blur-xl rounded-xl shadow-lg p-6 hover:shadow-xl 
-          transition-all duration-300 border border-gray-100">
-          <h2 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
-            <span className="bg-indigo-50 p-1.5 rounded-lg text-base">📈</span>
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-3 sm:gap-4">
+        <div className="bg-white/80 backdrop-blur-xl rounded-lg sm:rounded-xl shadow p-4 sm:p-6 
+          hover:shadow-lg transition-all duration-300 border border-gray-100 overflow-x-auto">
+          <h2 className="text-base sm:text-lg font-bold text-gray-800 mb-3 sm:mb-4 flex items-center gap-2">
+            <span className="bg-indigo-50 p-1 sm:p-1.5 rounded-lg text-sm sm:text-base">📈</span>
             Monthly Overview
           </h2>
-          <OverviewChart data={monthlyData} />
+          <div className="min-w-[300px]">
+            <OverviewChart data={monthlyData} />
+          </div>
         </div>
 
-        <div className="bg-white/80 backdrop-blur-xl rounded-xl shadow-lg p-6 hover:shadow-xl 
-          transition-all duration-300 border border-gray-100">
-          <h2 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
-            <span className="bg-indigo-50 p-1.5 rounded-lg text-base">💎</span>
+        <div className="bg-white/80 backdrop-blur-xl rounded-lg sm:rounded-xl shadow p-4 sm:p-6 
+          hover:shadow-lg transition-all duration-300 border border-gray-100">
+          <h2 className="text-base sm:text-lg font-bold text-gray-800 mb-3 sm:mb-4 flex items-center gap-2">
+            <span className="bg-indigo-50 p-1 sm:p-1.5 rounded-lg text-sm sm:text-base">💎</span>
             Savings Strategy
           </h2>
           <SavingsBreakdown netIncome={totals.income - totals.expense} />
         </div>
 
-        <div className="bg-white/80 backdrop-blur-xl rounded-xl shadow-lg p-6 hover:shadow-xl 
-          transition-all duration-300 border border-gray-100">
-          <h2 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
-            <span className="bg-indigo-50 p-1.5 rounded-lg text-base">💫</span>
+        <div className="bg-white/80 backdrop-blur-xl rounded-lg sm:rounded-xl shadow p-4 sm:p-6 
+          hover:shadow-lg transition-all duration-300 border border-gray-100">
+          <h2 className="text-base sm:text-lg font-bold text-gray-800 mb-3 sm:mb-4 flex items-center gap-2">
+            <span className="bg-indigo-50 p-1 sm:p-1.5 rounded-lg text-sm sm:text-base">💫</span>
             Income Distribution
           </h2>
           <CategoryChart
@@ -124,10 +126,10 @@ export const AnalyticsView = () => {
           />
         </div>
 
-        <div className="bg-white/80 backdrop-blur-xl rounded-xl shadow-lg p-6 hover:shadow-xl 
-          transition-all duration-300 border border-gray-100">
-          <h2 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
-            <span className="bg-indigo-50 p-1.5 rounded-lg text-base">🎯</span>
+        <div className="bg-white/80 backdrop-blur-xl rounded-lg sm:rounded-xl shadow p-4 sm:p-6 
+          hover:shadow-lg transition-all duration-300 border border-gray-100">
+          <h2 className="text-base sm:text-lg font-bold text-gray-800 mb-3 sm:mb-4 flex items-center gap-2">
+            <span className="bg-indigo-50 p-1 sm:p-1.5 rounded-lg text-sm sm:text-base">🎯</span>
             Expense Breakdown
           </h2>
           <CategoryChart
