@@ -54,7 +54,7 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
       const upcomingTasks = incompleteTasks.filter(task => {
         const dueDate = new Date(task.dueDate);
         const today = new Date();
-        return dueDate > today && dueDate <= addDays(today, 3);
+        return dueDate > today && dueDate <= addDays(today, 1);
       });
 
       setTaskGroups({ overdueTasks, dueTodayTasks, upcomingTasks });
