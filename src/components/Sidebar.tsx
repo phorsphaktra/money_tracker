@@ -55,6 +55,12 @@ export const Sidebar = ({ isOpen, setIsOpen, isCollapsed }: SidebarProps) => {
     reader.readAsDataURL(file);
   };
 
+  const handleMobileNavClick = () => {
+    if (window.innerWidth < 1024) { // 1024px is the lg breakpoint in Tailwind
+      setIsOpen(false);
+    }
+  };
+
   return (
     <>
       {/* Mobile backdrop */}
@@ -144,6 +150,7 @@ export const Sidebar = ({ isOpen, setIsOpen, isCollapsed }: SidebarProps) => {
                 to={path}
                 end={path === '/'}
                 title={isCollapsed ? t(label) : undefined}
+                onClick={handleMobileNavClick}
                 className={({ isActive }) =>
                   `flex items-center ${isCollapsed ? 'justify-center' : ''} 
                   px-4 py-3 my-1 text-sm font-medium rounded-xl
