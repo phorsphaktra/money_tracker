@@ -26,13 +26,13 @@ export const TaskCard: React.FC<TaskCardProps> = ({
   return (
     <div
       onClick={onTaskClick}
-      className={`group bg-white dark:bg-slate-800/50 rounded-xl shadow-sm 
+      className={`group bg-white dark:bg-slate-800/50 rounded-lg sm:rounded-xl shadow-sm 
         hover:shadow-md border border-slate-200/50 dark:border-slate-700/50
         transition-all duration-200 cursor-pointer backdrop-blur-sm
-        hover:scale-[1.02] ${task.status === 'completed' ? 'bg-slate-50/50 dark:bg-slate-800/30' : ''}`}
+        hover:scale-[1.01] sm:hover:scale-[1.02] ${task.status === 'completed' ? 'bg-slate-50/50 dark:bg-slate-800/30' : ''}`}
     >
-      <div className={`p-4 ${loading ? 'opacity-50' : ''}`}>
-        <div className="flex items-start gap-4">
+      <div className={`p-3 sm:p-4 ${loading ? 'opacity-50' : ''}`}>
+        <div className="flex items-start gap-2 sm:gap-4">
           <div onClick={(e) => e.stopPropagation()} 
             className="mt-1 relative group-hover:scale-110 transition-transform">
             <input
@@ -41,14 +41,14 @@ export const TaskCard: React.FC<TaskCardProps> = ({
               onChange={(e) => e.stopPropagation()}
               onClick={onCheckboxClick}
               disabled={loading}
-              className="w-5 h-5 text-indigo-600 rounded-lg focus:ring-indigo-500
+              className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-600 rounded-lg focus:ring-indigo-500
                 dark:border-slate-600 dark:checked:border-indigo-500 cursor-pointer
                 transition-all duration-200"
             />
           </div>
           
           <div className="flex-1 min-w-0">
-            <h3 className={`font-medium text-slate-900 dark:text-white truncate 
+            <h3 className={`text-sm sm:text-base font-medium text-slate-900 dark:text-white truncate 
               group-hover:text-indigo-600 dark:group-hover:text-indigo-400
               transition-colors duration-200 ${
                 task.status === 'completed' ? 'line-through text-slate-500 dark:text-slate-400' : ''
@@ -57,20 +57,20 @@ export const TaskCard: React.FC<TaskCardProps> = ({
             </h3>
             
             {task.description && (
-              <p className="mt-1 text-sm text-slate-500 dark:text-slate-400 line-clamp-2
+              <p className="mt-0.5 sm:mt-1 text-xs sm:text-sm text-slate-500 dark:text-slate-400 line-clamp-2
                 group-hover:text-slate-600 dark:group-hover:text-slate-300">
                 {task.description}
               </p>
             )}
 
-            <div className="mt-3 flex flex-wrap items-center gap-2">
+            <div className="mt-2 sm:mt-3 flex flex-wrap items-center gap-1.5 sm:gap-2">
               <select
                 value={task.priority}
                 onChange={(e) => onPriorityChange(e.target.value)}
                 onClick={(e) => e.stopPropagation()}
                 disabled={loading}
-                className={`text-xs px-2.5 py-1.5 rounded-lg bg-white/50 dark:bg-slate-800/50 
-                  border cursor-pointer transition-all duration-200
+                className={`text-xs px-2 py-1 sm:px-2.5 sm:py-1.5 rounded-lg bg-white/50 dark:bg-slate-800/50 
+                  border cursor-pointer transition-all duration-200 max-w-[110px]
                   hover:border-indigo-500/50 dark:hover:border-indigo-500/50
                   ${task.priority === 'High' 
                     ? 'border-red-200 dark:border-red-800/50 text-red-600 dark:text-red-400' 
@@ -88,8 +88,8 @@ export const TaskCard: React.FC<TaskCardProps> = ({
                 onChange={(e) => onStatusChange(e.target.value as TaskStatus)}
                 onClick={(e) => e.stopPropagation()}
                 disabled={loading}
-                className="text-xs px-2.5 py-1.5 rounded-lg bg-white/50 dark:bg-slate-800/50 
-                  border border-slate-200 dark:border-slate-700 
+                className="text-xs px-2 py-1 sm:px-2.5 sm:py-1.5 rounded-lg bg-white/50 dark:bg-slate-800/50 
+                  border border-slate-200 dark:border-slate-700 max-w-[120px]
                   text-slate-700 dark:text-slate-300 cursor-pointer
                   focus:ring-2 focus:ring-indigo-500/50 outline-none
                   hover:border-indigo-500/50 dark:hover:border-indigo-500/50
@@ -102,7 +102,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({
                 ))}
               </select>
 
-              <span className="text-xs px-2.5 py-1.5 text-slate-500 dark:text-slate-400 
+              <span className="text-xs px-2 py-1 sm:px-2.5 sm:py-1.5 text-slate-500 dark:text-slate-400 
                 bg-slate-100 dark:bg-slate-800/50 rounded-lg border border-slate-200/50 
                 dark:border-slate-700/50">
                 Due {format(new Date(task.dueDate), 'MMM d')}
@@ -110,10 +110,10 @@ export const TaskCard: React.FC<TaskCardProps> = ({
             </div>
           </div>
 
-          <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+          <div className="flex items-center gap-1 sm:gap-2 opacity-70 sm:opacity-0 group-hover:opacity-100 transition-opacity">
             <button
               onClick={(e) => { e.stopPropagation(); onEdit(); }}
-              className="p-2 text-slate-400 hover:text-indigo-500 transition-colors"
+              className="p-1.5 sm:p-2 text-slate-400 hover:text-indigo-500 transition-colors"
               disabled={loading}
             >
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -124,7 +124,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({
             <button
               onClick={(e) => { e.stopPropagation(); onDelete(); }}
               disabled={loading}
-              className="p-2 text-slate-400 hover:text-red-500 disabled:opacity-50 transition-colors"
+              className="p-1.5 sm:p-2 text-slate-400 hover:text-red-500 disabled:opacity-50 transition-colors"
             >
               {loading ? (
                 <div className="animate-spin h-5 w-5 border-2 border-slate-500 rounded-full" />

@@ -1,3 +1,4 @@
+import { useRef, useEffect } from 'react';
 import { Task } from '../../types/task';
 import { format } from 'date-fns';
 import { XMarkIcon, CalendarIcon, ChatBubbleLeftIcon, ClockIcon, TagIcon } from '@heroicons/react/24/outline';
@@ -10,16 +11,42 @@ interface TaskDetailModalProps {
 }
 
 export const TaskDetailModal = ({ task, onClose }: TaskDetailModalProps) => {
+  const modalRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (modalRef.current && !modalRef.current.contains(event.target as Node)) {
+        onClose();
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [onClose]);
+
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto">
-      <div className="fixed inset-0 bg-black/20 dark:bg-black/40 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative min-h-screen flex items-center justify-center p-4">
-        <div className="relative bg-white dark:bg-slate-800 rounded-2xl shadow-xl w-full max-w-3xl">
+    <div className="fixed inset-0 z-50 overflow-hidden">
+      <div className="fixed inset-0 bg-black/20 dark:bg-black/40 backdrop-blur-sm touch-none" />
+      <div className="relative min-h-[100dvh] flex items-end md:items-center justify-center">
+        <div 
+          ref={modalRef}
+          className="relative bg-white dark:bg-slate-800 w-full h-[90dvh] md:h-auto 
+            md:rounded-2xl rounded-t-2xl md:shadow-xl md:max-w-3xl md:my-4 
+            md:mx-auto overflow-y-auto overscroll-contain"
+        >
+          <div className="md:hidden w-full h-1.5 flex items-center justify-center p-3">
+            <div className="w-12 h-1.5 rounded-full bg-slate-300 dark:bg-slate-600" />
+          </div>
+          
           {/* Header */}
-          <div className="flex justify-between items-start p-6 border-b border-slate-200 dark:border-slate-700">
+          <div className="sticky top-0 z-10 bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm 
+            flex justify-between items-start p-4 md:p-6 border-b border-slate-200 dark:border-slate-700">
             <div className="space-y-1">
-              <div className="flex items-center gap-2">
-                <h2 className="text-2xl font-semibold text-slate-900 dark:text-white">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h2 
+                  id="modal-title" 
+                  className="text-xl md:text-2xl font-semibold text-slate-900 dark:text-white"
+                >
                   {task.title}
                 </h2>
                 <TaskStatusBadge status={task.status} />
@@ -40,7 +67,7 @@ export const TaskDetailModal = ({ task, onClose }: TaskDetailModalProps) => {
           </div>
 
           {/* Content */}
-          <div className="p-6 space-y-6">
+          <div className="p-4 md:p-6 space-y-4 pb-safe">
             {/* Description */}
             <div className="space-y-2">
               <h3 className="font-medium text-slate-900 dark:text-white">Description</h3>
@@ -50,7 +77,7 @@ export const TaskDetailModal = ({ task, onClose }: TaskDetailModalProps) => {
             </div>
 
             {/* Meta Information */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <h3 className="font-medium text-slate-900 dark:text-white">Details</h3>
                 <div className="space-y-3">

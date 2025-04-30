@@ -9,7 +9,8 @@ import {
   Cog6ToothIcon,
   ArrowRightOnRectangleIcon,
   CameraIcon,
-  ClipboardDocumentCheckIcon
+  ClipboardDocumentCheckIcon,
+  XMarkIcon
 } from '@heroicons/react/24/outline';
 
 interface SidebarProps {
@@ -56,23 +57,37 @@ export const Sidebar = ({ isOpen, setIsOpen, isCollapsed }: SidebarProps) => {
 
   return (
     <>
+      {/* Mobile backdrop */}
       {isOpen && (
-        <div className="lg:hidden fixed inset-0 bg-black/20 backdrop-blur-sm z-30"
-          onClick={() => setIsOpen(false)} />
+        <div 
+          className="lg:hidden fixed inset-0 bg-black/40 backdrop-blur-sm z-30 
+          animate-in fade-in duration-300"
+          onClick={() => setIsOpen(false)} 
+        />
       )}
 
       <aside className={`
-        fixed lg:sticky top-16 left-0 h-[calc(100vh-64px)]
+        fixed lg:sticky top-0 lg:top-16 left-0 h-screen lg:h-[calc(100vh-64px)]
         bg-white dark:bg-slate-900
         border-r border-slate-200/50 dark:border-slate-700/50
         transform ${isOpen ? 'translate-x-0' : '-translate-x-full'} 
-        lg:translate-x-0 transition-all duration-300 ease-out z-20
+        lg:translate-x-0 transition-all duration-300 ease-out z-40
         flex flex-col overflow-hidden
-        ${isCollapsed ? 'lg:w-20' : 'lg:w-72'} w-72
+        ${isCollapsed ? 'lg:w-20' : 'lg:w-72'} w-[280px]
       `}>
+        {/* Mobile close button */}
+        <div className="lg:hidden flex justify-end p-4">
+          <button
+            onClick={() => setIsOpen(false)}
+            className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
+          >
+            <XMarkIcon className="w-6 h-6 text-slate-500" />
+          </button>
+        </div>
+
         <div className="flex-1 flex flex-col overflow-y-auto">
           {/* Profile section */}
-          <div className={`p-4 border-b border-slate-200/50 dark:border-slate-700/50
+          <div className={`px-4 pb-4 lg:py-4 border-b border-slate-200/50 dark:border-slate-700/50
             ${isCollapsed ? 'items-center' : ''}`}>
             <div className="flex flex-col items-center">
               <div className="relative group cursor-pointer"

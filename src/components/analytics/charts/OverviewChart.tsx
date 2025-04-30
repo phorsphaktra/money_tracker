@@ -42,7 +42,10 @@ export const OverviewChart = ({ data }: OverviewChartProps) => {
         borderColor: '#22C55E',
         backgroundColor: 'rgba(34, 197, 94, 0.1)',
         fill: true,
-        tension: 0.4
+        tension: 0.4,
+        borderWidth: 2,
+        pointRadius: window.innerWidth < 768 ? 2 : 3,
+        pointHoverRadius: window.innerWidth < 768 ? 4 : 6,
       },
       {
         label: 'Expenses',
@@ -50,94 +53,34 @@ export const OverviewChart = ({ data }: OverviewChartProps) => {
         borderColor: '#EF4444',
         backgroundColor: 'rgba(239, 68, 68, 0.1)',
         fill: true,
-        tension: 0.4
+        tension: 0.4,
+        borderWidth: 2,
+        pointRadius: window.innerWidth < 768 ? 2 : 3,
+        pointHoverRadius: window.innerWidth < 768 ? 4 : 6,
       }
     ]
   };
 
-  const options = {
-    responsive: true,
-    maintainAspectRatio: false,
-    interaction: {
-      mode: 'index' as const,
-      intersect: false,
-    },
-    plugins: {
-      legend: {
-        display: false
-      },
-      tooltip: {
-        backgroundColor: 'rgba(0, 0, 0, 0.8)',
-        padding: 12,
-        titleFont: { size: 13 },
-        bodyFont: { size: 12 },
-        callbacks: {
-          label: (context: any) => 
-            `${context.dataset.label}: $${context.raw.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}`
-        }
-      }
-    },
-    scales: {
-      y: {
-        beginAtZero: true,
-        grid: {
-          color: 'rgba(0, 0, 0, 0.05)',
-          drawBorder: false
-        },
-        ticks: {
-          callback: (tickValue: string | number) => 
-            `$${Number(tickValue).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}`,
-          font: { size: 11 }
-        }
-      },
-      x: {
-        grid: {
-          display: false
-        },
-        ticks: {
-          font: { size: 11 }
-        }
-      }
-    }
-  };
-
   return (
-    <div className="w-full bg-white rounded-xl shadow-lg p-6 border border-gray-100">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 space-y-4 sm:space-y-0">
-        <div className="space-y-1">
-          <h3 className="text-2xl font-bold text-gray-800">Monthly Overview</h3>
-          <p className="text-sm text-gray-500">Your financial activity for the past months</p>
+    <div className="w-full bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow duration-300 p-4 sm:p-6 border border-gray-100">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 sm:mb-6 space-y-3 sm:space-y-0">
+        <div className="space-y-0.5">
+          <h3 className="text-lg sm:text-xl font-semibold text-gray-800">Monthly Overview</h3>
+          <p className="text-xs sm:text-sm text-gray-500">Your financial activity for the past months</p>
         </div>
-        <div className="flex items-center gap-6 bg-gray-50 px-4 py-2 rounded-lg">
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-[#22C55E] ring-4 ring-green-100"></div>
-            <span className="text-sm font-medium text-gray-700">Income</span>
+        <div className="flex items-center gap-4 bg-gray-50/70 px-3 py-1.5 rounded-lg self-start">
+          <div className="flex items-center gap-1.5">
+            <div className="w-2.5 h-2.5 rounded-full bg-[#22C55E] ring-2 ring-green-100"></div>
+            <span className="text-xs font-medium text-gray-600">Income</span>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-[#EF4444] ring-4 ring-red-100"></div>
-            <span className="text-sm font-medium text-gray-700">Expenses</span>
+          <div className="flex items-center gap-1.5">
+            <div className="w-2.5 h-2.5 rounded-full bg-[#EF4444] ring-2 ring-red-100"></div>
+            <span className="text-xs font-medium text-gray-600">Expenses</span>
           </div>
         </div>
       </div>
-      <div className="h-[400px] w-full">
-        <Line 
-          data={chartData} 
-          options={{
-            ...options,
-            plugins: {
-              ...options.plugins,
-              tooltip: {
-                ...options.plugins.tooltip,
-                backgroundColor: 'rgba(17, 24, 39, 0.95)',
-                titleColor: '#ffffff',
-                bodyColor: '#ffffff',
-                padding: 16,
-                cornerRadius: 8,
-                displayColors: false,
-              }
-            }
-          }}
-        />
+      <div className="h-[250px] sm:h-[350px]">
+        <Line data={chartData} />
       </div>
     </div>
   );
