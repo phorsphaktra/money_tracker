@@ -75,8 +75,6 @@ export const SettingsScreen = () => {
                 className="rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900"
               >
                 <option value="USD">USD ($)</option>
-                <option value="EUR">EUR (€)</option>
-                <option value="GBP">GBP (£)</option>
                 <option value="KHR">KHR (៛)</option>
               </select>
             </div>
