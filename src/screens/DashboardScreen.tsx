@@ -19,18 +19,6 @@ const formatNumber = (num: number, language: string) => {
   return num.toLocaleString('en-US', { minimumFractionDigits: 2 });
 };
 
-const formatCurrency = (amount: number, language: string, currency: string = 'USD') => {
-  const khmerNumerals = ['០', '១', '២', '៣', '៤', '៥', '៦', '៧', '៨', '៩'];
-  const value = amount.toLocaleString('en-US', { minimumFractionDigits: 2 });
-  
-  if (language === 'km') {
-    const khmerValue = value.replace(/[0-9]/g, d => khmerNumerals[parseInt(d)]);
-    return currency === 'KHR' ? `${khmerValue}៛` : `$${khmerValue}`;
-  }
-  
-  return currency === 'KHR' ? `${value}៛` : `$${value}`;
-};
-
 export const DashboardScreen = () => {
     const { transactions, isLoading, error } = useTransactions();
     const { t } = useTranslation();
@@ -145,15 +133,24 @@ const StatsGrid = ({ stats, isLoading, language }: {
   isLoading: boolean,
   language: string 
 }) => (
-  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-    <CardStats
+  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    {/* <CardStats
       title={t('dashboard.overview.total_balance')}
       value={formatCurrency(stats.totalBalance, language)}
       trend={`${formatNumber(Number(stats.balanceTrend), language)}%`}
       isPositive={Number(stats.balanceTrend) >= 0}
       isLoading={isLoading}
       icon="wallet"
+    /> */}
+     <CardStats
+      title={t('dashboard.monthly_income')}
+      value={`$${formatNumber(stats.currentIncome, language)}`}
+      trend={`${formatNumber(Number(stats.incomeTrend), language)}%`}
+      isPositive={Number(stats.incomeTrend) >= 0}
+      isLoading={isLoading}
+      icon="income"
     />
+    
     <CardStats
       title={t('dashboard.monthly_spending')}
       value={`$${formatNumber(stats.currentSpending, language)}`}
@@ -162,17 +159,10 @@ const StatsGrid = ({ stats, isLoading, language }: {
       isLoading={isLoading}
       icon="spending"
     />
+   
     <CardStats
-      title={t('dashboard.monthly_income')}
-      value={`$${formatNumber(stats.currentIncome, language)}`}
-      trend={`${formatNumber(Number(stats.incomeTrend), language)}%`}
-      isPositive={Number(stats.incomeTrend) >= 0}
-      isLoading={isLoading}
-      icon="income"
-    />
-    <CardStats
-      title={t('dashboard.savings_rate')}
-      value={`${formatNumber(Number(stats.savingsRate), language)}%`}
+      title={t('dashboard.net_balance')}
+      value={`$${formatNumber(Number(stats.savingsRate), language)}`}
       trend={`${formatNumber(Number(stats.savingsTrend), language)}%`}
       isPositive={Number(stats.savingsTrend) >= 0}
       isLoading={isLoading}

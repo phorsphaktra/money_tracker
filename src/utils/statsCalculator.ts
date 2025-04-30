@@ -26,7 +26,7 @@ export const calculatePeriodStats = (transactions: Transaction[]): PeriodStats =
     .filter(txn => txn.type === 'expense')
     .reduce((sum, txn) => sum + txn.amount, 0);
 
-  const savingsRate = income > 0 ? ((income - spending) / income * 100) : 0;
+  const savingsRate = income > 0 ? ((income + spending) / income * 100) : 0;
 
   return { income, spending, savingsRate };
 };
