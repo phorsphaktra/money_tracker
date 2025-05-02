@@ -9,6 +9,7 @@ export interface UserProfile {
     country?: string;
     timezone?: string;
     preferences?: {
+        [x: string]: any;
         darkMode?: boolean;
         currency?: string;
         language?: string;

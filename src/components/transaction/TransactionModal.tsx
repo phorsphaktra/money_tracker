@@ -3,6 +3,8 @@ import { useTransactions, Transaction } from '../../contexts/TransactionContext'
 import { Button } from '../shared/Button';
 import { EXPENSE_CATEGORIES, INCOME_CATEGORIES, isValidCategory } from '../../utils/categories';
 import { CategorySelect } from './CategorySelect';
+import { useUserCurrency } from '../../hooks/useUserCurrency';
+import { getCurrencySymbol } from '../../utils/currencyUtils';
 
 interface TransactionModalProps {
   transaction?: Transaction;
@@ -25,6 +27,7 @@ export const TransactionModal = ({ transaction, onClose, type = 'expense' }: Tra
   const { addTransaction, updateTransaction } = useTransactions();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<FormErrors>({});
+  const currency = useUserCurrency();
 
   const [formData, setFormData] = useState<FormData>({
     description: transaction?.description || '',
@@ -170,21 +173,35 @@ export const TransactionModal = ({ transaction, onClose, type = 'expense' }: Tra
           <div className="space-y-4">
             {[
               { id: 'description' as const, label: 'Description', type: 'text' },
-              { id: 'amount' as const, label: 'Amount', type: 'number', step: '0.01' },
+              { 
+                id: 'amount' as const, 
+                label: `Amount`,
+                type: 'number', 
+                step: '0.01',
+                prefix: getCurrencySymbol(currency)
+              },
               { id: 'date' as const, label: 'Date', type: 'date' }
             ].map(field => (
               <div key={field.id} className="space-y-1">
                 <label className="block text-sm font-medium text-gray-700">
                   {field.label}
                 </label>
-                <input
-                  {...field}
-                  value={formData[field.id]}
-                  onChange={handleChange(field.id)}
-                  className={`block w-full px-3 py-2 rounded-md border 
-                    ${errors[field.id] ? 'border-red-500' : 'border-gray-300'}
-                    focus:ring-indigo-500 focus:border-indigo-500 shadow-sm`}
-                />
+                <div className="relative">
+                  {field.prefix && (
+                    <span className="absolute left-3 top-2 text-gray-500">
+                      {field.prefix}
+                    </span>
+                  )}
+                  <input
+                    {...field}
+                    value={formData[field.id]}
+                    onChange={handleChange(field.id)}
+                    className={`block w-full px-3 py-2 rounded-md border 
+                      ${errors[field.id] ? 'border-red-500' : 'border-gray-300'}
+                      ${field.prefix ? 'pl-7' : ''}
+                      focus:ring-indigo-500 focus:border-indigo-500 shadow-sm`}
+                  />
+                </div>
                 {errors[field.id] && (
                   <p className="text-sm text-red-600 mt-1">{errors[field.id]}</p>
                 )}
