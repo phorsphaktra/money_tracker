@@ -11,7 +11,8 @@ const updateVersion = (env) => {
   }
 
   let content = fs.readFileSync(envPath, 'utf8');
-  const versionMatch = content.match(/VITE_APP_VERSION=(\d+)\.(\d+)\.(\d+)-(\w+)/);
+  // Match both patterns: x.x.x and x.x.x-env
+  const versionMatch = content.match(/VITE_APP_VERSION=(\d+)\.(\d+)\.(\d+)(?:-\w+)?/);
   
   if (!versionMatch) {
     console.error('Version pattern not found in env file');
@@ -34,7 +35,10 @@ const updateVersion = (env) => {
     }
   }
 
-  const newVersion = `${newMajor}.${newMinor}.${newPatch}-${env}`;
+  // Format version based on environment
+  const newVersion = env === 'production' 
+    ? `${newMajor}.${newMinor}.${newPatch}`
+    : `${newMajor}.${newMinor}.${newPatch}-${env}`;
   
   content = content.replace(
     /VITE_APP_VERSION=.*/,
