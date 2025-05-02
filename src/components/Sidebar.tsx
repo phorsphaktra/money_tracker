@@ -185,7 +185,7 @@ export const Sidebar = ({ isOpen, setIsOpen, isCollapsed }: SidebarProps) => {
           </button>
           {!isCollapsed && (
             <div className="mt-4 text-xs text-center text-slate-400 dark:text-slate-500">
-              {t('dashboard.version')} 1.0.0
+              {t('dashboard.version')} {import.meta.env.VITE_APP_VERSION}
             </div>
           )}
         </div>

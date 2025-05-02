@@ -4,16 +4,15 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-  "dev": "vite --mode uat",                       
-  "dev:uat": "vite --mode uat",     
-  "dev:prod": "vite --mode production",
-  "build": "tsc -b && vite build",  
-  "build:uat": "tsc -b && vite build --mode uat",
-  "build:prod": "tsc -b && vite build --mode production",  
-  "lint": "eslint .",
-  "preview": "vite preview"
-},
-
+    "dev": "vite --mode uat",                       
+    "dev:uat": "vite --mode uat",     
+    "dev:prod": "vite --mode production",
+    "build": "tsc -b && vite build",  
+    "build:uat": "node scripts/version-manager.js uat && tsc -b && vite build --mode uat",
+    "build:prod": "node scripts/version-manager.js production && tsc -b && vite build --mode production",  
+    "lint": "eslint .",
+    "preview": "vite preview"
+  },
   "dependencies": {
     "@headlessui/react": "^2.2.2",
     "@heroicons/react": "^2.2.0",
