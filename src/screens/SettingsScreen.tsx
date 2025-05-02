@@ -1,25 +1,27 @@
-import { useState } from 'react';
-import { useAuth } from '../contexts/AuthContext';
 import { useDarkMode } from '../contexts/DarkModeContext';
 import { useTranslation } from 'react-i18next';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useSettings } from '../contexts/SettingsContext';
 
 export const SettingsScreen = () => {
-  useAuth();
   const { darkMode, toggleDarkMode } = useDarkMode();
   const { t } = useTranslation();
   const { language, setLanguage } = useLanguage();
-  const [currency, setCurrency] = useState(() => 
-    localStorage.getItem('currency') || 'USD'
-  );
+  const { preferences, updatePreferences } = useSettings();
 
-  const handleCurrencyChange = (value: string) => {
-    setCurrency(value);
-    localStorage.setItem('currency', value);
+  const handleCurrencyChange = async (value: string) => {
+    await updatePreferences({ currency: value });
   };
 
-  const handleLanguageChange = (value: string) => {
+  const handleLanguageChange = async (value: string) => {
+    await updatePreferences({ language: value });
     setLanguage(value);
+  };
+
+  const handleDarkModeToggle = async () => {
+    const newDarkMode = !darkMode;
+    await updatePreferences({ darkMode: newDarkMode });
+    toggleDarkMode();
   };
 
   return (
@@ -43,7 +45,7 @@ export const SettingsScreen = () => {
               {t('settings.appearance.darkMode')}
             </span>
             <button
-              onClick={toggleDarkMode}
+              onClick={handleDarkModeToggle}
               role="switch"
               aria-checked={darkMode}
               className={`${
@@ -70,7 +72,7 @@ export const SettingsScreen = () => {
                 {t('settings.preferences.currency')}
               </span>
               <select
-                value={currency}
+                value={preferences.currency}
                 onChange={(e) => handleCurrencyChange(e.target.value)}
                 className="rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900"
               >

@@ -108,6 +108,21 @@ export const authService = {
         return docSnap.exists() ? (docSnap.data() as UserProfile) : null;
     },
 
+    async updateUserPreferences(uid: string, preferences: {
+        currency?: string;
+        language?: string;
+        darkMode?: boolean;
+    }) {
+        try {
+            const userRef = doc(db, 'users', uid);
+            await updateDoc(userRef, {
+                'preferences': preferences
+            });
+        } catch (error) {
+            throw this.handleFirestoreError(error);
+        }
+    },
+
     // Helper methods
     handleAuthError(error: unknown): Error {
         if (error instanceof FirebaseError) {
