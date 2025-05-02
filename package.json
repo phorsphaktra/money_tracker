@@ -10,6 +10,8 @@
     "build": "tsc -b && vite build",  
     "build:uat": "node scripts/version-manager.js uat && tsc -b && vite build --mode uat",
     "build:prod": "node scripts/version-manager.js production && tsc -b && vite build --mode production",  
+   "deploy:uat": "npm run build:uat && firebase use uat && firebase deploy --only hosting:uat",
+  "deploy:prod": "npm run build:prod && firebase use prod && firebase deploy --only hosting:prod",
     "lint": "eslint .",
     "preview": "vite preview"
   },
