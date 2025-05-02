@@ -9,6 +9,7 @@
   "dev:prod": "vite --mode production",
   "build": "tsc -b && vite build",  
   "build:uat": "tsc -b && vite build --mode uat",
+  "build:prod": "tsc -b && vite build --mode production",  
   "lint": "eslint .",
   "preview": "vite preview"
 },
