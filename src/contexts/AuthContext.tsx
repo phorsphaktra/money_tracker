@@ -21,6 +21,7 @@ interface AuthContextType extends AuthState {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const INACTIVITY_TIMEOUT = 15 * 60 * 1000; // 15 minutes in milliseconds
+const TOKEN_REFRESH_INTERVAL = 10 * 60 * 1000; // 10 minutes
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const [state, setState] = useState<AuthState>({
@@ -29,6 +30,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         isAuthenticated: false,
         error: null
     });
+    
     const activityTimeoutRef = useRef<NodeJS.Timeout>();
 
     const handleError = useCallback((error: Error) => {
@@ -38,6 +40,33 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const clearError = useCallback(() => {
         setState(prev => ({ ...prev, error: null }));
     }, []);
+
+    const logout = useCallback(async () => {
+        try {
+            await authService.logout();
+            if (activityTimeoutRef.current) {
+                clearTimeout(activityTimeoutRef.current);
+            }
+            clearError();
+        } catch (error) {
+            handleError(error as Error);
+        }
+    }, [clearError, handleError]);
+
+    const refreshToken = useCallback(async () => {
+        if (state.user) {
+            try {
+                const currentUser = auth.currentUser;
+                if (currentUser) {
+                    await currentUser.getIdToken(true);
+                }
+            } catch (error) {
+                console.error('Token refresh failed:', error);
+                // Force logout if token refresh fails
+                await logout();
+            }
+        }
+    }, [state.user, logout]);
 
     useEffect(() => {
         const unsubscribe = auth.onAuthStateChanged(async (user) => {
@@ -51,21 +80,35 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             if (user) {
                 try {
                     await authService.updateLastLogin(user.uid);
+                    // Set up token refresh interval
+                    const refreshInterval = setInterval(refreshToken, TOKEN_REFRESH_INTERVAL);
+                    return () => clearInterval(refreshInterval);
                 } catch (error) {
-                    console.error('Failed to update last login:', error);
+                    if (error instanceof Error && error.message.includes('auth/id-token-expired')) {
+                        await logout();
+                        handleError(new Error('Your session has expired. Please login again.'));
+                    } else {
+                        console.error('Failed to update last login:', error);
+                    }
                 }
             }
         });
 
-        return unsubscribe;
-    }, []);
+        return () => {
+            unsubscribe();
+        };
+    }, [refreshToken, logout, handleError]);
 
     const login = useCallback(async (email: string, password: string) => {
         try {
             await authService.loginWithEmail(email, password);
             clearError();
         } catch (error) {
-            handleError(error as Error);
+            if (error instanceof Error && error.message.includes('auth/id-token-expired')) {
+                handleError(new Error('Your session has expired. Please login again.'));
+            } else {
+                handleError(error as Error);
+            }
         }
     }, [clearError, handleError]);
 
@@ -105,17 +148,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         };
     }, [resetActivityTimer]);
 
-    const logout = useCallback(async () => {
-        try {
-            await authService.logout();
-            if (activityTimeoutRef.current) {
-                clearTimeout(activityTimeoutRef.current);
-            }
-            clearError();
-        } catch (error) {
-            handleError(error as Error);
-        }
-    }, [clearError, handleError]);
+
 
     const value = {
         ...state,

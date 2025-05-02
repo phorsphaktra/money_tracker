@@ -4,11 +4,15 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc -b && vite build",
-    "lint": "eslint .",
-    "preview": "vite preview"
-  },
+  "dev": "vite --mode uat",                       
+  "dev:uat": "vite --mode uat",     
+  "dev:prod": "vite --mode production",
+  "build": "tsc -b && vite build",  
+  "build:uat": "tsc -b && vite build --mode uat",
+  "lint": "eslint .",
+  "preview": "vite preview"
+},
+
   "dependencies": {
     "@headlessui/react": "^2.2.2",
     "@heroicons/react": "^2.2.0",
@@ -32,6 +36,7 @@
     "@types/react-dom": "^18.2.7",
     "@vitejs/plugin-react-swc": "^3.3.2",
     "autoprefixer": "^10.4.14",
+    "env-cmd": "^10.1.0",
     "eslint": "^9.21.0",
     "eslint-plugin-react-hooks": "^5.1.0",
     "eslint-plugin-react-refresh": "^0.4.19",
