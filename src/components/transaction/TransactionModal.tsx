@@ -24,23 +24,52 @@ type FormData = {
 type FormField = 'description' | 'amount' | 'category' | 'date' | 'type';
 type FormErrors = Partial<Record<FormField | 'submit', string>>;
 
+/**
+ * Processes the amount value and handles currency conversion if needed
+ * @param amount The input amount
+ * @param currency The current currency
+ * @param exchangeRate The exchange rate to use for conversion
+ */
+const processAmount = (amount: number, currency: string, exchangeRate: number) => {
+  if (currency !== 'KHR') return { value: amount };
+  
+  const usdValue = amount / exchangeRate;
+  return {
+    value: usdValue,
+    originalAmount: amount,
+    exchangeRate,
+    displayValue: new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 2,
+    }).format(usdValue)
+  };
+};
+
 export const TransactionModal = ({ transaction, onClose, type = 'expense' }: TransactionModalProps) => {
+  // Context and hooks
   const { addTransaction, updateTransaction } = useTransactions();
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [errors, setErrors] = useState<FormErrors>({});
   const currency = useUserCurrency();
   const { exchangeRates } = useSettings();
+  
+  // Local state
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errors, setErrors] = useState<FormErrors>({});
   const [convertedAmount, setConvertedAmount] = useState<string>('');
 
-  const [formData, setFormData] = useState<FormData>({
+  // Initialize form data from transaction or defaults
+  const [formData, setFormData] = useState<FormData>(() => ({
     description: transaction?.description || '',
     amount: transaction ? Math.abs(transaction.amount).toString() : '',
     category: transaction?.category || 
       (type === 'income' ? INCOME_CATEGORIES[0].id : EXPENSE_CATEGORIES[0].id),
     type: transaction?.type || type,
     date: transaction?.date || new Date().toISOString().split('T')[0]
-  });
+  }));
 
+  /**
+   * Validates the form data and returns any errors
+   */
   const validateForm = () => {
     const newErrors: FormErrors = {};
 
@@ -61,46 +90,44 @@ export const TransactionModal = ({ transaction, onClose, type = 'expense' }: Tra
       newErrors.date = 'Please select a valid date';
     }
 
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    return { isValid: Object.keys(newErrors).length === 0, errors: newErrors };
   };
 
+  /**
+   * Handles form submission and transaction creation/update
+   */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!validateForm()) return;
+    const { isValid, errors: validationErrors } = validateForm();
+    if (!isValid) {
+      setErrors(validationErrors);
+      return;
+    }
 
     setIsSubmitting(true);
     setErrors({});
 
     try {
       const amount = parseFloat(formData.amount);
-      const finalAmount = currency === 'KHR' 
-        ? calculateUSDAmount(amount) 
-        : amount;
+      const { value: processedAmount, ...currencyData } = processAmount(
+        amount, 
+        currency, 
+        exchangeRates.KHR_USD
+      );
 
       const transactionData = {
         description: formData.description.trim(),
-        amount: formData.type === 'expense' ? -Math.abs(finalAmount) : Math.abs(finalAmount),
+        amount: formData.type === 'expense' ? -Math.abs(processedAmount) : Math.abs(processedAmount),
         category: formData.category,
         type: formData.type,
         date: formData.date,
-        originalAmount: currency === 'KHR' ? amount : undefined,
-        originalCurrency: currency === 'KHR' ? 'KHR' : undefined,
-        exchangeRate: currency === 'KHR' ? exchangeRates.KHR_USD : undefined
+        ...(currency === 'KHR' && {
+          originalCurrency: currency,
+          ...currencyData
+        })
       };
 
-      if (transaction) {
-        // Check if anything has actually changed
-        const hasChanges = Object.keys(transactionData).some(
-          key => transactionData[key as keyof typeof transactionData] !== 
-                 transaction[key as keyof typeof transactionData]
-        );
-
-        if (!hasChanges) {
-          onClose();
-          return;
-        }
-
+      if (transaction?.id) {
         await updateTransaction(transaction.id, transactionData);
       } else {
         await addTransaction(transactionData);
@@ -108,18 +135,15 @@ export const TransactionModal = ({ transaction, onClose, type = 'expense' }: Tra
       
       onClose();
     } catch (err) {
-      setErrors({ 
-        submit: err instanceof Error ? err.message : 'Failed to save transaction' 
-      });
+      setErrors({ submit: err instanceof Error ? err.message : 'Failed to save transaction' });
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const calculateUSDAmount = (khrAmount: number) => {
-    return khrAmount / exchangeRates.KHR_USD;
-  };
-
+  /**
+   * Handles form field changes and updates converted amount for KHR currency
+   */
   const handleChange = (field: FormField) => (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
@@ -127,27 +151,21 @@ export const TransactionModal = ({ transaction, onClose, type = 'expense' }: Tra
     setFormData(prev => {
       const newData = { ...prev, [field]: value };
       
-      // Calculate converted amount when amount changes
       if (field === 'amount' && currency === 'KHR') {
-        const amountNum = parseFloat(value) || 0;
-        const usdAmount = calculateUSDAmount(amountNum);
-        setConvertedAmount(new Intl.NumberFormat('en-US', {
-          style: 'currency',
-          currency: 'USD',
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2,
-        }).format(usdAmount));
-      }
-      
-      // Update category if type changes
-      if (field === 'type') {
-        const categories = value === 'income' ? INCOME_CATEGORIES : EXPENSE_CATEGORIES;
-        newData.category = categories[0].id;
+        const { displayValue } = processAmount(
+          parseFloat(value) || 0, 
+          currency, 
+          exchangeRates.KHR_USD
+        );
+        setConvertedAmount(displayValue?.toString() || '');
+      } else if (field === 'type') {
+        newData.category = (value === 'income' ? INCOME_CATEGORIES : EXPENSE_CATEGORIES)[0].id;
       }
       
       return newData;
     });
     
+    // Clear field-specific error when value changes
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: undefined }));
     }
