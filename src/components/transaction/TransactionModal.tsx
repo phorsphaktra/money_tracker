@@ -5,6 +5,7 @@ import { EXPENSE_CATEGORIES, INCOME_CATEGORIES, isValidCategory } from '../../ut
 import { CategorySelect } from './CategorySelect';
 import { useUserCurrency } from '../../hooks/useUserCurrency';
 import { getCurrencySymbol } from '../../utils/currencyUtils';
+import { useSettings } from '../../contexts/SettingsContext';
 
 interface TransactionModalProps {
   transaction?: Transaction;
@@ -28,6 +29,8 @@ export const TransactionModal = ({ transaction, onClose, type = 'expense' }: Tra
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<FormErrors>({});
   const currency = useUserCurrency();
+  const { exchangeRates } = useSettings();
+  const [convertedAmount, setConvertedAmount] = useState<string>('');
 
   const [formData, setFormData] = useState<FormData>({
     description: transaction?.description || '',
@@ -71,12 +74,19 @@ export const TransactionModal = ({ transaction, onClose, type = 'expense' }: Tra
 
     try {
       const amount = parseFloat(formData.amount);
+      const finalAmount = currency === 'KHR' 
+        ? calculateUSDAmount(amount) 
+        : amount;
+
       const transactionData = {
         description: formData.description.trim(),
-        amount: formData.type === 'expense' ? -Math.abs(amount) : Math.abs(amount),
+        amount: formData.type === 'expense' ? -Math.abs(finalAmount) : Math.abs(finalAmount),
         category: formData.category,
         type: formData.type,
-        date: formData.date
+        date: formData.date,
+        originalAmount: currency === 'KHR' ? amount : undefined,
+        originalCurrency: currency === 'KHR' ? 'KHR' : undefined,
+        exchangeRate: currency === 'KHR' ? exchangeRates.KHR_USD : undefined
       };
 
       if (transaction) {
@@ -106,12 +116,28 @@ export const TransactionModal = ({ transaction, onClose, type = 'expense' }: Tra
     }
   };
 
+  const calculateUSDAmount = (khrAmount: number) => {
+    return khrAmount / exchangeRates.KHR_USD;
+  };
+
   const handleChange = (field: FormField) => (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
     const value = e.target.value;
     setFormData(prev => {
       const newData = { ...prev, [field]: value };
+      
+      // Calculate converted amount when amount changes
+      if (field === 'amount' && currency === 'KHR') {
+        const amountNum = parseFloat(value) || 0;
+        const usdAmount = calculateUSDAmount(amountNum);
+        setConvertedAmount(new Intl.NumberFormat('en-US', {
+          style: 'currency',
+          currency: 'USD',
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        }).format(usdAmount));
+      }
       
       // Update category if type changes
       if (field === 'type') {
@@ -175,10 +201,11 @@ export const TransactionModal = ({ transaction, onClose, type = 'expense' }: Tra
               { id: 'description' as const, label: 'Description', type: 'text' },
               { 
                 id: 'amount' as const, 
-                label: `Amount`,
+                label: `Amount ${currency === 'KHR' && `(Rate: ${exchangeRates.KHR_USD} KHR/USD)`}`,
                 type: 'number', 
                 step: '0.01',
-                prefix: getCurrencySymbol(currency)
+                prefix: getCurrencySymbol(currency),
+                showConverted: true // Add this flag
               },
               { id: 'date' as const, label: 'Date', type: 'date' }
             ].map(field => (
@@ -202,6 +229,11 @@ export const TransactionModal = ({ transaction, onClose, type = 'expense' }: Tra
                       focus:ring-indigo-500 focus:border-indigo-500 shadow-sm`}
                   />
                 </div>
+                {field.showConverted && currency === 'KHR' && formData.amount && (
+                  <div className="text-sm text-gray-500 mt-1">
+                    Amount in USD: {convertedAmount}
+                  </div>
+                )}
                 {errors[field.id] && (
                   <p className="text-sm text-red-600 mt-1">{errors[field.id]}</p>
                 )}

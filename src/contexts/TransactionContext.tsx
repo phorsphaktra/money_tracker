@@ -14,6 +14,9 @@ export interface Transaction {
   date: string;
   createdAt?: string;
   updatedAt?: string;
+  originalAmount?: number;
+  originalCurrency?: string;
+  exchangeRate?: number;
 }
 
 export interface TransactionFilters {
