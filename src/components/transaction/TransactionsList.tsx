@@ -1,7 +1,12 @@
+import { useState, useMemo } from 'react';
 import { Transaction } from '../../contexts/TransactionContext';
 import { getCategoryById } from '../../utils/categories';
 import { formatCurrency } from '../../utils/formatters';
 import { CategoryIcon } from './CategoryIcon';
+import { TransactionModal } from './TransactionModal';
+import { useUserCurrency } from '../../hooks/useUserCurrency';
+import { useSettings } from '../../contexts/SettingsContext';
+import { getEditableAmount } from '../../utils/currencyUtils';
 
 interface TransactionsListProps {
   transactions: Transaction[];
@@ -42,8 +47,24 @@ export const TransactionsList = ({
 };
 
 const TransactionItem = ({ transaction }: { transaction: Transaction }) => {
+  const [showEditModal, setShowEditModal] = useState(false);
+  const userCurrency = useUserCurrency();
+  const { exchangeRates } = useSettings();
   const category = getCategoryById(transaction.category, transaction.type);
-  
+
+  const displayAmount = useMemo(() => {
+    if (transaction.originalCurrency === 'KHR' && userCurrency === 'KHR') {
+      return transaction.originalAmount || transaction.amount;
+    }
+    if (userCurrency === 'KHR' && transaction.originalCurrency !== 'KHR') {
+      return Math.round(transaction.amount * exchangeRates.KHR_USD);
+    }
+    if (userCurrency === 'USD' && transaction.originalCurrency === 'KHR') {
+      return transaction.amount;
+    }
+    return Math.abs(transaction.amount);
+  }, [transaction, userCurrency, exchangeRates]);
+
   return (
     <div className="flex items-center justify-between p-4 hover:bg-gray-50 
       dark:hover:bg-gray-700/50 transition-colors duration-200">
@@ -69,13 +90,34 @@ const TransactionItem = ({ transaction }: { transaction: Transaction }) => {
             : 'text-red-600 dark:text-red-400'
         }`}>
           {transaction.type === 'income' ? '+' : '-'}
-          {formatCurrency(Math.abs(transaction.amount))}
+          {formatCurrency(displayAmount, userCurrency)}
         </span>
+        {transaction.originalCurrency && transaction.originalCurrency !== userCurrency && (
+          <span className="text-xs text-gray-500">
+            {formatCurrency(
+              Math.abs(transaction.originalAmount || transaction.amount), 
+              transaction.originalCurrency
+            )}
+          </span>
+        )}
         <div className="flex gap-2 mt-1">
-          <button className="text-xs text-blue-600 dark:text-blue-400">Edit</button>
+          <button 
+            className="text-xs text-blue-600 dark:text-blue-400">
+            Edit
+          </button>
           <button className="text-xs text-red-600 dark:text-red-400">Delete</button>
         </div>
       </div>
+
+      {showEditModal && (
+        <TransactionModal
+          transaction={{
+            ...transaction,
+            amount: getEditableAmount(transaction, userCurrency, exchangeRates.KHR_USD)
+          }}
+          onClose={() => setShowEditModal(false)}
+        />
+      )}
     </div>
   );
 };

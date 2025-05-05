@@ -3,6 +3,7 @@ import { useTransactions, Transaction } from '../../contexts/TransactionContext'
 import { LoadingSpinner } from '../shared/LoadingSpinner';
 import { DeleteTransactionModal } from './DeleteTransactionModal';
 import { PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
+import { TransactionModal } from './TransactionModal';
 
 interface TransactionRowProps {
   transaction: Transaction;
@@ -13,6 +14,7 @@ export const TransactionRow = ({ transaction, rowNumber }: TransactionRowProps) 
   const { deleteTransaction } = useTransactions();
   const [isLoading, setIsLoading] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
 
   const handleDelete = async () => {
     setIsLoading(true);
@@ -56,7 +58,8 @@ export const TransactionRow = ({ transaction, rowNumber }: TransactionRowProps) 
         ) : (
           <div className="flex items-center gap-2">
             <button
-              className="p-1 text-gray-400 hover:text-indigo-600 rounded-full hover:bg-indigo-50 dark:hover:bg-indigo-900/20"
+              onClick={() => setShowEditModal(true)}
+              className="p-1 text-gray-400 hover:text-indigo-600 rounded-full hover:bg-indigo-50"
               title="Edit transaction"
             >
               <PencilIcon className="h-4 w-4" />
@@ -69,6 +72,13 @@ export const TransactionRow = ({ transaction, rowNumber }: TransactionRowProps) 
               <TrashIcon className="h-4 w-4" />
             </button>
           </div>
+        )}
+
+        {showEditModal && (
+          <TransactionModal
+            transaction={transaction}
+            onClose={() => setShowEditModal(false)}
+          />
         )}
 
         <DeleteTransactionModal

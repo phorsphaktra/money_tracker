@@ -46,10 +46,29 @@ const processAmount = (amount: number, currency: string, exchangeRate: number) =
   };
 };
 
+// Add utility functions at the top
+const getInitialAmount = (
+  transaction: Transaction | undefined,
+  userCurrency: string,
+  exchangeRate: number
+): string => {
+  if (!transaction) return '';
+  
+  // For KHR transactions, use originalAmount
+  if (transaction.originalCurrency === 'KHR' && userCurrency === 'KHR') {
+    return Math.abs(transaction.originalAmount || 0).toString();
+  }
+  
+  // For USD, convert if needed
+  const amount = Math.abs(transaction.amount);
+  return userCurrency === 'KHR' 
+    ? Math.round(amount * exchangeRate).toString()
+    : amount.toString();
+};
+
 export const TransactionModal = ({ transaction, onClose, type = 'expense' }: TransactionModalProps) => {
-  // Context and hooks
   const { addTransaction, updateTransaction } = useTransactions();
-  const currency = useUserCurrency();
+  const userCurrency = useUserCurrency();
   const { exchangeRates } = useSettings();
   
   // Local state
@@ -60,7 +79,7 @@ export const TransactionModal = ({ transaction, onClose, type = 'expense' }: Tra
   // Initialize form data from transaction or defaults
   const [formData, setFormData] = useState<FormData>(() => ({
     description: transaction?.description || '',
-    amount: transaction ? Math.abs(transaction.amount).toString() : '',
+    amount: getInitialAmount(transaction, userCurrency, exchangeRates.KHR_USD),
     category: transaction?.category || 
       (type === 'income' ? INCOME_CATEGORIES[0].id : EXPENSE_CATEGORIES[0].id),
     type: transaction?.type || type,
@@ -109,21 +128,21 @@ export const TransactionModal = ({ transaction, onClose, type = 'expense' }: Tra
 
     try {
       const amount = parseFloat(formData.amount);
-      const { value: processedAmount, ...currencyData } = processAmount(
-        amount, 
-        currency, 
-        exchangeRates.KHR_USD
-      );
+      // Convert to USD if user currency is KHR
+      const usdAmount = userCurrency === 'KHR' 
+        ? amount / exchangeRates.KHR_USD 
+        : amount;
 
       const transactionData = {
         description: formData.description.trim(),
-        amount: formData.type === 'expense' ? -Math.abs(processedAmount) : Math.abs(processedAmount),
+        amount: formData.type === 'expense' ? -Math.abs(usdAmount) : Math.abs(usdAmount),
         category: formData.category,
         type: formData.type,
         date: formData.date,
-        ...(currency === 'KHR' && {
-          originalCurrency: currency,
-          ...currencyData
+        ...(userCurrency === 'KHR' && {
+          originalAmount: amount,
+          originalCurrency: 'KHR',
+          exchangeRate: exchangeRates.KHR_USD
         })
       };
 
@@ -151,13 +170,10 @@ export const TransactionModal = ({ transaction, onClose, type = 'expense' }: Tra
     setFormData(prev => {
       const newData = { ...prev, [field]: value };
       
-      if (field === 'amount' && currency === 'KHR') {
-        const { displayValue } = processAmount(
-          parseFloat(value) || 0, 
-          currency, 
-          exchangeRates.KHR_USD
-        );
-        setConvertedAmount(displayValue?.toString() || '');
+      if (field === 'amount' && userCurrency === 'KHR') {
+        const numericAmount = parseFloat(value) || 0;
+        const usdAmount = (numericAmount / exchangeRates.KHR_USD).toFixed(2);
+        setConvertedAmount(usdAmount);
       } else if (field === 'type') {
         newData.category = (value === 'income' ? INCOME_CATEGORIES : EXPENSE_CATEGORIES)[0].id;
       }
@@ -219,11 +235,11 @@ export const TransactionModal = ({ transaction, onClose, type = 'expense' }: Tra
               { id: 'description' as const, label: 'Description', type: 'text' },
               { 
                 id: 'amount' as const, 
-                label: `Amount ${currency === 'KHR' && `(Rate: ${exchangeRates.KHR_USD} KHR/USD)`}`,
+                label: `Amount ${userCurrency === 'KHR' ? `(Rate: ${exchangeRates.KHR_USD} KHR/USD)` : ''}`,
                 type: 'number', 
-                step: '0.01',
-                prefix: getCurrencySymbol(currency),
-                showConverted: true // Add this flag
+                step: userCurrency === 'KHR' ? '1' : '0.01',
+                prefix: getCurrencySymbol(userCurrency),
+                showConverted: userCurrency === 'KHR'
               },
               { id: 'date' as const, label: 'Date', type: 'date' }
             ].map(field => (
@@ -247,7 +263,7 @@ export const TransactionModal = ({ transaction, onClose, type = 'expense' }: Tra
                       focus:ring-indigo-500 focus:border-indigo-500 shadow-sm`}
                   />
                 </div>
-                {field.showConverted && currency === 'KHR' && formData.amount && (
+                {field.showConverted && userCurrency === 'KHR' && formData.amount && (
                   <div className="text-sm text-gray-500 mt-1">
                     Amount in USD: {convertedAmount}
                   </div>

@@ -1,13 +1,8 @@
+import { SUPPORTED_CURRENCIES } from './constants';
+
 export const getCurrencySymbol = (currency: string): string => {
-  const symbols: Record<string, string> = {
-    USD: '$',
-    EUR: '€',
-    GBP: '£',
-    JPY: '¥',
-    KHR: '៛',
-    // Add more currencies as needed
-  };
-  return symbols[currency] || currency;
+  const currencyInfo = SUPPORTED_CURRENCIES.find(c => c.code === currency);
+  return currencyInfo?.symbol || currency;
 };
 
 export const convertCurrency = (
@@ -34,4 +29,22 @@ export const formatCurrency = (amount: number, currency: string): string => {
     minimumFractionDigits: currency === 'KHR' ? 0 : 2,
     maximumFractionDigits: currency === 'KHR' ? 0 : 2
   })}`;
+};
+
+export const getEditableAmount = (
+  transaction: {
+    amount: number;
+    originalAmount?: number;
+    originalCurrency?: string;
+  },
+  currency: string,
+  exchangeRate: number
+): number => {
+  if (currency === 'KHR' && transaction.originalCurrency === 'KHR') {
+    return transaction.originalAmount || transaction.amount;
+  }
+  if (currency === 'USD' && transaction.originalCurrency === 'KHR') {
+    return transaction.amount * exchangeRate;
+  }
+  return Math.abs(transaction.amount);
 };
