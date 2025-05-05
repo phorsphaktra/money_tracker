@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useTransactions} from '../contexts/TransactionContext';
 import { Button } from '../components/shared/Button';
-import { TransactionRow } from '../components/transaction/TransactionRow';
 import { TransactionModal } from '../components/transaction/TransactionModal';
 import { LoadingSpinner } from '../components/shared/LoadingSpinner';
 import { useTranslation } from 'react-i18next';
@@ -80,51 +79,11 @@ export const TransactionsScreen = () => {
 
       {/* List Container */}
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden">
-        <div className="hidden sm:block">
-          <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-            <thead className="bg-gray-50 dark:bg-gray-900">
-              <tr>
-                {['no', 'date', 'description', 'category', 'amount', 'actions'].map((header) => (
-                  <th key={header} className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
-                    {t(`transactions.table.${header}`)}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {filteredTransactions.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="px-6 py-4 text-center text-gray-500">
-                    {isLoading ? (
-                      <div className="flex justify-center items-center">
-                        <LoadingSpinner size="small" className="text-indigo-600 mr-2" />
-                        <span>Loading transactions...</span>
-                      </div>
-                    ) : (
-                      'No transactions found'
-                    )}
-                  </td>
-                </tr>
-              ) : (
-                filteredTransactions.map((transaction, index) => (
-                  <TransactionRow
-                    key={transaction.id}
-                    transaction={transaction}
-                    rowNumber={index + 1}
-                  />
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Mobile List View */}
-        <div className="sm:hidden">
-          <TransactionsList 
-            transactions={filteredTransactions}
-            isLoading={isLoading}
-          />
-        </div>
+        <TransactionsList 
+          transactions={filteredTransactions}
+          isLoading={isLoading}
+          showFilters={false}
+        />
       </div>
 
       {/* FAB and Modal */}

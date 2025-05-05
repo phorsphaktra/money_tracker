@@ -24,27 +24,6 @@ type FormData = {
 type FormField = 'description' | 'amount' | 'category' | 'date' | 'type';
 type FormErrors = Partial<Record<FormField | 'submit', string>>;
 
-/**
- * Processes the amount value and handles currency conversion if needed
- * @param amount The input amount
- * @param currency The current currency
- * @param exchangeRate The exchange rate to use for conversion
- */
-const processAmount = (amount: number, currency: string, exchangeRate: number) => {
-  if (currency !== 'KHR') return { value: amount };
-  
-  const usdValue = amount / exchangeRate;
-  return {
-    value: usdValue,
-    originalAmount: amount,
-    exchangeRate,
-    displayValue: new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 2,
-    }).format(usdValue)
-  };
-};
 
 // Add utility functions at the top
 const getInitialAmount = (

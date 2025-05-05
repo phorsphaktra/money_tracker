@@ -6,7 +6,8 @@ import { CategoryIcon } from './CategoryIcon';
 import { TransactionModal } from './TransactionModal';
 import { useUserCurrency } from '../../hooks/useUserCurrency';
 import { useSettings } from '../../contexts/SettingsContext';
-import { getEditableAmount } from '../../utils/currencyUtils';
+import { getEditableAmount, calculateDisplayAmount } from '../../utils/currencyUtils';
+import { useTransactions } from '../../contexts/TransactionContext';
 
 interface TransactionsListProps {
   transactions: Transaction[];
@@ -48,22 +49,30 @@ export const TransactionsList = ({
 
 const TransactionItem = ({ transaction }: { transaction: Transaction }) => {
   const [showEditModal, setShowEditModal] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const { deleteTransaction } = useTransactions();
   const userCurrency = useUserCurrency();
   const { exchangeRates } = useSettings();
   const category = getCategoryById(transaction.category, transaction.type);
 
-  const displayAmount = useMemo(() => {
-    if (transaction.originalCurrency === 'KHR' && userCurrency === 'KHR') {
-      return transaction.originalAmount || transaction.amount;
+  const { displayAmount, showOriginal } = useMemo(() => 
+    calculateDisplayAmount(transaction, userCurrency, exchangeRates.KHR_USD),
+    [transaction, userCurrency, exchangeRates]
+  );
+
+  const handleDelete = async () => {
+    if (!window.confirm('Are you sure you want to delete this transaction?')) return;
+    setIsDeleting(true);
+    try {
+      await deleteTransaction(transaction.id);
+    } catch (error) {
+      console.error('Failed to delete transaction:', error);
+    } finally {
+      setIsDeleting(false);
     }
-    if (userCurrency === 'KHR' && transaction.originalCurrency !== 'KHR') {
-      return Math.round(transaction.amount * exchangeRates.KHR_USD);
-    }
-    if (userCurrency === 'USD' && transaction.originalCurrency === 'KHR') {
-      return transaction.amount;
-    }
-    return Math.abs(transaction.amount);
-  }, [transaction, userCurrency, exchangeRates]);
+  };
+
+  const handleEdit = () => setShowEditModal(true);
 
   return (
     <div className="flex items-center justify-between p-4 hover:bg-gray-50 
@@ -92,20 +101,33 @@ const TransactionItem = ({ transaction }: { transaction: Transaction }) => {
           {transaction.type === 'income' ? '+' : '-'}
           {formatCurrency(displayAmount, userCurrency)}
         </span>
-        {transaction.originalCurrency && transaction.originalCurrency !== userCurrency && (
+        {showOriginal && transaction.originalCurrency && (
           <span className="text-xs text-gray-500">
             {formatCurrency(
-              Math.abs(transaction.originalAmount || transaction.amount), 
+              Math.abs(transaction.originalAmount || transaction.amount),
               transaction.originalCurrency
             )}
           </span>
         )}
         <div className="flex gap-2 mt-1">
-          <button 
-            className="text-xs text-blue-600 dark:text-blue-400">
-            Edit
-          </button>
-          <button className="text-xs text-red-600 dark:text-red-400">Delete</button>
+          {isDeleting ? (
+            <span className="text-xs text-gray-500">Deleting...</span>
+          ) : (
+            <>
+              <button 
+                onClick={handleEdit}
+                className="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-800 
+                  dark:hover:text-blue-300 transition-colors">
+                Edit
+              </button>
+              <button 
+                onClick={handleDelete}
+                className="text-xs text-red-600 dark:text-red-400 hover:text-red-800 
+                  dark:hover:text-red-300 transition-colors">
+                Delete
+              </button>
+            </>
+          )}
         </div>
       </div>
 
