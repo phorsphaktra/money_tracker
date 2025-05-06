@@ -1,6 +1,5 @@
 import { useMemo, useState } from 'react';
 import { CardStats } from '../components/dashboard/CardStats';
-import { TransactionsList } from '../components/transaction/TransactionsList';
 import { useTransactions } from '../contexts/TransactionContext';
 import { calculateDashboardStats } from '../utils/statsCalculator';
 import { useTranslation } from 'react-i18next';
@@ -9,6 +8,8 @@ import { t } from 'i18next';
 import { FloatingActionButton } from '../components/shared/FloatingActionButton';
 import { TransactionModal } from '../components/transaction/TransactionModal';
 import { SpendingChart } from '../components/dashboard/SpendingChart';
+import { TransactionCard } from '../components/transaction/TransactionCard';
+import { useNavigate } from 'react-router-dom';
 
 const formatNumber = (num: number, language: string) => {
   if (language === 'km') {
@@ -24,10 +25,15 @@ export const DashboardScreen = () => {
     const { t } = useTranslation();
     const { language } = useLanguage();
     const [isAddingNew, setIsAddingNew] = useState(false);
+    const navigate = useNavigate();
     
     const stats = useMemo(() => 
       calculateDashboardStats(transactions), [transactions]
     );
+
+    const handleViewAll = () => {
+      navigate('/transactions');
+    };
 
     if (isLoading) {
       return (
@@ -86,19 +92,25 @@ export const DashboardScreen = () => {
                 {t('dashboard.overview.recent_transactions')}
               </h3>
               <button 
-                onClick={() => {}} 
+                onClick={handleViewAll}
                 className="text-sm text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 font-medium transition-colors duration-200"
               >
                 {t('dashboard.overview.view_all')}
               </button>
             </div>
-            <div className="overflow-hidden">
-              <TransactionsList 
-                transactions={transactions}
-                isLoading={isLoading}
-                limit={5}
-                showFilters={false}
-              />
+            <div className="overflow-hidden space-y-2">
+              {transactions.slice(0, 5).map((transaction, index) => (
+                <TransactionCard
+                  key={transaction.id}
+                  transaction={transaction}
+                  index={index}
+                />
+              ))}
+              {transactions.length === 0 && (
+                <p className="text-center text-gray-500 dark:text-gray-400 py-4">
+                  {t('dashboard.no_transactions')}
+                </p>
+              )}
             </div>
           </div>
         </div>
