@@ -31,20 +31,24 @@ export const TransactionActions: React.FC<TransactionActionsProps> = ({
 
   return (
     <>
-      <div className="flex items-center gap-2">
+      <div className="flex items-center justify-end space-x-1">
         {onEdit && (
           <button
             onClick={() => onEdit(transaction)}
-            className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
+            className="p-2 text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
+            title="Edit transaction"
           >
             <PencilIcon className="h-4 w-4" />
+            <span className="sr-only">Edit</span>
           </button>
         )}
         <button
           onClick={() => setShowDeleteModal(true)}
-          className="p-1 text-gray-400 hover:text-red-600 dark:hover:text-red-400 rounded-full hover:bg-red-50 dark:hover:bg-red-900/20"
+          className="p-2 text-gray-400 hover:text-red-600 dark:hover:text-red-400 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+          title="Delete transaction"
         >
           <TrashIcon className="h-4 w-4" />
+          <span className="sr-only">Delete</span>
         </button>
       </div>
 

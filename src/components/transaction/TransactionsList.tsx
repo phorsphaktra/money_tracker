@@ -8,6 +8,7 @@ import { useUserCurrency } from '../../hooks/useUserCurrency';
 import { useSettings } from '../../contexts/SettingsContext';
 import { getEditableAmount, calculateDisplayAmount } from '../../utils/currencyUtils';
 import { useTransactions } from '../../contexts/TransactionContext';
+import { TransactionActions } from './TransactionActions';
 
 interface TransactionsListProps {
   transactions: Transaction[];
@@ -25,13 +26,7 @@ export const TransactionsList = ({
     : transactions;
 
   if (isLoading) {
-    return (
-      <div className="space-y-4">
-        {[...Array(3)].map((_, i) => (
-          <TransactionSkeleton key={i} />
-        ))}
-      </div>
-    );
+    return <TransactionSkeleton />;
   }
 
   if (!transactions.length) {
@@ -39,17 +34,31 @@ export const TransactionsList = ({
   }
 
   return (
-    <div className="divide-y divide-gray-200 dark:divide-gray-700">
-      {displayTransactions.map((transaction) => (
-        <TransactionItem key={transaction.id} transaction={transaction} />
-      ))}
+    <div className="overflow-x-auto -mx-4 sm:mx-0">
+      <div className="inline-block min-w-full align-middle">
+        <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+          <thead className="bg-gray-50 dark:bg-gray-800">
+            <tr>
+              <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Category</th>
+              <th className="hidden sm:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Description</th>
+              <th className="hidden md:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Date</th>
+              <th className="px-3 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Amount</th>
+              <th className="px-3 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
+            </tr>
+          </thead>
+          <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
+            {displayTransactions.map((transaction) => (
+              <TransactionItem key={transaction.id} transaction={transaction} />
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 };
 
 const TransactionItem = ({ transaction }: { transaction: Transaction }) => {
   const [showEditModal, setShowEditModal] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
   const { deleteTransaction } = useTransactions();
   const userCurrency = useUserCurrency();
   const { exchangeRates } = useSettings();
@@ -60,40 +69,36 @@ const TransactionItem = ({ transaction }: { transaction: Transaction }) => {
     [transaction, userCurrency, exchangeRates]
   );
 
-  const handleDelete = async () => {
-    if (!window.confirm('Are you sure you want to delete this transaction?')) return;
-    setIsDeleting(true);
-    try {
-      await deleteTransaction(transaction.id);
-    } catch (error) {
-      console.error('Failed to delete transaction:', error);
-    } finally {
-      setIsDeleting(false);
-    }
-  };
-
   const handleEdit = () => setShowEditModal(true);
 
   return (
-    <div className="flex items-center justify-between p-4 hover:bg-gray-50 
-      dark:hover:bg-gray-700/50 transition-colors duration-200">
-      <div className="flex items-center gap-3 min-w-0">
-        <div className="flex-shrink-0">
+    <tr className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors duration-200">
+      <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
+        <div className="flex items-center gap-2 sm:gap-3">
           <CategoryIcon category={category} />
-        </div>
-        <div className="min-w-0">
-          <p className="font-medium text-gray-900 dark:text-white truncate">
-            {transaction.description || category.label}
-          </p>
-          <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
-            <span>{new Date(transaction.date).toLocaleDateString()}</span>
-            <span className="hidden sm:inline">•</span>
-            <span className="hidden sm:inline">{category.label}</span>
+          <div className="sm:hidden flex flex-col">
+            <span className="text-sm font-medium text-gray-900 dark:text-gray-200">
+              {transaction.description || category.label}
+            </span>
+            <span className="text-xs text-gray-500">
+              {new Date(transaction.date).toLocaleDateString()}
+            </span>
           </div>
+          <span className="hidden sm:block text-sm text-gray-900 dark:text-gray-200">
+            {category.label}
+          </span>
         </div>
-      </div>
-      <div className="flex flex-col items-end ml-3">
-        <span className={`text-sm font-medium whitespace-nowrap ${
+      </td>
+      <td className="hidden sm:table-cell px-6 py-4 whitespace-nowrap">
+        <span className="text-sm text-gray-900 dark:text-gray-200">
+          {transaction.description || category.label}
+        </span>
+      </td>
+      <td className="hidden md:table-cell px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+        {new Date(transaction.date).toLocaleDateString()}
+      </td>
+      <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-right">
+        <span className={`text-sm font-medium ${
           transaction.type === 'income' 
             ? 'text-green-600 dark:text-green-400' 
             : 'text-red-600 dark:text-red-400'
@@ -102,35 +107,21 @@ const TransactionItem = ({ transaction }: { transaction: Transaction }) => {
           {formatCurrency(displayAmount, userCurrency)}
         </span>
         {showOriginal && transaction.originalCurrency && (
-          <span className="text-xs text-gray-500">
+          <div className="text-xs text-gray-500">
             {formatCurrency(
               Math.abs(transaction.originalAmount || transaction.amount),
               transaction.originalCurrency
             )}
-          </span>
+          </div>
         )}
-        <div className="flex gap-2 mt-1">
-          {isDeleting ? (
-            <span className="text-xs text-gray-500">Deleting...</span>
-          ) : (
-            <>
-              <button 
-                onClick={handleEdit}
-                className="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-800 
-                  dark:hover:text-blue-300 transition-colors">
-                Edit
-              </button>
-              <button 
-                onClick={handleDelete}
-                className="text-xs text-red-600 dark:text-red-400 hover:text-red-800 
-                  dark:hover:text-red-300 transition-colors">
-                Delete
-              </button>
-            </>
-          )}
-        </div>
-      </div>
-
+      </td>
+      <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-right">
+        <TransactionActions
+          transaction={transaction}
+          onDelete={() => deleteTransaction(transaction.id)}
+          onEdit={handleEdit}
+        />
+      </td>
       {showEditModal && (
         <TransactionModal
           transaction={{
@@ -140,23 +131,41 @@ const TransactionItem = ({ transaction }: { transaction: Transaction }) => {
           onClose={() => setShowEditModal(false)}
         />
       )}
-    </div>
+    </tr>
   );
 };
 
 const TransactionSkeleton = () => (
-  <div className="animate-pulse flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
-    <div className="w-10 h-10 bg-gray-200 rounded-full" />
-    <div className="flex-1 space-y-2">
-      <div className="h-4 bg-gray-200 rounded w-1/4" />
-      <div className="h-3 bg-gray-200 rounded w-1/2" />
+  <div className="overflow-x-auto -mx-4 sm:mx-0">
+    <div className="inline-block min-w-full align-middle">
+      <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+        <thead className="bg-gray-50 dark:bg-gray-800">
+          <tr>
+            {[...Array(5)].map((_, i) => (
+              <th key={i} className={`px-3 sm:px-6 py-3 ${i === 1 || i === 2 ? 'hidden sm:table-cell' : ''}`}>
+                <div className="h-4 bg-gray-200 dark:bg-gray-600 rounded w-20" />
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {[...Array(3)].map((_, i) => (
+            <tr key={i} className="animate-pulse">
+              {[...Array(5)].map((_, j) => (
+                <td key={j} className={`px-3 sm:px-6 py-4 ${j === 1 || j === 2 ? 'hidden sm:table-cell' : ''}`}>
+                  <div className="h-4 bg-gray-100 dark:bg-gray-700 rounded w-full" />
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
-    <div className="h-4 bg-gray-200 rounded w-20" />
   </div>
 );
 
 const EmptyState = () => (
-  <div className="text-center py-8 text-gray-500">
+  <div className="text-center py-8 text-gray-500 bg-white dark:bg-gray-900 rounded-lg">
     No transactions found
   </div>
 );
