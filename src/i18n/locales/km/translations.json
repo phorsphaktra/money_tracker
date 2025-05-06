@@ -68,6 +68,11 @@
       "recent_transactions": "ប្រតិបត្តិការថ្មីៗ",
       "no_transactions": "មិនមានប្រតិបត្តិការថ្មីៗ"
     },
+    "task_overview": "ទិដ្ឋភាពទូទៅនៃការងារ",
+    "total_tasks": "ការងារសរុប",
+    "completed_tasks": "ការងារបញ្ចប់",
+    "in_progress_tasks": "ការងារកំពុងដំណើរការ",
+    "blocked_tasks": "ការងារដែលបានចាក់សោ",
     "stats": {
       "spending_by_category": "ការចំណាយតាមប្រភេទ",
       "monthly_summary": "សង្ខេបប្រចាំខែ",

@@ -10,6 +10,8 @@ import { TransactionModal } from '../components/transaction/TransactionModal';
 import { SpendingChart } from '../components/dashboard/SpendingChart';
 import { TransactionCard } from '../components/transaction/TransactionCard';
 import { useNavigate } from 'react-router-dom';
+import { filterTransactionsByPeriod, getDateRangeLabel } from '../utils/dateUtils';
+import { useTaskContext } from '../contexts/TaskContext';
 
 const formatNumber = (num: number, language: string) => {
   if (language === 'km') {
@@ -21,21 +23,44 @@ const formatNumber = (num: number, language: string) => {
 };
 
 export const DashboardScreen = () => {
-    const { transactions, isLoading, error } = useTransactions();
+    const { transactions, isLoading: transactionsLoading } = useTransactions();
+    const { tasks, loading: tasksLoading } = useTaskContext();
     const { t } = useTranslation();
     const { language } = useLanguage();
     const [isAddingNew, setIsAddingNew] = useState(false);
     const navigate = useNavigate();
+    const [period, setPeriod] = useState('6months');
     
     const stats = useMemo(() => 
       calculateDashboardStats(transactions), [transactions]
     );
 
+    const filteredTransactions = useMemo(() => 
+      filterTransactionsByPeriod(transactions, period), 
+      [transactions, period]
+    );
+
+    const taskStats = useMemo(() => {
+      const total = tasks.length;
+      const completed = tasks.filter(t => t.status === 'completed').length;
+      const inProgress = tasks.filter(t => t.status === 'in_progress').length;
+      const blocked = tasks.filter(t => t.status === 'blocked').length;
+      const completionRate = total > 0 ? (completed / total) * 100 : 0;
+
+      return {
+        total,
+        completed,
+        inProgress,
+        blocked,
+        completionRate
+      };
+    }, [tasks]);
+
     const handleViewAll = () => {
       navigate('/transactions');
     };
 
-    if (isLoading) {
+    if (transactionsLoading || tasksLoading) {
       return (
         <div className="grid gap-6 animate-pulse">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -51,9 +76,9 @@ export const DashboardScreen = () => {
       );
     }
 
-    if (error) {
-        return <DashboardError error={error} />;
-    }
+    // if (transactionError || tasksError) {
+    //     return <DashboardError error={transactionError || tasksError} />;
+    // }
 
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
@@ -66,23 +91,31 @@ export const DashboardScreen = () => {
           </p>
         </header>
         
-        <StatsGrid stats={stats} isLoading={isLoading} language={language} />
-        
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
+        <StatsGrid stats={stats} isLoading={transactionsLoading} language={language} />
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-8">
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 hover:shadow-lg transition-all duration-300 border border-gray-100 dark:border-gray-700">
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                 {t('dashboard.spending_overview')}
               </h3>
-              <select className="text-sm border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 focus:ring-indigo-500 focus:border-indigo-500">
-                <option>{t('dashboard.last_6_months')}</option>
-                <option>{t('dashboard.last_3_months')}</option>
-                <option>{t('dashboard.this_year')}</option>
+              <select 
+                value={period}
+                onChange={(e) => setPeriod(e.target.value)}
+                className="text-sm border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 focus:ring-indigo-500 focus:border-indigo-500"
+              >
+                <option value="7days">{t('filters.7days')}</option>
+                <option value="30days">{t('filters.30days')}</option>
+                <option value="3months">{t('filters.3months')}</option>
+                <option value="6months">{t('filters.6months')}</option>
+                <option value="1year">{t('filters.1year')}</option>
+                <option value="ytd">{t('filters.ytd')}</option>
               </select>
             </div>
             <SpendingChart 
-              transactions={transactions} 
-              isLoading={isLoading} 
+              transactions={filteredTransactions}
+              isLoading={transactionsLoading}
+              period={period} 
             />
           </div>
           
@@ -114,6 +147,49 @@ export const DashboardScreen = () => {
             </div>
           </div>
         </div>
+
+
+        {/* Add Task Stats Section */}
+        <div className="mt-8 bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 hover:shadow-lg transition-all duration-300 border border-gray-100 dark:border-gray-700">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">
+            {t('dashboard.task_overview')}
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <CardStats
+              title={t('dashboard.total_tasks')}
+              value={taskStats.total.toString()}
+              trend={`${formatNumber(taskStats.completionRate, language)}%`}
+              isPositive={true}
+              isLoading={tasksLoading}
+              icon="wallet"
+            />
+            <CardStats
+              title={t('dashboard.completed_tasks')}
+              value={taskStats.completed.toString()}
+              trend=""
+              isPositive={true}
+              isLoading={tasksLoading}
+              icon="income"
+            />
+            <CardStats
+              title={t('dashboard.in_progress_tasks')}
+              value={taskStats.inProgress.toString()}
+              trend=""
+              isPositive={true}
+              isLoading={tasksLoading}
+              icon="income"
+            />
+            <CardStats
+              title={t('dashboard.blocked_tasks')}
+              value={taskStats.blocked.toString()}
+              trend=""
+              isPositive={false}
+              isLoading={tasksLoading}
+              icon="wallet"
+            />
+          </div>
+        </div>
+        
         <FloatingActionButton 
           onClick={() => setIsAddingNew(true)}
           label="Add Transaction"

@@ -27,7 +27,8 @@ ChartJS.register(
 
 interface SpendingChartProps {
   transactions: Transaction[];
-  isLoading?: boolean;
+  isLoading: boolean;
+  period: string;
 }
 
 export const SpendingChart = ({ transactions, isLoading }: SpendingChartProps) => {
