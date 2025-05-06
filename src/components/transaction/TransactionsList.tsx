@@ -1,7 +1,6 @@
 import { useState, useMemo } from 'react';
 import { Transaction } from '../../contexts/TransactionContext';
 import { getCategoryById } from '../../utils/categories';
-// import { formatCurrency } from '../../utils/formatters';
 import { CategoryIcon } from './CategoryIcon';
 import { TransactionModal } from './TransactionModal';
 import { useUserCurrency } from '../../hooks/useUserCurrency';
@@ -9,6 +8,7 @@ import { useSettings } from '../../contexts/SettingsContext';
 import { getEditableAmount, calculateDisplayAmount } from '../../utils/currencyUtils';
 import { useTransactions } from '../../contexts/TransactionContext';
 import { TransactionActions } from './TransactionActions';
+import { TransactionCard } from './TransactionCard';
 
 interface TransactionsListProps {
   transactions: Transaction[];
@@ -20,7 +20,8 @@ interface TransactionsListProps {
 export const TransactionsList = ({ 
   transactions,
   isLoading,
-  limit}: TransactionsListProps) => {
+  limit
+}: TransactionsListProps) => {
   const displayTransactions = limit 
     ? transactions.slice(0, limit)
     : transactions;
@@ -34,29 +35,50 @@ export const TransactionsList = ({
   }
 
   return (
-    <div className="overflow-x-auto -mx-4 sm:mx-0">
-      <div className="inline-block min-w-full align-middle">
-        <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-          <thead className="bg-gray-50 dark:bg-gray-800">
-            <tr>
-              <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-16">No.</th>
-              <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Category</th>
-              <th className="hidden sm:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Description</th>
-              <th className="hidden md:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Date</th>
-              <th className="px-3 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Amount</th>
-              <th className="px-3 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
-            {displayTransactions.map((transaction, index) => (
-              <TransactionItem 
-                key={transaction.id} 
-                transaction={transaction} 
-                index={index + 1}
-              />
-            ))}
-          </tbody>
-        </table>
+    <div className="w-full mx-auto mb-auto">
+      {/* Mobile View */}
+      <div className="md:hidden space-y-2">
+        <div className="bg-gray-50 dark:bg-gray-800/50 backdrop-blur-sm sticky top-0 z-10 p-3 -mx-4">
+          <h2 className="text-sm font-medium text-gray-600 dark:text-gray-300">
+            Recent Transactions
+          </h2>
+        </div>
+        <div className="space-y-2 px-4">
+          {displayTransactions.map((transaction, index) => (
+            <TransactionCard
+              key={transaction.id}
+              transaction={transaction}
+              index={index + 1}
+            />
+          ))}
+        </div>
+      </div>
+
+      {/* Desktop View */}
+      <div className="hidden md:block overflow-x-auto -mx-4 sm:mx-0">
+        <div className="inline-block min-w-full align-middle">
+          <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+            <thead className="bg-gray-50 dark:bg-gray-800">
+              <tr>
+                <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-16">No.</th>
+                <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Category</th>
+                <th className="hidden sm:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Description</th>
+                <th className="hidden md:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Date</th>
+                <th className="px-3 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Amount</th>
+                <th className="px-3 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
+              {displayTransactions.map((transaction, index) => (
+                <TransactionItem 
+                  key={transaction.id} 
+                  transaction={transaction} 
+                  index={index + 1}
+                />
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );
@@ -163,35 +185,58 @@ const TransactionItem = ({
 };
 
 const TransactionSkeleton = () => (
-  <div className="overflow-x-auto -mx-4 sm:mx-0">
-    <div className="inline-block min-w-full align-middle">
-      <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-        <thead className="bg-gray-50 dark:bg-gray-800">
-          <tr>
-            <th className="px-3 sm:px-6 py-3">
-              <div className="h-4 bg-gray-200 dark:bg-gray-600 rounded w-8" />
-            </th>
-            {[...Array(5)].map((_, i) => (
-              <th key={i} className={`px-3 sm:px-6 py-3 ${i === 1 || i === 2 ? 'hidden sm:table-cell' : ''}`}>
-                <div className="h-4 bg-gray-200 dark:bg-gray-600 rounded w-20" />
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {[...Array(3)].map((_, i) => (
-            <tr key={i} className="animate-pulse">
-              {[...Array(6)].map((_, j) => (
-                <td key={j} className={`px-3 sm:px-6 py-4 ${j === 1 || j === 2 ? 'hidden sm:table-cell' : ''}`}>
-                  <div className="h-4 bg-gray-100 dark:bg-gray-700 rounded w-full" />
-                </td>
-              ))}
-            </tr>
-          ))}
-        </tbody>
-      </table>
+  <>
+    {/* Mobile Skeleton */}
+    <div className="md:hidden space-y-3 px-4">
+      {[...Array(3)].map((_, i) => (
+        <div key={i} className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 space-y-3 animate-pulse">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 bg-gray-200 dark:bg-gray-700 rounded-full" />
+              <div>
+                <div className="h-4 w-24 bg-gray-200 dark:bg-gray-700 rounded" />
+                <div className="h-3 w-16 bg-gray-100 dark:bg-gray-600 rounded mt-2" />
+              </div>
+            </div>
+            <div className="h-4 w-20 bg-gray-200 dark:bg-gray-700 rounded" />
+          </div>
+        </div>
+      ))}
     </div>
-  </div>
+
+    {/* Desktop Skeleton */}
+    <div className="hidden md:block">
+      <div className="overflow-x-auto -mx-4 sm:mx-0">
+        <div className="inline-block min-w-full align-middle">
+          <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+            <thead className="bg-gray-50 dark:bg-gray-800">
+              <tr>
+                <th className="px-3 sm:px-6 py-3">
+                  <div className="h-4 bg-gray-200 dark:bg-gray-600 rounded w-8" />
+                </th>
+                {[...Array(5)].map((_, i) => (
+                  <th key={i} className={`px-3 sm:px-6 py-3 ${i === 1 || i === 2 ? 'hidden sm:table-cell' : ''}`}>
+                    <div className="h-4 bg-gray-200 dark:bg-gray-600 rounded w-20" />
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {[...Array(3)].map((_, i) => (
+                <tr key={i} className="animate-pulse">
+                  {[...Array(6)].map((_, j) => (
+                    <td key={j} className={`px-3 sm:px-6 py-4 ${j === 1 || j === 2 ? 'hidden sm:table-cell' : ''}`}>
+                      <div className="h-4 bg-gray-100 dark:bg-gray-700 rounded w-full" />
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </>
 );
 
 const EmptyState = () => (
