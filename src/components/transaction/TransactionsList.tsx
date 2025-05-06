@@ -75,10 +75,18 @@ const TransactionItem = ({
   const { exchangeRates } = useSettings();
   const category = getCategoryById(transaction.category, transaction.type);
 
-  const { displayAmount } = useMemo(() => 
-    calculateDisplayAmount(transaction, userCurrency, exchangeRates.KHR_USD),
-    [transaction, userCurrency, exchangeRates]
-  );
+  const { displayAmount, showOriginal, originalAmount } = useMemo(() => {
+    const result = calculateDisplayAmount(transaction, userCurrency, exchangeRates.KHR_USD);
+    const shouldShowOriginal = 
+      transaction.originalCurrency && 
+      transaction.originalCurrency !== userCurrency;
+
+    return {
+      displayAmount: result.displayAmount,
+      showOriginal: shouldShowOriginal,
+      originalAmount: transaction.originalAmount || transaction.amount
+    };
+  }, [transaction, userCurrency, exchangeRates]);
 
   const handleEdit = () => setShowEditModal(true);
 
@@ -118,10 +126,20 @@ const TransactionItem = ({
               ? 'text-green-600 dark:text-green-400' 
               : 'text-red-600 dark:text-red-400'
           }`}>
-            {transaction.type === 'income' ? '+' : '-'}{''}
+            {transaction.type === 'income' ? '+' : '-'}{' '}
             {userCurrency === 'KHR' ? '៛' : '$'}
-            {Math.abs(displayAmount)}
+            {new Intl.NumberFormat(undefined, {
+              minimumFractionDigits: userCurrency === 'KHR' ? 0 : 2,
+            }).format(Math.abs(displayAmount))}
           </span>
+          {showOriginal && (
+            <span className="text-xs text-gray-500">
+              {transaction.originalCurrency === 'KHR' ? '៛' : '$'}
+              {new Intl.NumberFormat(undefined, {
+                minimumFractionDigits: transaction.originalCurrency === 'KHR' ? 0 : 2,
+              }).format(Math.abs(originalAmount))}
+            </span>
+          )}
         </div>
       </td>
       <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-right">
