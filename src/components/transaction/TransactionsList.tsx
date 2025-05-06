@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { Transaction } from '../../contexts/TransactionContext';
 import { getCategoryById } from '../../utils/categories';
-import { formatCurrency } from '../../utils/formatters';
+// import { formatCurrency } from '../../utils/formatters';
 import { CategoryIcon } from './CategoryIcon';
 import { TransactionModal } from './TransactionModal';
 import { useUserCurrency } from '../../hooks/useUserCurrency';
@@ -39,6 +39,7 @@ export const TransactionsList = ({
         <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
           <thead className="bg-gray-50 dark:bg-gray-800">
             <tr>
+              <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-16">No.</th>
               <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Category</th>
               <th className="hidden sm:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Description</th>
               <th className="hidden md:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Date</th>
@@ -47,8 +48,12 @@ export const TransactionsList = ({
             </tr>
           </thead>
           <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
-            {displayTransactions.map((transaction) => (
-              <TransactionItem key={transaction.id} transaction={transaction} />
+            {displayTransactions.map((transaction, index) => (
+              <TransactionItem 
+                key={transaction.id} 
+                transaction={transaction} 
+                index={index + 1}
+              />
             ))}
           </tbody>
         </table>
@@ -57,14 +62,20 @@ export const TransactionsList = ({
   );
 };
 
-const TransactionItem = ({ transaction }: { transaction: Transaction }) => {
+const TransactionItem = ({ 
+  transaction, 
+  index 
+}: { 
+  transaction: Transaction;
+  index: number;
+}) => {
   const [showEditModal, setShowEditModal] = useState(false);
   const { deleteTransaction } = useTransactions();
   const userCurrency = useUserCurrency();
   const { exchangeRates } = useSettings();
   const category = getCategoryById(transaction.category, transaction.type);
 
-  const { displayAmount, showOriginal } = useMemo(() => 
+  const { displayAmount } = useMemo(() => 
     calculateDisplayAmount(transaction, userCurrency, exchangeRates.KHR_USD),
     [transaction, userCurrency, exchangeRates]
   );
@@ -73,6 +84,9 @@ const TransactionItem = ({ transaction }: { transaction: Transaction }) => {
 
   return (
     <tr className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors duration-200">
+      <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+        {index}
+      </td>
       <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
         <div className="flex items-center gap-2 sm:gap-3">
           <CategoryIcon category={category} />
@@ -98,22 +112,17 @@ const TransactionItem = ({ transaction }: { transaction: Transaction }) => {
         {new Date(transaction.date).toLocaleDateString()}
       </td>
       <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-right">
-        <span className={`text-sm font-medium ${
-          transaction.type === 'income' 
-            ? 'text-green-600 dark:text-green-400' 
-            : 'text-red-600 dark:text-red-400'
-        }`}>
-          {transaction.type === 'income' ? '+' : '-'}
-          {formatCurrency(displayAmount, userCurrency)}
-        </span>
-        {showOriginal && transaction.originalCurrency && (
-          <div className="text-xs text-gray-500">
-            {formatCurrency(
-              Math.abs(transaction.originalAmount || transaction.amount),
-              transaction.originalCurrency
-            )}
-          </div>
-        )}
+        <div className="flex flex-col items-end">
+          <span className={`text-sm font-medium ${
+            transaction.type === 'income' 
+              ? 'text-green-600 dark:text-green-400' 
+              : 'text-red-600 dark:text-red-400'
+          }`}>
+            {transaction.type === 'income' ? '+' : '-'}{''}
+            {userCurrency === 'KHR' ? '៛' : '$'}
+            {Math.abs(displayAmount)}
+          </span>
+        </div>
       </td>
       <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-right">
         <TransactionActions
@@ -141,6 +150,9 @@ const TransactionSkeleton = () => (
       <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
         <thead className="bg-gray-50 dark:bg-gray-800">
           <tr>
+            <th className="px-3 sm:px-6 py-3">
+              <div className="h-4 bg-gray-200 dark:bg-gray-600 rounded w-8" />
+            </th>
             {[...Array(5)].map((_, i) => (
               <th key={i} className={`px-3 sm:px-6 py-3 ${i === 1 || i === 2 ? 'hidden sm:table-cell' : ''}`}>
                 <div className="h-4 bg-gray-200 dark:bg-gray-600 rounded w-20" />
@@ -151,7 +163,7 @@ const TransactionSkeleton = () => (
         <tbody>
           {[...Array(3)].map((_, i) => (
             <tr key={i} className="animate-pulse">
-              {[...Array(5)].map((_, j) => (
+              {[...Array(6)].map((_, j) => (
                 <td key={j} className={`px-3 sm:px-6 py-4 ${j === 1 || j === 2 ? 'hidden sm:table-cell' : ''}`}>
                   <div className="h-4 bg-gray-100 dark:bg-gray-700 rounded w-full" />
                 </td>
