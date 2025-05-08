@@ -55,31 +55,37 @@ const calculateEnhancedStats = (
   try {
     const monthlyAverage = safeCalculateAverage(transactions);
 
-    // Calculate spending categories only for expenses
-    const categoryTotals = transactions
-      .filter((t) => t.type === "expense")
-      .reduce((acc, curr) => {
-        if (!curr || !curr.category || !curr.amount) return acc;
-        const category = curr.category.trim() || "Uncategorized";
-        acc[category] = (acc[category] || 0) + Math.abs(curr.amount);
-        return acc;
-      }, {} as Record<string, number>);
+    // Calculate categories for both income and expenses
+    const categoryTotals = transactions.reduce((acc, curr) => {
+      if (!curr || !curr.category || !curr.amount) return acc;
+      const category = curr.category.trim() || "Uncategorized";
+      const type = curr.type as 'income' | 'expense';
+      if (!acc[type]) acc[type] = {};
+      acc[type][category] = (acc[type][category] || 0) + Math.abs(curr.amount);
+      return acc;
+    }, {} as Record<'income' | 'expense', Record<string, number>>);
 
-    const totalSpending = Object.values(categoryTotals).reduce(
-      (a, b) => a + b,
-      0
-    );
+    // Calculate totals for each type
+    const totals = {
+      income: Object.values(categoryTotals.income || {}).reduce((a, b) => a + b, 0),
+      expense: Object.values(categoryTotals.expense || {}).reduce((a, b) => a + b, 0)
+    };
 
-    // Calculate top categories with percentages
-    const topCategories = Object.entries(categoryTotals)
-      .filter(([category]) => category && category !== "Uncategorized")
-      .map(([category, amount]) => ({
+    // Create combined top categories array
+    const topCategories = [
+      ...Object.entries(categoryTotals.expense || {}).map(([category, amount]) => ({
         category,
         amount,
-        percentage: (amount / totalSpending) * 100,
+        percentage: (amount / totals.expense) * 100,
+        type: 'expense' as const
+      })),
+      ...Object.entries(categoryTotals.income || {}).map(([category, amount]) => ({
+        category,
+        amount,
+        percentage: (amount / totals.income) * 100,
+        type: 'income' as const
       }))
-      .sort((a, b) => b.amount - a.amount)
-      .slice(0, 5);
+    ].sort((a, b) => b.amount - a.amount);
 
     const currentIncome = Math.max(0, baseStats?.currentIncome || 0);
     const spendingTrend = baseStats?.spendingTrend || 0;

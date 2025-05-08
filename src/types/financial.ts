@@ -17,6 +17,7 @@ export interface CategorySpending {
   category: string;
   amount: number;
   percentage: number;
+  type: 'income' | 'expense';
 }
 
 export interface HealthMetrics {
