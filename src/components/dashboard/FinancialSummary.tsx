@@ -137,7 +137,7 @@ export const FinancialSummary: FC<FinancialSummaryProps> = ({
           <div className="flex items-center gap-4">
             <h2 className="text-xl font-semibold text-gray-900 dark:text-white">{t("dashboard.financial_summary")}</h2>
             <div className="flex items-center gap-3">
-              <div className="bg-blue-50 dark:bg-blue-900/20 px-4 py-1.5 rounded-full">
+              {/* <div className="bg-blue-50 dark:bg-blue-900/20 px-4 py-1.5 rounded-full">
                 <span className="text-sm font-medium text-blue-700 dark:text-blue-400">
                   Score: {healthMetrics.score}/100
                 </span>
@@ -146,7 +146,7 @@ export const FinancialSummary: FC<FinancialSummaryProps> = ({
                 <span className="text-yellow-700 dark:text-yellow-400 bg-yellow-50 dark:bg-yellow-900/20 px-3 py-1.5 rounded-full text-sm font-medium flex items-center gap-1">
                   <span className="text-lg">⚠️</span> {t("dashboard.increased_spending")}
                 </span>
-              )}
+              )} */}
             </div>
           </div>
           <button
@@ -167,7 +167,7 @@ export const FinancialSummary: FC<FinancialSummaryProps> = ({
 
       <div className={`transition-all duration-300 ease-in-out ${isCollapsed ? "max-h-0 opacity-0" : "max-h-[1000px] opacity-100"}`}>
         <div className="p-6 space-y-6">
-          <div className="grid gap-4 sm:grid-cols-2">
+          {/* <div className="grid gap-4 sm:grid-cols-2">
             <MetricCard
               title={t("dashboard.monthly_average")}
               value={formatMonthlyAverage(
@@ -186,14 +186,14 @@ export const FinancialSummary: FC<FinancialSummaryProps> = ({
               value={`${formatNumber(enhancedStats.savingsRate, language)}%`}
               className={enhancedStats.savingsRate > 0 ? "text-green-600" : "text-red-600"}
             />
-          </div>
+          </div> */}
 
-          <HealthIndicator
+          {/* <HealthIndicator
             status={healthMetrics.status}
             message={healthMetrics.message}
             details={healthMetrics.details}
             t={t}
-          />
+          /> */}
 
           {topCategories.length > 0 && (
             <SpendingCategories

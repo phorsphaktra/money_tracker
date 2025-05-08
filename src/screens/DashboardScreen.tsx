@@ -9,10 +9,10 @@ import { SpendingChart } from "../components/dashboard/SpendingChart";
 import { TransactionCard } from "../components/transaction/TransactionCard";
 import { useNavigate } from "react-router-dom";
 import { useTaskContext } from "../contexts/TaskContext";
-import { FinancialSummary } from '../components/dashboard/FinancialSummary';
-import { MonthlyMetricsCard } from '../components/dashboard/MonthlyMetricsCard';
-import { TaskStatsSection } from '../components/dashboard/TaskStatsSection';
-import { calculateDetailedHealth} from "../utils/financialCalculations";
+import { FinancialSummary } from "../components/dashboard/FinancialSummary";
+import { MonthlyMetricsCard } from "../components/dashboard/MonthlyMetricsCard";
+import { TaskStatsSection } from "../components/dashboard/TaskStatsSection";
+import { calculateDetailedHealth } from "../utils/financialCalculations";
 
 const formatNumber = (num: number, language: string) => {
   if (language === "km") {
@@ -23,9 +23,6 @@ const formatNumber = (num: number, language: string) => {
   }
   return num.toLocaleString("en-US", { minimumFractionDigits: 2 });
 };
-
-
-
 
 const safeCalculateAverage = (transactions: Transaction[]): number => {
   if (!Array.isArray(transactions) || transactions.length === 0) {
@@ -60,7 +57,7 @@ const calculateEnhancedStats = (
 
     // Calculate spending categories only for expenses
     const categoryTotals = transactions
-      .filter(t => t.type === 'expense')
+      .filter((t) => t.type === "expense")
       .reduce((acc, curr) => {
         if (!curr || !curr.category || !curr.amount) return acc;
         const category = curr.category.trim() || "Uncategorized";
@@ -68,7 +65,10 @@ const calculateEnhancedStats = (
         return acc;
       }, {} as Record<string, number>);
 
-    const totalSpending = Object.values(categoryTotals).reduce((a, b) => a + b, 0);
+    const totalSpending = Object.values(categoryTotals).reduce(
+      (a, b) => a + b,
+      0
+    );
 
     // Calculate top categories with percentages
     const topCategories = Object.entries(categoryTotals)
@@ -76,7 +76,7 @@ const calculateEnhancedStats = (
       .map(([category, amount]) => ({
         category,
         amount,
-        percentage: (amount / totalSpending) * 100
+        percentage: (amount / totalSpending) * 100,
       }))
       .sort((a, b) => b.amount - a.amount)
       .slice(0, 5);
@@ -85,7 +85,11 @@ const calculateEnhancedStats = (
     const spendingTrend = baseStats?.spendingTrend || 0;
     const savingsRate = baseStats?.savingsRate || 0;
 
-    const healthMetrics = calculateDetailedHealth(savingsRate, spendingTrend, monthlyAverage);
+    const healthMetrics = calculateDetailedHealth(
+      savingsRate,
+      spendingTrend,
+      monthlyAverage
+    );
 
     return {
       ...baseStats,
@@ -117,21 +121,23 @@ const calculateEnhancedStats = (
 const calculateMonthlyStats = (transactions: Transaction[]) => {
   const currentMonth = new Date().getMonth();
   const lastMonth = currentMonth === 0 ? 11 : currentMonth - 1;
-  
+
   const thisMonthTotal = transactions
-    .filter(t => new Date(t.date).getMonth() === currentMonth)
+    .filter((t) => new Date(t.date).getMonth() === currentMonth)
     .reduce((acc, t) => acc + (t.amount || 0), 0);
-    
+
   const lastMonthTotal = transactions
-    .filter(t => new Date(t.date).getMonth() === lastMonth)
+    .filter((t) => new Date(t.date).getMonth() === lastMonth)
     .reduce((acc, t) => acc + (t.amount || 0), 0);
-    
-  const monthlyChange = lastMonthTotal ? ((thisMonthTotal - lastMonthTotal) / lastMonthTotal) * 100 : 0;
-  
+
+  const monthlyChange = lastMonthTotal
+    ? ((thisMonthTotal - lastMonthTotal) / lastMonthTotal) * 100
+    : 0;
+
   return {
     thisMonth: thisMonthTotal,
     lastMonth: lastMonthTotal,
-    change: monthlyChange
+    change: monthlyChange,
   };
 };
 
@@ -139,33 +145,38 @@ const getMonthOptions = () => {
   const months = [];
   const currentDate = new Date();
   const currentYear = currentDate.getFullYear();
-  
+
   for (let i = 0; i < 12; i++) {
     const date = new Date(currentYear, i, 1);
     months.push({
       value: i,
-      label: date.toLocaleString('default', { month: 'long' })
+      label: date.toLocaleString("default", { month: "long" }),
     });
   }
   return months;
 };
 
-const filterTransactionsByMonth = (transactions: Transaction[], monthIndex: number) => {
+const filterTransactionsByMonth = (
+  transactions: Transaction[],
+  monthIndex: number
+) => {
   const currentYear = new Date().getFullYear();
-  return transactions.filter(transaction => {
+  return transactions.filter((transaction) => {
     const transactionDate = new Date(transaction.date);
-    return transactionDate.getMonth() === monthIndex && 
-           transactionDate.getFullYear() === currentYear;
+    return (
+      transactionDate.getMonth() === monthIndex &&
+      transactionDate.getFullYear() === currentYear
+    );
   });
 };
 
 const calculateMonthlyMetrics = (transactions: Transaction[]) => {
   const income = transactions
-    .filter(t => t.type === 'income')
+    .filter((t) => t.type === "income")
     .reduce((sum, t) => sum + (t.amount || 0), 0);
 
   const spending = transactions
-    .filter(t => t.type === 'expense')
+    .filter((t) => t.type === "expense")
     .reduce((sum, t) => sum + Math.abs(t.amount || 0), 0);
 
   const netBalance = income - spending;
@@ -173,7 +184,7 @@ const calculateMonthlyMetrics = (transactions: Transaction[]) => {
   return {
     income,
     spending,
-    netBalance
+    netBalance,
   };
 };
 
@@ -219,13 +230,13 @@ export const DashboardScreen = () => {
     [stats, filteredTransactionsByMonth]
   );
 
-  const monthlyStats = useMemo(() => 
-    calculateMonthlyStats(filteredTransactionsByMonth),
+  const monthlyStats = useMemo(
+    () => calculateMonthlyStats(filteredTransactionsByMonth),
     [filteredTransactionsByMonth]
   );
 
-  const monthlyMetrics = useMemo(() => 
-    calculateMonthlyMetrics(filteredTransactionsByMonth),
+  const monthlyMetrics = useMemo(
+    () => calculateMonthlyMetrics(filteredTransactionsByMonth),
     [filteredTransactionsByMonth]
   );
 
@@ -236,8 +247,8 @@ export const DashboardScreen = () => {
   }, [filteredTransactionsByMonth]);
 
   const handleViewAll = () => {
-    navigate("/transactions", { 
-      state: { selectedMonth } 
+    navigate("/transactions", {
+      state: { selectedMonth },
     });
   };
 
@@ -276,17 +287,6 @@ export const DashboardScreen = () => {
             ))}
           </select>
         </div>
-        
-        <FinancialSummary
-          enhancedStats={enhancedStats}
-          monthlyStats={monthlyStats}
-          language={language}
-          isCollapsed={isCollapsed}
-          onToggleCollapse={() => setIsCollapsed(!isCollapsed)}
-          formatNumber={formatNumber}
-          t={t}
-          topCategories={enhancedStats.topCategories}
-        />
       </header>
 
       <MonthlyMetricsCard
@@ -295,6 +295,17 @@ export const DashboardScreen = () => {
         formatNumber={formatNumber}
         language={language}
         t={t}
+      />
+
+      <FinancialSummary
+        enhancedStats={enhancedStats}
+        monthlyStats={monthlyStats}
+        language={language}
+        isCollapsed={isCollapsed}
+        onToggleCollapse={() => setIsCollapsed(!isCollapsed)}
+        formatNumber={formatNumber}
+        t={t}
+        topCategories={enhancedStats.topCategories}
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -310,7 +321,6 @@ export const DashboardScreen = () => {
           <SpendingChart
             transactions={filteredTransactionsByMonth}
             isLoading={transactionsLoading}
-           
           />
         </div>
 
@@ -339,7 +349,9 @@ export const DashboardScreen = () => {
             ))}
             {recentTransactions.length === 0 && (
               <p className="text-center text-gray-500 dark:text-gray-400 py-4">
-                {t("dashboard.no_transactions_month", { month: monthOptions[selectedMonth].label })}
+                {t("dashboard.no_transactions_month", {
+                  month: monthOptions[selectedMonth].label,
+                })}
               </p>
             )}
           </div>
