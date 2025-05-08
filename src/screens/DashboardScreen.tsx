@@ -1,10 +1,8 @@
 import { useMemo, useState } from "react";
-import { CardStats } from "../components/dashboard/CardStats";
 import { Transaction, useTransactions } from "../contexts/TransactionContext";
 import { calculateDashboardStats } from "../utils/statsCalculator";
 import { useTranslation } from "react-i18next";
 import { useLanguage } from "../contexts/LanguageContext";
-import { t } from "i18next";
 import { FloatingActionButton } from "../components/shared/FloatingActionButton";
 import { TransactionModal } from "../components/transaction/TransactionModal";
 import { SpendingChart } from "../components/dashboard/SpendingChart";
