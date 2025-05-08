@@ -47,6 +47,7 @@
   },
   "dashboard": {
     "title": "Dashboard",
+    "monthly_metrics": "Monthly Metrics",
     "navigation": {
       "dashboard": "Dashboard",
       "transactions": "Transactions",
@@ -73,6 +74,7 @@
     "completed_tasks": "Completed Tasks",
     "in_progress_tasks": "In Progress Tasks",
     "blocked_tasks": "Blocked Tasks",
+    "no_transactions_month": "No transactions this month",
     "stats": {
       "spending_by_category": "Spending by Category",
       "monthly_summary": "Monthly Summary"

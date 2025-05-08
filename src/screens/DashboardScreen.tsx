@@ -10,9 +10,10 @@ import { TransactionModal } from "../components/transaction/TransactionModal";
 import { SpendingChart } from "../components/dashboard/SpendingChart";
 import { TransactionCard } from "../components/transaction/TransactionCard";
 import { useNavigate } from "react-router-dom";
-import { filterTransactionsByPeriod } from "../utils/dateUtils";
 import { useTaskContext } from "../contexts/TaskContext";
 import { FinancialSummary } from '../components/dashboard/FinancialSummary';
+import { MonthlyMetricsCard } from '../components/dashboard/MonthlyMetricsCard';
+import { TaskStatsSection } from '../components/dashboard/TaskStatsSection';
 
 const formatNumber = (num: number, language: string) => {
   if (language === "km") {
@@ -172,6 +173,48 @@ const calculateMonthlyStats = (transactions: Transaction[]) => {
   };
 };
 
+const getMonthOptions = () => {
+  const months = [];
+  const currentDate = new Date();
+  const currentYear = currentDate.getFullYear();
+  
+  for (let i = 0; i < 12; i++) {
+    const date = new Date(currentYear, i, 1);
+    months.push({
+      value: i,
+      label: date.toLocaleString('default', { month: 'long' })
+    });
+  }
+  return months;
+};
+
+const filterTransactionsByMonth = (transactions: Transaction[], monthIndex: number) => {
+  const currentYear = new Date().getFullYear();
+  return transactions.filter(transaction => {
+    const transactionDate = new Date(transaction.date);
+    return transactionDate.getMonth() === monthIndex && 
+           transactionDate.getFullYear() === currentYear;
+  });
+};
+
+const calculateMonthlyMetrics = (transactions: Transaction[]) => {
+  const income = transactions
+    .filter(t => t.type === 'income')
+    .reduce((sum, t) => sum + (t.amount || 0), 0);
+
+  const spending = transactions
+    .filter(t => t.type === 'expense')
+    .reduce((sum, t) => sum + Math.abs(t.amount || 0), 0);
+
+  const netBalance = income - spending;
+
+  return {
+    income,
+    spending,
+    netBalance
+  };
+};
+
 export const DashboardScreen = () => {
   const { transactions, isLoading: transactionsLoading } = useTransactions();
   const { tasks, loading: tasksLoading } = useTaskContext();
@@ -179,17 +222,18 @@ export const DashboardScreen = () => {
   const { language } = useLanguage();
   const [isAddingNew, setIsAddingNew] = useState(false);
   const navigate = useNavigate();
-  const [period, setPeriod] = useState("6months");
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
+  const monthOptions = useMemo(() => getMonthOptions(), []);
 
-  const stats = useMemo(
-    () => calculateDashboardStats(transactions),
-    [transactions]
+  const filteredTransactionsByMonth = useMemo(
+    () => filterTransactionsByMonth(transactions, selectedMonth),
+    [transactions, selectedMonth]
   );
 
-  const filteredTransactions = useMemo(
-    () => filterTransactionsByPeriod(transactions, period),
-    [transactions, period]
+  const stats = useMemo(
+    () => calculateDashboardStats(filteredTransactionsByMonth),
+    [filteredTransactionsByMonth]
   );
 
   const taskStats = useMemo(() => {
@@ -209,17 +253,30 @@ export const DashboardScreen = () => {
   }, [tasks]);
 
   const enhancedStats = useMemo(
-    () => calculateEnhancedStats(transactions, stats),
-    [stats, transactions]
+    () => calculateEnhancedStats(filteredTransactionsByMonth, stats),
+    [stats, filteredTransactionsByMonth]
   );
 
   const monthlyStats = useMemo(() => 
-    calculateMonthlyStats(transactions),
-    [transactions]
+    calculateMonthlyStats(filteredTransactionsByMonth),
+    [filteredTransactionsByMonth]
   );
 
+  const monthlyMetrics = useMemo(() => 
+    calculateMonthlyMetrics(filteredTransactionsByMonth),
+    [filteredTransactionsByMonth]
+  );
+
+  const recentTransactions = useMemo(() => {
+    return filteredTransactionsByMonth
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+      .slice(0, 5);
+  }, [filteredTransactionsByMonth]);
+
   const handleViewAll = () => {
-    navigate("/transactions");
+    navigate("/transactions", { 
+      state: { selectedMonth } 
+    });
   };
 
   if (transactionsLoading || tasksLoading) {
@@ -243,11 +300,24 @@ export const DashboardScreen = () => {
   // }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6">
-      <header className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">
-          {t("dashboard.title")}
-        </h1>
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 space-y-8">
+      <header>
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">
+            {t("dashboard.title")}
+          </h1>
+          <select
+            value={selectedMonth}
+            onChange={(e) => setSelectedMonth(Number(e.target.value))}
+            className="text-sm border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 focus:ring-indigo-500 focus:border-indigo-500"
+          >
+            {monthOptions.map((month) => (
+              <option key={month.value} value={month.value}>
+                {month.label}
+              </option>
+            ))}
+          </select>
+        </div>
         
         <FinancialSummary
           enhancedStats={enhancedStats}
@@ -262,34 +332,28 @@ export const DashboardScreen = () => {
         />
       </header>
 
-      <StatsGrid
-        stats={enhancedStats}
-        isLoading={transactionsLoading}
+      <MonthlyMetricsCard
+        monthLabel={monthOptions[selectedMonth].label}
+        metrics={monthlyMetrics}
+        formatNumber={formatNumber}
         language={language}
+        t={t}
       />
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 hover:shadow-lg transition-all duration-300 border border-gray-100 dark:border-gray-700">
           <div className="flex justify-between items-center mb-6">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
               {t("dashboard.spending_overview")}
+              <span className="text-sm font-normal text-gray-500">
+                {monthOptions[selectedMonth].label}
+              </span>
             </h3>
-            <select
-              value={period}
-              onChange={(e) => setPeriod(e.target.value)}
-              className="text-sm border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 focus:ring-indigo-500 focus:border-indigo-500"
-            >
-              <option value="7days">{t("dashboard.filters.7days")}</option>
-              <option value="30days">{t("dashboard.filters.30days")}</option>
-              <option value="3months">{t("dashboard.filters.3months")}</option>
-              <option value="6months">{t("dashboard.filters.6months")}</option>
-              <option value="1year">{t("dashboard.filters.1year")}</option>
-            </select>
           </div>
           <SpendingChart
-            transactions={filteredTransactions}
+            transactions={filteredTransactionsByMonth}
             isLoading={transactionsLoading}
-            period={period}
+           
           />
         </div>
 
@@ -297,6 +361,9 @@ export const DashboardScreen = () => {
           <div className="flex justify-between items-center mb-6">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
               {t("dashboard.overview.recent_transactions")}
+              <span className="ml-2 text-sm font-normal text-gray-500">
+                {monthOptions[selectedMonth].label}
+              </span>
             </h3>
             <button
               onClick={handleViewAll}
@@ -306,66 +373,33 @@ export const DashboardScreen = () => {
             </button>
           </div>
           <div className="overflow-hidden space-y-2">
-            {transactions.slice(0, 5).map((transaction, index) => (
+            {recentTransactions.map((transaction, index) => (
               <TransactionCard
                 key={transaction.id}
                 transaction={transaction}
                 index={index}
               />
             ))}
-            {transactions.length === 0 && (
+            {recentTransactions.length === 0 && (
               <p className="text-center text-gray-500 dark:text-gray-400 py-4">
-                {t("dashboard.no_transactions")}
+                {t("dashboard.no_transactions_month", { month: monthOptions[selectedMonth].label })}
               </p>
             )}
           </div>
         </div>
       </div>
 
-      {/* Add Task Stats Section */}
-      <div className="mt-8 bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 hover:shadow-lg transition-all duration-300 border border-gray-100 dark:border-gray-700">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">
-          {t("dashboard.task_overview")}
-        </h3>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <CardStats
-            title={t("dashboard.total_tasks")}
-            value={taskStats.total.toString()}
-            trend={`${formatNumber(taskStats.completionRate, language)}%`}
-            isPositive={true}
-            isLoading={tasksLoading}
-            icon="wallet"
-          />
-          <CardStats
-            title={t("dashboard.completed_tasks")}
-            value={taskStats.completed.toString()}
-            trend=""
-            isPositive={true}
-            isLoading={tasksLoading}
-            icon="income"
-          />
-          <CardStats
-            title={t("dashboard.in_progress_tasks")}
-            value={taskStats.inProgress.toString()}
-            trend=""
-            isPositive={true}
-            isLoading={tasksLoading}
-            icon="income"
-          />
-          <CardStats
-            title={t("dashboard.blocked_tasks")}
-            value={taskStats.blocked.toString()}
-            trend=""
-            isPositive={false}
-            isLoading={tasksLoading}
-            icon="wallet"
-          />
-        </div>
-      </div>
+      <TaskStatsSection
+        stats={taskStats}
+        isLoading={tasksLoading}
+        formatNumber={formatNumber}
+        language={language}
+        t={t}
+      />
 
       <FloatingActionButton
         onClick={() => setIsAddingNew(true)}
-        label="Add Transaction"
+        label={t("dashboard.add_transaction")}
         position="bottom-right"
       />
 
@@ -375,50 +409,3 @@ export const DashboardScreen = () => {
     </div>
   );
 };
-
-const StatsGrid = ({
-  stats,
-  isLoading,
-  language,
-}: {
-  stats: ReturnType<typeof calculateDashboardStats>;
-  isLoading: boolean;
-  language: string;
-}) => (
-  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-    {/* <CardStats
-      title={t('dashboard.overview.total_balance')}
-      value={formatCurrency(stats.totalBalance, language)}
-      trend={`${formatNumber(Number(stats.balanceTrend), language)}%`}
-      isPositive={Number(stats.balanceTrend) >= 0}
-      isLoading={isLoading}
-      icon="wallet"
-    /> */}
-    <CardStats
-      title={t("dashboard.monthly_income")}
-      value={`$${formatNumber(stats.currentIncome, language)}`}
-      trend={`${formatNumber(Number(stats.incomeTrend), language)}%`}
-      isPositive={Number(stats.incomeTrend) >= 0}
-      isLoading={isLoading}
-      icon="income"
-    />
-
-    <CardStats
-      title={t("dashboard.monthly_spending")}
-      value={`$${formatNumber(stats.currentSpending, language)}`}
-      trend={`${formatNumber(Number(stats.spendingTrend), language)}%`}
-      isPositive={Number(stats.spendingTrend) < 0}
-      isLoading={isLoading}
-      icon="spending"
-    />
-
-    <CardStats
-      title={t("dashboard.net_balance")}
-      value={`$${formatNumber(Number(stats.savingsRate), language)}`}
-      trend={`${formatNumber(Number(stats.savingsTrend), language)}%`}
-      isPositive={Number(stats.savingsTrend) >= 0}
-      isLoading={isLoading}
-      icon="savings"
-    />
-  </div>
-);
