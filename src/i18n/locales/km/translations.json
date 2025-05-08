@@ -90,7 +90,6 @@
     "monthly_income": "ចំណូលប្រចាំខែ",
     "savings_rate": "អត្រាសន្សំ",
     "net_balance": "សមតុល្យសុទ្ធ",
-
     "loading": "កំពុងផ្ទុក...",
     "error": "បញ្ហា: ",
     "recent_transactions": "ប្រតិបត្តិការថ្មីៗ",
@@ -107,6 +106,30 @@
     "currencies": {
       "KHR": "រៀល",
       "USD": "ដុល្លារ"
+    },
+    "financial_summary": "សេចក្តីសង្ខេបហិរញ្ញវត្ថុ",
+    "monthly_average": "ការចំណាយជាមធ្យមប្រចាំខែ",
+    "financial_health": "សុខភាពហិរញ្ញវត្ថុ",
+    "spending_alert": "ការចំណាយកើនឡើងខ្ពស់ជាងធម្មតា",
+    "last_updated": "បានធ្វើបច្ចុប្បន្នភាពចុងក្រោយ",
+    "top_categories": "ប្រភេទចំណាយខ្ពស់បំផុត",
+    "top_spending_areas": "តំបន់ចំណាយខ្ពស់បំផុត",
+    "health": {
+      "excellent": "ល្អប្រសើរ",
+      "good": "ល្អ",
+      "warning": "ត្រូវប្រុងប្រយ័ត្ន",
+      "needs-attention": "ត្រូវការការយកចិត្តទុកដាក់",
+      "unknown": "មិនអាចវាយតម្លៃបាន"
+    },
+    "trends": {
+      "increasing": "កំពុងកើនឡើង",
+      "decreasing": "កំពុងថយចុះ",
+      "stable": "ស្ថិរភាព"
+    },
+    "analysis": {
+      "high_spending": "ការចំណាយខ្ពស់",
+      "good_savings": "ការសន្សំល្អ",
+      "need_improvement": "ត្រូវការការកែលម្អ"
     }
   },
   "transactions": {

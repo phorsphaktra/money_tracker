@@ -96,6 +96,30 @@
       "6months": "Last 6 months",
       "1year": "Last 1 year",
       "ytd": "Year to date"
+    },
+    "financial_summary": "Financial Summary",
+    "monthly_average": "Monthly Average",
+    "financial_health": "Financial Health",
+    "spending_alert": "Spending Alert",
+    "last_updated": "Last updated",
+    "top_categories": "Top Spending Categories",
+    "top_spending_areas": "Top Spending Areas",
+    "health": {
+      "excellent": "Excellent",
+      "good":"Good",
+      "warning": "Warning",
+      "needs-attention": "Needs Attention",
+      "unknown": "Unknown"
+    },
+    "trends": {
+      "increasing": "Increasing",
+      "decreasing": "Decreasing",
+      "stable": "Stable"
+    },
+    "analysis": {
+      "high_spending": "High Spending",
+      "good_savings": "Good Savings",
+      "need_improvement": "Needs Improvement"
     }
   },
   "transactions": {
