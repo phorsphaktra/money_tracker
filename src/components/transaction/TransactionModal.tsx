@@ -106,7 +106,7 @@ export const TransactionModal = ({ transaction, onClose, type = 'expense' }: Tra
     setErrors({});
 
     try {
-      const amount = parseFloat(formData.amount);
+      const amount = Math.abs(parseFloat(formData.amount)); // Ensure positive amount
       // Convert to USD if user currency is KHR
       const usdAmount = userCurrency === 'KHR' 
         ? amount / exchangeRates.KHR_USD 
@@ -114,9 +114,9 @@ export const TransactionModal = ({ transaction, onClose, type = 'expense' }: Tra
 
       const transactionData = {
         description: formData.description.trim(),
-        amount: formData.type === 'expense' ? -Math.abs(usdAmount) : Math.abs(usdAmount),
+        amount: usdAmount, // Always store positive amount
         category: formData.category,
-        type: formData.type,
+        type: formData.type, // Use type field to determine if it's expense or income
         date: formData.date,
         ...(userCurrency === 'KHR' && {
           originalAmount: amount,
@@ -221,37 +221,41 @@ export const TransactionModal = ({ transaction, onClose, type = 'expense' }: Tra
                 showConverted: userCurrency === 'KHR'
               },
               { id: 'date' as const, label: 'Date', type: 'date' }
-            ].map(field => (
-              <div key={field.id} className="space-y-1">
-                <label className="block text-sm font-medium text-gray-700">
-                  {field.label}
-                </label>
-                <div className="relative">
-                  {field.prefix && (
-                    <span className="absolute left-3 top-2 text-gray-500">
-                      {field.prefix}
-                    </span>
-                  )}
-                  <input
-                    {...field}
-                    value={formData[field.id]}
-                    onChange={handleChange(field.id)}
-                    className={`block w-full px-3 py-2 rounded-md border 
-                      ${errors[field.id] ? 'border-red-500' : 'border-gray-300'}
-                      ${field.prefix ? 'pl-7' : ''}
-                      focus:ring-indigo-500 focus:border-indigo-500 shadow-sm`}
-                  />
-                </div>
-                {field.showConverted && userCurrency === 'KHR' && formData.amount && (
-                  <div className="text-sm text-gray-500 mt-1">
-                    Amount in USD: {convertedAmount}
+            ].map(field => {
+              // Separate DOM props from custom props
+              const { showConverted, prefix, label, ...inputProps } = field;
+              return (
+                <div key={field.id} className="space-y-1">
+                  <label className="block text-sm font-medium text-gray-700">
+                    {label}
+                  </label>
+                  <div className="relative">
+                    {prefix && (
+                      <span className="absolute left-3 top-2 text-gray-500">
+                        {prefix}
+                      </span>
+                    )}
+                    <input
+                      {...inputProps}
+                      value={formData[field.id]}
+                      onChange={handleChange(field.id)}
+                      className={`block w-full px-3 py-2 rounded-md border 
+                        ${errors[field.id] ? 'border-red-500' : 'border-gray-300'}
+                        ${prefix ? 'pl-7' : ''}
+                        focus:ring-indigo-500 focus:border-indigo-500 shadow-sm`}
+                    />
                   </div>
-                )}
-                {errors[field.id] && (
-                  <p className="text-sm text-red-600 mt-1">{errors[field.id]}</p>
-                )}
-              </div>
-            ))}
+                  {showConverted && userCurrency === 'KHR' && formData.amount && (
+                    <div className="text-sm text-gray-500 mt-1">
+                      Amount in USD: {convertedAmount}
+                    </div>
+                  )}
+                  {errors[field.id] && (
+                    <p className="text-sm text-red-600 mt-1">{errors[field.id]}</p>
+                  )}
+                </div>
+              );
+            })}
           </div>
 
           {/* Category Selection */}
