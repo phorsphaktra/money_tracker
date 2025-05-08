@@ -104,12 +104,11 @@ export const DashboardScreen = () => {
                 onChange={(e) => setPeriod(e.target.value)}
                 className="text-sm border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 focus:ring-indigo-500 focus:border-indigo-500"
               >
-                <option value="7days">{t('filters.7days')}</option>
-                <option value="30days">{t('filters.30days')}</option>
-                <option value="3months">{t('filters.3months')}</option>
-                <option value="6months">{t('filters.6months')}</option>
-                <option value="1year">{t('filters.1year')}</option>
-                <option value="ytd">{t('filters.ytd')}</option>
+                <option value="7days">{t('dashboard.filters.7days')}</option>
+                <option value="30days">{t('dashboard.filters.30days')}</option>
+                <option value="3months">{t('dashboard.filters.3months')}</option>
+                <option value="6months">{t('dashboard.filters.6months')}</option>
+                <option value="1year">{t('dashboard.filters.1year')}</option>
               </select>
             </div>
             <SpendingChart 

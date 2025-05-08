@@ -88,8 +88,14 @@
     "net_balance": "Net Balance",
     "loading": "Loading...",
     "error": "Error: ",
-    "filter": {
-      "select_period": "Select period"
+    "filters": {
+      "select_period": "Select period",
+      "7days": "Last 7 days",
+      "30days": "Last 30 days",
+      "3months": "Last 3 months",
+      "6months": "Last 6 months",
+      "1year": "Last 1 year",
+      "ytd": "Year to date"
     }
   },
   "transactions": {
