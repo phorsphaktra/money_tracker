@@ -9,6 +9,7 @@ import { useSettings } from '../../contexts/SettingsContext';
 import { getEditableAmount, calculateDisplayAmount } from '../../utils/currencyUtils';
 import { useTransactions } from '../../contexts/TransactionContext';
 import { ConfirmDialog } from '../ConfirmDialog';
+import { LoadingSpinner } from '../shared/LoadingSpinner';
 
 interface TransactionCardProps {
   transaction: Transaction;
@@ -121,9 +122,13 @@ export const TransactionCard = ({ transaction }: TransactionCardProps) => {
             hover:scale-105 hover:bg-red-600 active:scale-95 disabled:opacity-50"
           style={{ transform: `scale(${Math.min(Math.abs(swipeOffset) / 150, 1)})` }}
         >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-          </svg>
+          {isDeleting ? (
+            <LoadingSpinner size="small" className="text-white" />
+          ) : (
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+          )}
         </button>
       </div>
 
@@ -211,7 +216,6 @@ export const TransactionCard = ({ transaction }: TransactionCardProps) => {
         onConfirm={handleDeleteConfirm}
         title="Delete Transaction"
         message="Are you sure you want to delete this transaction? This action cannot be undone."
-        confirmLabel="Delete"
         confirmButtonClass="bg-red-500 hover:bg-red-600"
         loading={isDeleting}
       />

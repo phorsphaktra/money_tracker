@@ -9,6 +9,7 @@ import { getEditableAmount, calculateDisplayAmount } from '../../utils/currencyU
 import { useTransactions } from '../../contexts/TransactionContext';
 import { TransactionActions } from './TransactionActions';
 import { TransactionCard } from './TransactionCard';
+import { LoadingSpinner } from '../shared/LoadingSpinner';
 
 interface TransactionsListProps {
   transactions: Transaction[];
@@ -188,53 +189,14 @@ const TransactionSkeleton = () => (
   <>
     {/* Mobile Skeleton */}
     <div className="md:hidden space-y-3 px-4">
-      {[...Array(3)].map((_, i) => (
-        <div key={i} className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 space-y-3 animate-pulse">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 bg-gray-200 dark:bg-gray-700 rounded-full" />
-              <div>
-                <div className="h-4 w-24 bg-gray-200 dark:bg-gray-700 rounded" />
-                <div className="h-3 w-16 bg-gray-100 dark:bg-gray-600 rounded mt-2" />
-              </div>
-            </div>
-            <div className="h-4 w-20 bg-gray-200 dark:bg-gray-700 rounded" />
-          </div>
-        </div>
-      ))}
+      <div className="flex justify-center py-8">
+        <LoadingSpinner size="large" className="text-primary" />
+      </div>
     </div>
 
     {/* Desktop Skeleton */}
-    <div className="hidden md:block">
-      <div className="overflow-x-auto -mx-4 sm:mx-0">
-        <div className="inline-block min-w-full align-middle">
-          <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-            <thead className="bg-gray-50 dark:bg-gray-800">
-              <tr>
-                <th className="px-3 sm:px-6 py-3">
-                  <div className="h-4 bg-gray-200 dark:bg-gray-600 rounded w-8" />
-                </th>
-                {[...Array(5)].map((_, i) => (
-                  <th key={i} className={`px-3 sm:px-6 py-3 ${i === 1 || i === 2 ? 'hidden sm:table-cell' : ''}`}>
-                    <div className="h-4 bg-gray-200 dark:bg-gray-600 rounded w-20" />
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {[...Array(3)].map((_, i) => (
-                <tr key={i} className="animate-pulse">
-                  {[...Array(6)].map((_, j) => (
-                    <td key={j} className={`px-3 sm:px-6 py-4 ${j === 1 || j === 2 ? 'hidden sm:table-cell' : ''}`}>
-                      <div className="h-4 bg-gray-100 dark:bg-gray-700 rounded w-full" />
-                    </td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
+    <div className="hidden md:flex justify-center py-12">
+      <LoadingSpinner size="large" className="text-primary" />
     </div>
   </>
 );
