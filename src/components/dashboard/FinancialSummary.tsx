@@ -10,7 +10,6 @@ interface FinancialSummaryProps {
   onToggleCollapse: () => void;
   formatNumber: (num: number, language: string) => string;
   t: (key: string) => string;
-  calculateFinancialScore: (stats: any) => number;
   topCategories: CategorySpending[];
 }
 
@@ -123,7 +122,6 @@ export const FinancialSummary: FC<FinancialSummaryProps> = ({
   onToggleCollapse,
   formatNumber,
   t,
-  calculateFinancialScore,
   topCategories
 }) => {
   const healthMetrics = calculateDetailedHealth(
@@ -141,7 +139,7 @@ export const FinancialSummary: FC<FinancialSummaryProps> = ({
             <div className="flex items-center gap-3">
               <div className="bg-blue-50 dark:bg-blue-900/20 px-4 py-1.5 rounded-full">
                 <span className="text-sm font-medium text-blue-700 dark:text-blue-400">
-                  Score: {calculateFinancialScore(enhancedStats)}/100
+                  Score: {healthMetrics.score}/100
                 </span>
               </div>
               {enhancedStats.hasIncreasedSpending && (

@@ -1,4 +1,4 @@
-import { MonthlyStats, HealthMetrics } from '../types/financial';
+import { MonthlyStats, HealthMetrics} from '../types/financial';
 
 export const calculateMonthlyAverageAmount = (monthlyStats: MonthlyStats): number => {
   const { thisMonth, lastMonth } = monthlyStats;

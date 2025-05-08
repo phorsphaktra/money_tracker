@@ -12,6 +12,7 @@ import { useTaskContext } from "../contexts/TaskContext";
 import { FinancialSummary } from '../components/dashboard/FinancialSummary';
 import { MonthlyMetricsCard } from '../components/dashboard/MonthlyMetricsCard';
 import { TaskStatsSection } from '../components/dashboard/TaskStatsSection';
+import { calculateDetailedHealth} from "../utils/financialCalculations";
 
 const formatNumber = (num: number, language: string) => {
   if (language === "km") {
@@ -23,47 +24,8 @@ const formatNumber = (num: number, language: string) => {
   return num.toLocaleString("en-US", { minimumFractionDigits: 2 });
 };
 
-interface FinancialHealth {
-  status: "excellent" | "good" | "warning" | "needs-attention" | "unknown";
-  message: string;
-}
 
-const calculateFinancialHealth = (
-  savingsRate: number,
-  spendingTrend: number
-): FinancialHealth => {
-  if (!isFinite(savingsRate) || !isFinite(spendingTrend)) {
-    return { status: "unknown", message: "Invalid data" };
-  }
 
-  if (savingsRate > 30 && spendingTrend < 0) {
-    return {
-      status: "excellent",
-      message: "Excellent savings and controlled spending",
-    };
-  }
-  if (savingsRate > 0) {
-    return { status: "good", message: "Positive savings rate" };
-  }
-  if (savingsRate === 0) {
-    return { status: "warning", message: "No savings accumulated" };
-  }
-  return { status: "needs-attention", message: "Negative savings rate" };
-};
-
-const calculateFinancialScore = (stats: any): number => {
-  const savingsScore =
-    (stats.savingsRate > 0 ? 40 : 0) * Math.min(stats.savingsRate / 30, 1);
-  const spendingScore = Math.max(
-    0,
-    30 * (1 - Math.max(stats.spendingTrend, 0) / 100)
-  );
-  const incomeScore = Math.max(
-    0,
-    30 * (1 + Math.min(stats.incomeTrend, 100) / 100)
-  );
-  return Math.min(100, Math.round(savingsScore + spendingScore + incomeScore));
-};
 
 const safeCalculateAverage = (transactions: Transaction[]): number => {
   if (!Array.isArray(transactions) || transactions.length === 0) {
@@ -123,7 +85,7 @@ const calculateEnhancedStats = (
     const spendingTrend = baseStats?.spendingTrend || 0;
     const savingsRate = baseStats?.savingsRate || 0;
 
-    const health = calculateFinancialHealth(savingsRate, spendingTrend);
+    const healthMetrics = calculateDetailedHealth(savingsRate, spendingTrend, monthlyAverage);
 
     return {
       ...baseStats,
@@ -131,8 +93,9 @@ const calculateEnhancedStats = (
       topCategories,
       hasIncreasedSpending: spendingTrend > 10,
       hasSavingsGoal: savingsRate > currentIncome * 0.2,
-      financialHealth: health.status,
-      healthMessage: health.message,
+      financialHealth: healthMetrics.status,
+      healthMessage: healthMetrics.message,
+      healthDetails: healthMetrics.details,
       lastUpdated: new Date().toISOString(),
     };
   } catch (error) {
@@ -145,6 +108,7 @@ const calculateEnhancedStats = (
       hasSavingsGoal: false,
       financialHealth: "unknown",
       healthMessage: "Error calculating stats",
+      healthDetails: null,
       lastUpdated: new Date().toISOString(),
     };
   }
@@ -293,10 +257,6 @@ export const DashboardScreen = () => {
     );
   }
 
-  // if (transactionError || tasksError) {
-  //     return <DashboardError error={transactionError || tasksError} />;
-  // }
-
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 space-y-8">
       <header>
@@ -325,7 +285,6 @@ export const DashboardScreen = () => {
           onToggleCollapse={() => setIsCollapsed(!isCollapsed)}
           formatNumber={formatNumber}
           t={t}
-          calculateFinancialScore={calculateFinancialScore}
           topCategories={enhancedStats.topCategories}
         />
       </header>

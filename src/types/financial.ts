@@ -29,3 +29,15 @@ export interface HealthMetrics {
     balanceHealth: number;
   };
 }
+
+export interface FinancialStats {
+  savingsRate: number;
+  spendingTrend: number;
+  incomeTrend: number;
+  monthlyAverage?: number;
+  currentIncome?: number;
+  monthlyIncome?: number;
+  monthlyExpenses?: number;
+  monthlyDebt?: number;
+  previousMonthExpenses?: number;
+}
