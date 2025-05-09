@@ -3,13 +3,7 @@ import {
   FinancialMetrics,
   MonthlyStats,
   CategorySpending,
-  HealthMetrics,
 } from "../../types/financial";
-import {
-  calculateDetailedHealth,
-  calculateMonthlyAverageAmount,
-  formatMonthlyAverage,
-} from "../../utils/financialCalculations";
 
 interface FinancialSummaryProps {
   enhancedStats: FinancialMetrics;
@@ -21,110 +15,6 @@ interface FinancialSummaryProps {
   t: (key: string) => string;
   topCategories: CategorySpending[];
 }
-
-const MetricCard: FC<{
-  title: string;
-  value: string | number;
-  trend?: { value: number; isPositive: boolean };
-  subtitle?: string;
-  className?: string;
-}> = ({ title, value, trend, subtitle, className }) => (
-  <div
-    className={`bg-white dark:bg-gray-800/40 p-6 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 border border-gray-100 dark:border-gray-700/50 ${className}`}
-  >
-    <div className="flex items-center justify-between mb-3">
-      <div className="text-sm font-medium text-gray-600 dark:text-gray-300">
-        {title}
-      </div>
-      {trend && (
-        <span
-          className={`text-xs px-3 py-1 rounded-full font-medium ${
-            trend.isPositive
-              ? "bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400"
-              : "bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400"
-          }`}
-        >
-          {trend.value > 0 ? "+" : ""}
-          {trend.value.toFixed(1)}%
-        </span>
-      )}
-    </div>
-    <div className="text-3xl font-bold text-gray-900 dark:text-white">
-      {value}
-    </div>
-    {subtitle && (
-      <div className="text-sm text-gray-500 dark:text-gray-400 mt-2">
-        {subtitle}
-      </div>
-    )}
-  </div>
-);
-
-const HealthIndicator: FC<{
-  status: string;
-  message: string;
-  details?: HealthMetrics["details"];
-  t: (key: string) => string;
-}> = ({ status, message, details, t }) => (
-  <div className="bg-white dark:bg-gray-800/40 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700/50">
-    <div className="flex items-center justify-between mb-4">
-      <span className="text-sm font-medium text-gray-600 dark:text-gray-300">
-        {t("dashboard.financial_health")}
-      </span>
-      <span
-        className={`px-3 py-1 rounded-full text-xs font-medium flex items-center gap-2 ${
-          status === "excellent"
-            ? "bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400"
-            : status === "good"
-            ? "bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400"
-            : status === "warning"
-            ? "bg-yellow-50 text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-400"
-            : "bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400"
-        }`}
-      >
-        <span
-          className={`w-2 h-2 rounded-full ${
-            status === "excellent"
-              ? "bg-green-500"
-              : status === "good"
-              ? "bg-blue-500"
-              : status === "warning"
-              ? "bg-yellow-500"
-              : "bg-red-500"
-          }`}
-        ></span>
-        {t(`dashboard.health.${status}`)}
-      </span>
-    </div>
-
-    {details && (
-      <div className="grid grid-cols-3 gap-4 mb-4">
-        <div className="text-center">
-          <div className="text-sm text-gray-500">Savings</div>
-          <div className="text-lg font-semibold">
-            {Math.round(details.savingsHealth)}%
-          </div>
-        </div>
-        <div className="text-center">
-          <div className="text-sm text-gray-500">Spending</div>
-          <div className="text-lg font-semibold">
-            {Math.round(details.spendingHealth)}%
-          </div>
-        </div>
-        <div className="text-center">
-          <div className="text-sm text-gray-500">Balance</div>
-          <div className="text-lg font-semibold">
-            {Math.round(details.balanceHealth)}%
-          </div>
-        </div>
-      </div>
-    )}
-
-    <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
-      {message}
-    </p>
-  </div>
-);
 
 const SpendingCategories: FC<{
   categories: CategorySpending[];
@@ -198,7 +88,6 @@ const SpendingCategories: FC<{
 
 export const FinancialSummary: FC<FinancialSummaryProps> = ({
   enhancedStats,
-  monthlyStats,
   language,
   isCollapsed,
   onToggleCollapse,
@@ -206,11 +95,7 @@ export const FinancialSummary: FC<FinancialSummaryProps> = ({
   t,
   topCategories,
 }) => {
-  const healthMetrics = calculateDetailedHealth(
-    enhancedStats.savingsRate,
-    monthlyStats.change,
-    enhancedStats.monthlyAverage
-  );
+
 
   return (
     <div className="bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700">
