@@ -54,6 +54,8 @@
       "analytics": "Analytics",
       "settings": "Settings"
     },
+    "top_income":" Top Income",
+    "top_expenses":" Top Expense",
     "header": {
       "welcome": "Welcome back",
       "signOut": "Sign out"
