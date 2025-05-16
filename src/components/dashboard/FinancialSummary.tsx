@@ -51,7 +51,8 @@ const SpendingCategories: FC<{
             <div key={category.category} className="space-y-2">
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                  {category.category}
+                  {/* {category.category} */}
+                  {category.category.charAt(0).toUpperCase() + category.category.slice(1).toLowerCase()}
                 </span>
                 <div className="flex items-center space-x-2">
                   <span
