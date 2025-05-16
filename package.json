@@ -4,14 +4,14 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite --mode uat",                       
-    "dev:uat": "vite --mode uat",     
+    "dev": "vite --mode uat",
+    "dev:uat": "vite --mode uat",
     "dev:prod": "vite --mode production",
-    "build": "tsc -b && vite build",  
+    "build": "tsc -b && vite build",
     "build:uat": "node scripts/version-manager.js uat && tsc -b && vite build --mode uat",
-    "build:prod": "node scripts/version-manager.js production && tsc -b && vite build --mode production",  
-   "deploy:uat": "npm run build:uat && firebase use uat && firebase deploy --only hosting:uat",
-  "deploy:prod": "npm run build:prod && firebase use prod && firebase deploy --only hosting:prod",
+    "build:prod": "node scripts/version-manager.js production && tsc -b && vite build --mode production",
+    "deploy:uat": "npm run build:uat && firebase use uat && firebase deploy --only hosting:uat",
+    "deploy:prod": "npm run build:prod && firebase use prod && firebase deploy --only hosting:prod",
     "lint": "eslint .",
     "preview": "vite preview"
   },
@@ -19,6 +19,7 @@
     "@headlessui/react": "^2.2.2",
     "@heroicons/react": "^2.2.0",
     "@tailwindcss/vite": "^4.0.17",
+    "@types/react-datepicker": "^6.2.0",
     "chart.js": "^4.4.8",
     "date-fns": "^4.1.0",
     "firebase": "^11.6.0",
@@ -28,9 +29,11 @@
     "i18next-http-backend": "^3.0.2",
     "react": "^18.2.0",
     "react-chartjs-2": "^5.3.0",
+    "react-datepicker": "^8.3.0",
     "react-dom": "^18.2.0",
     "react-i18next": "^15.4.1",
-    "react-router-dom": "^7.4.1"
+    "react-router-dom": "^7.4.1",
+    "react-swipeable": "^7.0.2"
   },
   "devDependencies": {
     "@eslint/js": "^9.21.0",

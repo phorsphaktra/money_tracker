@@ -43,16 +43,21 @@
     "close": "Close",
     "loading": "Loading...",
     "confirm": "Confirm",
-    "settings": "Settings"
+    "settings": "Settings",
+    "done": "Done",
+    "clear": "Clear"
   },
   "dashboard": {
     "title": "Dashboard",
+    "monthly_metrics": "Monthly Metrics",
     "navigation": {
       "dashboard": "Dashboard",
       "transactions": "Transactions",
       "analytics": "Analytics",
       "settings": "Settings"
     },
+    "top_income":" Top Income",
+    "top_expenses":" Top Expense",
     "header": {
       "welcome": "Welcome back",
       "signOut": "Sign out"
@@ -68,6 +73,12 @@
       "recent_transactions": "Recent Transactions",
       "no_transactions": "No recent transactions"
     },
+    "task_overview": "Task Overview",
+    "total_tasks": "Total Tasks",
+    "completed_tasks": "Completed Tasks",
+    "in_progress_tasks": "In Progress Tasks",
+    "blocked_tasks": "Blocked Tasks",
+    "no_transactions_month": "No transactions this month",
     "stats": {
       "spending_by_category": "Spending by Category",
       "monthly_summary": "Monthly Summary"
@@ -83,8 +94,38 @@
     "net_balance": "Net Balance",
     "loading": "Loading...",
     "error": "Error: ",
-    "filter": {
-      "select_period": "Select period"
+    "filters": {
+      "select_period": "Select period",
+      "7days": "Last 7 days",
+      "30days": "Last 30 days",
+      "3months": "Last 3 months",
+      "6months": "Last 6 months",
+      "1year": "Last 1 year",
+      "ytd": "Year to date"
+    },
+    "financial_summary": "Financial Summary",
+    "monthly_average": "Monthly Average",
+    "financial_health": "Financial Health",
+    "spending_alert": "Spending Alert",
+    "last_updated": "Last updated",
+    "top_categories": "Top Spending Categories",
+    "top_spending_areas": "Top Spending Areas",
+    "health": {
+      "excellent": "Excellent",
+      "good":"Good",
+      "warning": "Warning",
+      "needs-attention": "Needs Attention",
+      "unknown": "Unknown"
+    },
+    "trends": {
+      "increasing": "Increasing",
+      "decreasing": "Decreasing",
+      "stable": "Stable"
+    },
+    "analysis": {
+      "high_spending": "High Spending",
+      "good_savings": "Good Savings",
+      "need_improvement": "Needs Improvement"
     }
   },
   "transactions": {
@@ -116,6 +157,19 @@
       "category": "Category",
       "amount": "Amount",
       "actions": "Actions"
+    },
+    "dateRange":{
+      "allTime": "All Time",
+      "today": "Today",
+      "yesterday": "Yesterday",
+      "thisWeek": "This Week",
+      "last7Days": "Last 7 Days",
+      "thisMonth": "This Month",
+      "lastMonth": "Last Month",
+      "custom": "Custom Range",
+      "endDate": "End Date",
+      "startDate": "Start Date",
+      "selectDate" : "Select Date"
     }
   },
   "transaction": {

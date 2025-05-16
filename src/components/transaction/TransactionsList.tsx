@@ -1,31 +1,111 @@
+import { useState, useMemo, useEffect } from 'react';
 import { Transaction } from '../../contexts/TransactionContext';
 import { getCategoryById } from '../../utils/categories';
-import { formatCurrency } from '../../utils/formatters';
 import { CategoryIcon } from './CategoryIcon';
+import { TransactionModal } from './TransactionModal';
+import { useUserCurrency } from '../../hooks/useUserCurrency';
+import { useSettings } from '../../contexts/SettingsContext';
+import { getEditableAmount, calculateDisplayAmount } from '../../utils/currencyUtils';
+import { useTransactions } from '../../contexts/TransactionContext';
+import { TransactionActions } from './TransactionActions';
+import { TransactionCard } from './TransactionCard';
+import { LoadingSpinner } from '../shared/LoadingSpinner';
 
+/**
+ * Props for the TransactionsList component
+ * @interface TransactionsListProps
+ * @property {Transaction[]} transactions - Array of transactions to display
+ * @property {boolean} [isLoading] - Loading state of the transactions
+ * @property {number} [limit] - Optional limit to display only N transactions
+ * @property {boolean} [showFilters] - Whether to show filtering controls
+ * @property {number} [itemsPerPage=10] - Number of items to show per page
+ * @property {Date|null} [startDate] - Optional start date for filtering transactions
+ * @property {Date|null} [endDate] - Optional end date for filtering transactions
+ */
 interface TransactionsListProps {
   transactions: Transaction[];
   isLoading?: boolean;
   limit?: number;
   showFilters?: boolean;
+  itemsPerPage?: number;
+  startDate?: Date | null;
+  endDate?: Date | null;
 }
 
+/**
+ * TransactionsList component displays a paginated list of transactions
+ * with both mobile and desktop views.
+ *
+ * @component
+ * @example
+ * ```tsx
+ * <TransactionsList
+ *   transactions={transactions}
+ *   isLoading={false}
+ *   itemsPerPage={10}
+ * />
+ * ```
+ */
 export const TransactionsList = ({ 
   transactions,
   isLoading,
-  limit}: TransactionsListProps) => {
-  const displayTransactions = limit 
-    ? transactions.slice(0, limit)
-    : transactions;
+  limit,
+  itemsPerPage = 10,
+  startDate,
+  endDate
+}: TransactionsListProps) => {
+  const [currentPage, setCurrentPage] = useState(1);
+  
+  // Reset pagination when transactions change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [transactions]);
+
+  /** 
+   * Filter and paginate transactions
+   */
+  const paginatedTransactions = useMemo(() => {
+    // First apply date filtering
+    let filtered = transactions;
+    if (startDate || endDate) {
+      filtered = transactions.filter(transaction => {
+        const transactionDate = new Date(transaction.date);
+        // Set times to beginning and end of day for comparison
+        const startOfDate = startDate ? new Date(startDate.setHours(0, 0, 0, 0)) : null;
+        const endOfDate = endDate ? new Date(endDate.setHours(23, 59, 59, 999)) : null;
+
+        if (startOfDate && transactionDate < startOfDate) return false;
+        if (endOfDate && transactionDate > endOfDate) return false;
+        return true;
+      });
+    }
+
+    // Then apply limit or pagination
+    if (limit) return filtered.slice(0, limit);
+    
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    return filtered.slice(startIndex, endIndex);
+  }, [transactions, currentPage, itemsPerPage, limit, startDate, endDate]);
+
+  // Calculate total pages based on filtered transactions
+  const totalPages = Math.ceil(
+    (startDate || endDate ? 
+      transactions.filter(t => {
+        const date = new Date(t.date);
+        return (!startDate || date >= startDate) && 
+               (!endDate || date <= endDate);
+      }).length : 
+      transactions.length) / itemsPerPage
+  );
+
+  // Reset pagination when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [transactions, startDate, endDate]);
 
   if (isLoading) {
-    return (
-      <div className="space-y-4">
-        {[...Array(3)].map((_, i) => (
-          <TransactionSkeleton key={i} />
-        ))}
-      </div>
-    );
+    return <TransactionSkeleton />;
   }
 
   if (!transactions.length) {
@@ -33,66 +113,236 @@ export const TransactionsList = ({
   }
 
   return (
-    <div className="divide-y divide-gray-200 dark:divide-gray-700">
-      {displayTransactions.map((transaction) => (
-        <TransactionItem key={transaction.id} transaction={transaction} />
-      ))}
+    <div className="w-full mx-auto mb-auto">
+      {/* Mobile View */}
+      <div className="md:hidden space-y-2">
+        <div className="bg-gray-50 dark:bg-gray-800/50 backdrop-blur-sm sticky top-0 z-10 p-3 -mx-4">
+          <h2 className="text-sm font-medium text-gray-600 dark:text-gray-300">
+            Recent Transactions
+          </h2>
+        </div>
+        <div className="space-y-2 px-4">
+          {paginatedTransactions.map((transaction, index) => (
+            <TransactionCard
+              key={transaction.id}
+              transaction={transaction}
+              index={(currentPage - 1) * itemsPerPage + index + 1}
+            />
+          ))}
+        </div>
+      </div>
+
+      {/* Desktop View */}
+      <div className="hidden md:block overflow-x-auto -mx-4 sm:mx-0">
+        <div className="inline-block min-w-full align-middle">
+          {/* Add date range info if filtering */}
+          {(startDate || endDate) && (
+            <div className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">
+              Showing transactions from 
+              {startDate ? ` ${startDate.toLocaleDateString()}` : ' the beginning'} 
+              to
+              {endDate ? ` ${endDate.toLocaleDateString()}` : ' now'}
+            </div>
+          )}
+
+          <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+            <thead className="bg-gray-50 dark:bg-gray-800">
+              <tr>
+                <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-16">No.</th>
+                <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Category</th>
+                <th className="hidden sm:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Description</th>
+                <th className="hidden md:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Date</th>
+                <th className="px-3 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Amount</th>
+                <th className="px-3 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
+              {paginatedTransactions.map((transaction, index) => (
+                <TransactionItem 
+                  key={transaction.id} 
+                  transaction={transaction} 
+                  index={(currentPage - 1) * itemsPerPage + index + 1}
+                />
+              ))}
+            </tbody>
+          </table>
+          
+          {/* Pagination Controls - Update display text to show filtered counts */}
+          {!limit && totalPages > 1 && (
+            <div className="flex items-center justify-between px-4 py-3 border-t border-gray-200 dark:border-gray-700">
+              <div className="flex items-center">
+                <p className="text-sm text-gray-700 dark:text-gray-300">
+                  Showing{' '}
+                  <span className="font-medium">
+                    {Math.min(((currentPage - 1) * itemsPerPage) + 1, transactions.length)}
+                  </span>
+                  {' '}-{' '}
+                  <span className="font-medium">
+                    {Math.min(currentPage * itemsPerPage, transactions.length)}
+                  </span>
+                  {' '}of{' '}
+                  <span className="font-medium">{transactions.length}</span>
+                  {' '}filtered results
+                </p>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  className="px-3 py-1 text-sm rounded-md border border-gray-300 dark:border-gray-600 
+                    disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-gray-800"
+                >
+                  Previous
+                </button>
+                <button
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                  className="px-3 py-1 text-sm rounded-md border border-gray-300 dark:border-gray-600 
+                    disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-gray-800"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 };
 
-const TransactionItem = ({ transaction }: { transaction: Transaction }) => {
+/**
+ * Renders a single transaction row item
+ * @component
+ * @param {Object} props - Component props
+ * @param {Transaction} props.transaction - Transaction data to display
+ * @param {number} props.index - Index number to display
+ */
+const TransactionItem = ({ 
+  transaction, 
+  index 
+}: { 
+  transaction: Transaction;
+  index: number;
+}) => {
+  const [showEditModal, setShowEditModal] = useState(false);
+  const { deleteTransaction } = useTransactions();
+  const userCurrency = useUserCurrency();
+  const { exchangeRates } = useSettings();
   const category = getCategoryById(transaction.category, transaction.type);
-  
+
+  const { displayAmount, showOriginal, originalAmount } = useMemo(() => {
+    const result = calculateDisplayAmount(transaction, userCurrency, exchangeRates.KHR_USD);
+    const shouldShowOriginal = 
+      transaction.originalCurrency && 
+      transaction.originalCurrency !== userCurrency;
+
+    return {
+      displayAmount: result.displayAmount,
+      showOriginal: shouldShowOriginal,
+      originalAmount: transaction.originalAmount || transaction.amount
+    };
+  }, [transaction, userCurrency, exchangeRates]);
+
+  const handleEdit = () => setShowEditModal(true);
+
   return (
-    <div className="flex items-center justify-between p-4 hover:bg-gray-50 
-      dark:hover:bg-gray-700/50 transition-colors duration-200">
-      <div className="flex items-center gap-3 min-w-0">
-        <div className="flex-shrink-0">
+    <tr className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors duration-200">
+      <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+        {index}
+      </td>
+      <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
+        <div className="flex items-center gap-2 sm:gap-3">
           <CategoryIcon category={category} />
-        </div>
-        <div className="min-w-0">
-          <p className="font-medium text-gray-900 dark:text-white truncate">
-            {transaction.description || category.label}
-          </p>
-          <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
-            <span>{new Date(transaction.date).toLocaleDateString()}</span>
-            <span className="hidden sm:inline">•</span>
-            <span className="hidden sm:inline">{category.label}</span>
+          <div className="sm:hidden flex flex-col">
+            <span className="text-sm font-medium text-gray-900 dark:text-gray-200">
+              {transaction.description || category.label}
+            </span>
+            <span className="text-xs text-gray-500">
+              {new Date(transaction.date).toLocaleDateString()}
+            </span>
           </div>
+          <span className="hidden sm:block text-sm text-gray-900 dark:text-gray-200">
+            {category.label}
+          </span>
         </div>
-      </div>
-      <div className="flex flex-col items-end ml-3">
-        <span className={`text-sm font-medium whitespace-nowrap ${
-          transaction.type === 'income' 
-            ? 'text-green-600 dark:text-green-400' 
-            : 'text-red-600 dark:text-red-400'
-        }`}>
-          {transaction.type === 'income' ? '+' : '-'}
-          {formatCurrency(Math.abs(transaction.amount))}
+      </td>
+      <td className="hidden sm:table-cell px-6 py-4 whitespace-nowrap">
+        <span className="text-sm text-gray-900 dark:text-gray-200">
+          {transaction.description || category.label}
         </span>
-        <div className="flex gap-2 mt-1">
-          <button className="text-xs text-blue-600 dark:text-blue-400">Edit</button>
-          <button className="text-xs text-red-600 dark:text-red-400">Delete</button>
+      </td>
+      <td className="hidden md:table-cell px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+        {new Date(transaction.date).toLocaleDateString()}
+      </td>
+      <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-right">
+        <div className="flex flex-col items-end">
+          <span className={`text-sm font-medium ${
+            transaction.type === 'income' 
+              ? 'text-green-600 dark:text-green-400' 
+              : 'text-red-600 dark:text-red-400'
+          }`}>
+            {transaction.type === 'income' ? '+' : '-'}{' '}
+            {userCurrency === 'KHR' ? '៛' : '$'}
+            {new Intl.NumberFormat(undefined, {
+              minimumFractionDigits: userCurrency === 'KHR' ? 0 : 2,
+            }).format(Math.abs(displayAmount))}
+          </span>
+          {showOriginal && (
+            <span className="text-xs text-gray-500">
+              {transaction.originalCurrency === 'KHR' ? '៛' : '$'}
+              {new Intl.NumberFormat(undefined, {
+                minimumFractionDigits: transaction.originalCurrency === 'KHR' ? 0 : 2,
+              }).format(Math.abs(originalAmount))}
+            </span>
+          )}
         </div>
-      </div>
-    </div>
+      </td>
+      <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-right">
+        <TransactionActions
+          transaction={transaction}
+          onDelete={() => deleteTransaction(transaction.id)}
+          onEdit={handleEdit}
+        />
+      </td>
+      {showEditModal && (
+        <TransactionModal
+          transaction={{
+            ...transaction,
+            amount: getEditableAmount(transaction, userCurrency, exchangeRates.KHR_USD)
+          }}
+          onClose={() => setShowEditModal(false)}
+        />
+      )}
+    </tr>
   );
 };
 
+/**
+ * Loading skeleton for the transactions list
+ * Shows different layouts for mobile and desktop
+ */
 const TransactionSkeleton = () => (
-  <div className="animate-pulse flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
-    <div className="w-10 h-10 bg-gray-200 rounded-full" />
-    <div className="flex-1 space-y-2">
-      <div className="h-4 bg-gray-200 rounded w-1/4" />
-      <div className="h-3 bg-gray-200 rounded w-1/2" />
+  <>
+    {/* Mobile Skeleton */}
+    <div className="md:hidden space-y-3 px-4">
+      <div className="flex justify-center py-8">
+        <LoadingSpinner size="large" className="text-primary" />
+      </div>
     </div>
-    <div className="h-4 bg-gray-200 rounded w-20" />
-  </div>
+
+    {/* Desktop Skeleton */}
+    <div className="hidden md:flex justify-center py-12">
+      <LoadingSpinner size="large" className="text-primary" />
+    </div>
+  </>
 );
 
+/**
+ * Empty state component shown when no transactions are available
+ */
 const EmptyState = () => (
-  <div className="text-center py-8 text-gray-500">
+  <div className="text-center py-8 text-gray-500 bg-white dark:bg-gray-900 rounded-lg">
     No transactions found
   </div>
 );

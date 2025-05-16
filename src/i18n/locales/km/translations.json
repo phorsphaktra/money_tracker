@@ -68,6 +68,11 @@
       "recent_transactions": "ប្រតិបត្តិការថ្មីៗ",
       "no_transactions": "មិនមានប្រតិបត្តិការថ្មីៗ"
     },
+    "task_overview": "ទិដ្ឋភាពទូទៅនៃការងារ",
+    "total_tasks": "ការងារសរុប",
+    "completed_tasks": "ការងារបញ្ចប់",
+    "in_progress_tasks": "ការងារកំពុងដំណើរការ",
+    "blocked_tasks": "ការងារដែលបានចាក់សោ",
     "stats": {
       "spending_by_category": "ការចំណាយតាមប្រភេទ",
       "monthly_summary": "សង្ខេបប្រចាំខែ",
@@ -76,6 +81,7 @@
       "income_trend": "ការប្រែប្រួលចំណូល",
       "savings_trend": "ការប្រែប្រួលការសន្សំ"
     },
+    "no_transactions_month": "មិនមានប្រតិបត្តិការនៅខែនេះទេ",
     "subtitle": "ទិដ្ឋភាពទូទៅនៃស្ថានភាពហិរញ្ញវត្ថុរបស់អ្នក",
     "spending_overview": "ទិដ្ឋភាពទូទៅនៃការចំណាយ",
     "last_6_months": "៦ ខែចុងក្រោយ",
@@ -85,17 +91,46 @@
     "monthly_income": "ចំណូលប្រចាំខែ",
     "savings_rate": "អត្រាសន្សំ",
     "net_balance": "សមតុល្យសុទ្ធ",
-
     "loading": "កំពុងផ្ទុក...",
     "error": "បញ្ហា: ",
     "recent_transactions": "ប្រតិបត្តិការថ្មីៗ",
     "view_all": "មើលទាំងអស់",
-    "filter": {
-      "select_period": "ជ្រើសរើសរយៈពេល"
+    "filters": {
+      "select_period": "ជ្រើសរើសរយៈពេល",
+      "7days": "៧ ថ្ងៃចុងក្រោយ",
+      "30days": "៣០ ថ្ងៃចុងក្រោយ",
+      "3months": "៣ ខែចុងក្រោយ",
+      "6months": "៦ ខែចុងក្រោយ",
+      "1year": "១ ឆ្នាំចុងក្រោយ",
+      "ytd": "ឆ្នាំនេះដល់ថ្ងៃនេះ"
     },
     "currencies": {
       "KHR": "រៀល",
       "USD": "ដុល្លារ"
+    },
+    "financial_summary": "សេចក្តីសង្ខេបហិរញ្ញវត្ថុ",
+    "monthly_average": "ការចំណាយជាមធ្យមប្រចាំខែ",
+    "financial_health": "សុខភាពហិរញ្ញវត្ថុ",
+    "spending_alert": "ការចំណាយកើនឡើងខ្ពស់ជាងធម្មតា",
+    "last_updated": "បានធ្វើបច្ចុប្បន្នភាពចុងក្រោយ",
+    "top_categories": "ប្រភេទចំណាយខ្ពស់បំផុត",
+    "top_spending_areas": "តំបន់ចំណាយខ្ពស់បំផុត",
+    "health": {
+      "excellent": "ល្អប្រសើរ",
+      "good": "ល្អ",
+      "warning": "ត្រូវប្រុងប្រយ័ត្ន",
+      "needs-attention": "ត្រូវការការយកចិត្តទុកដាក់",
+      "unknown": "មិនអាចវាយតម្លៃបាន"
+    },
+    "trends": {
+      "increasing": "កំពុងកើនឡើង",
+      "decreasing": "កំពុងថយចុះ",
+      "stable": "ស្ថិរភាព"
+    },
+    "analysis": {
+      "high_spending": "ការចំណាយខ្ពស់",
+      "good_savings": "ការសន្សំល្អ",
+      "need_improvement": "ត្រូវការការកែលម្អ"
     }
   },
   "transactions": {
@@ -141,6 +176,16 @@
     "type": {
       "income": "ចំណូល",
       "expense": "ចំណាយ"
+    },
+    "dateRange":{
+      "allTime": "រយៈពេលទាំងអស់",
+      "today": "ថ្ងៃនេះ",
+      "yesterday": "ម្សិលមិញ",
+      "thisWeek": "សប្តាហ៍នេះ",
+      "last7Days": "៧ ថ្ងៃចុងក្រោយ",
+      "thisMonth": "ខែនេះ",
+      "lastMonth": "ខែមុន",
+      "custom": "រយៈពេលកំណត់"
     }
   },
   "transaction": {

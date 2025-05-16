@@ -1,7 +1,7 @@
 import { useState } from 'react';
+import { DateRangeSelect } from '../components/shared/DateRangeSelect';
 import { useTransactions} from '../contexts/TransactionContext';
 import { Button } from '../components/shared/Button';
-import { TransactionRow } from '../components/transaction/TransactionRow';
 import { TransactionModal } from '../components/transaction/TransactionModal';
 import { LoadingSpinner } from '../components/shared/LoadingSpinner';
 import { useTranslation } from 'react-i18next';
@@ -13,13 +13,24 @@ export const TransactionsScreen = () => {
   const [filter, setFilter] = useState<'all' | 'income' | 'expense'>('all');
   const [search, setSearch] = useState('');
   const [isAddingNew, setIsAddingNew] = useState(false);
+  const [dateRange, setDateRange] = useState<{start: Date | null, end: Date | null}>({
+    start: null,
+    end: null
+  });
   const { t } = useTranslation();
 
   const filteredTransactions = transactions.filter(transaction => {
     const matchesFilter = filter === 'all' || transaction.type === filter;
     const matchesSearch = transaction.description.toLowerCase().includes(search.toLowerCase()) ||
                          transaction.category.toLowerCase().includes(search.toLowerCase());
-    return matchesFilter && matchesSearch;
+    
+    // Add date filtering
+    const transactionDate = new Date(transaction.date);
+    const matchesDateRange = 
+      (!dateRange.start || transactionDate >= dateRange.start) &&
+      (!dateRange.end || transactionDate <= dateRange.end);
+
+    return matchesFilter && matchesSearch && matchesDateRange;
   });
 
   if (error) {
@@ -64,6 +75,12 @@ export const TransactionsScreen = () => {
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
+        <DateRangeSelect
+          startDate={dateRange.start}
+          endDate={dateRange.end}
+          onDateChange={(start, end) => setDateRange({ start, end })}
+          className="w-full sm:w-56"
+        />
         <div className="flex gap-2 overflow-x-auto py-1 -mx-3 px-3 sm:mx-0 sm:px-0">
           {(['all', 'income', 'expense'] as const).map((type) => (
             <Button
@@ -80,51 +97,13 @@ export const TransactionsScreen = () => {
 
       {/* List Container */}
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden">
-        <div className="hidden sm:block">
-          <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-            <thead className="bg-gray-50 dark:bg-gray-900">
-              <tr>
-                {['no', 'date', 'description', 'category', 'amount', 'actions'].map((header) => (
-                  <th key={header} className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
-                    {t(`transactions.table.${header}`)}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {filteredTransactions.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="px-6 py-4 text-center text-gray-500">
-                    {isLoading ? (
-                      <div className="flex justify-center items-center">
-                        <LoadingSpinner size="small" className="text-indigo-600 mr-2" />
-                        <span>Loading transactions...</span>
-                      </div>
-                    ) : (
-                      'No transactions found'
-                    )}
-                  </td>
-                </tr>
-              ) : (
-                filteredTransactions.map((transaction, index) => (
-                  <TransactionRow
-                    key={transaction.id}
-                    transaction={transaction}
-                    rowNumber={index + 1}
-                  />
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Mobile List View */}
-        <div className="sm:hidden">
-          <TransactionsList 
-            transactions={filteredTransactions}
-            isLoading={isLoading}
-          />
-        </div>
+        <TransactionsList 
+          transactions={filteredTransactions}
+          isLoading={isLoading}
+          showFilters={false}
+          startDate={dateRange.start}
+          endDate={dateRange.end}
+        />
       </div>
 
       {/* FAB and Modal */}

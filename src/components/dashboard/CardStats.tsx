@@ -28,9 +28,9 @@ export const CardStats: React.FC<CardStatsProps> = ({
   trend,
   isPositive,
   isLoading,
-  icon = 'wallet',
+  icon
 }) => {
-  const Icon = icons[icon];
+  const Icon = icon ? icons[icon] : WalletIcon;
 
   if (isLoading) {
     return (
