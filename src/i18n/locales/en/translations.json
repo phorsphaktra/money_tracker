@@ -155,6 +155,16 @@
       "category": "Category",
       "amount": "Amount",
       "actions": "Actions"
+    },
+    "dateRange":{
+      "allTime": "All Time",
+      "today": "Today",
+      "yesterday": "Yesterday",
+      "thisWeek": "This Week",
+      "last7Days": "Last 7 Days",
+      "thisMonth": "This Month",
+      "lastMonth": "Last Month",
+      "custom": "Custom Range"
     }
   },
   "transaction": {

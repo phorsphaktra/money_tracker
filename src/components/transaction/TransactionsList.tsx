@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Transaction } from '../../contexts/TransactionContext';
 import { getCategoryById } from '../../utils/categories';
 import { CategoryIcon } from './CategoryIcon';
@@ -11,21 +11,98 @@ import { TransactionActions } from './TransactionActions';
 import { TransactionCard } from './TransactionCard';
 import { LoadingSpinner } from '../shared/LoadingSpinner';
 
+/**
+ * Props for the TransactionsList component
+ * @interface TransactionsListProps
+ * @property {Transaction[]} transactions - Array of transactions to display
+ * @property {boolean} [isLoading] - Loading state of the transactions
+ * @property {number} [limit] - Optional limit to display only N transactions
+ * @property {boolean} [showFilters] - Whether to show filtering controls
+ * @property {number} [itemsPerPage=10] - Number of items to show per page
+ * @property {Date|null} [startDate] - Optional start date for filtering transactions
+ * @property {Date|null} [endDate] - Optional end date for filtering transactions
+ */
 interface TransactionsListProps {
   transactions: Transaction[];
   isLoading?: boolean;
   limit?: number;
   showFilters?: boolean;
+  itemsPerPage?: number;
+  startDate?: Date | null;
+  endDate?: Date | null;
 }
 
+/**
+ * TransactionsList component displays a paginated list of transactions
+ * with both mobile and desktop views.
+ *
+ * @component
+ * @example
+ * ```tsx
+ * <TransactionsList
+ *   transactions={transactions}
+ *   isLoading={false}
+ *   itemsPerPage={10}
+ * />
+ * ```
+ */
 export const TransactionsList = ({ 
   transactions,
   isLoading,
-  limit
+  limit,
+  itemsPerPage = 10,
+  startDate,
+  endDate
 }: TransactionsListProps) => {
-  const displayTransactions = limit 
-    ? transactions.slice(0, limit)
-    : transactions;
+  const [currentPage, setCurrentPage] = useState(1);
+  
+  // Reset pagination when transactions change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [transactions]);
+
+  /** 
+   * Filter and paginate transactions
+   */
+  const paginatedTransactions = useMemo(() => {
+    // First apply date filtering
+    let filtered = transactions;
+    if (startDate || endDate) {
+      filtered = transactions.filter(transaction => {
+        const transactionDate = new Date(transaction.date);
+        // Set times to beginning and end of day for comparison
+        const startOfDate = startDate ? new Date(startDate.setHours(0, 0, 0, 0)) : null;
+        const endOfDate = endDate ? new Date(endDate.setHours(23, 59, 59, 999)) : null;
+
+        if (startOfDate && transactionDate < startOfDate) return false;
+        if (endOfDate && transactionDate > endOfDate) return false;
+        return true;
+      });
+    }
+
+    // Then apply limit or pagination
+    if (limit) return filtered.slice(0, limit);
+    
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    return filtered.slice(startIndex, endIndex);
+  }, [transactions, currentPage, itemsPerPage, limit, startDate, endDate]);
+
+  // Calculate total pages based on filtered transactions
+  const totalPages = Math.ceil(
+    (startDate || endDate ? 
+      transactions.filter(t => {
+        const date = new Date(t.date);
+        return (!startDate || date >= startDate) && 
+               (!endDate || date <= endDate);
+      }).length : 
+      transactions.length) / itemsPerPage
+  );
+
+  // Reset pagination when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [transactions, startDate, endDate]);
 
   if (isLoading) {
     return <TransactionSkeleton />;
@@ -45,11 +122,11 @@ export const TransactionsList = ({
           </h2>
         </div>
         <div className="space-y-2 px-4">
-          {displayTransactions.map((transaction, index) => (
+          {paginatedTransactions.map((transaction, index) => (
             <TransactionCard
               key={transaction.id}
               transaction={transaction}
-              index={index + 1}
+              index={(currentPage - 1) * itemsPerPage + index + 1}
             />
           ))}
         </div>
@@ -58,6 +135,16 @@ export const TransactionsList = ({
       {/* Desktop View */}
       <div className="hidden md:block overflow-x-auto -mx-4 sm:mx-0">
         <div className="inline-block min-w-full align-middle">
+          {/* Add date range info if filtering */}
+          {(startDate || endDate) && (
+            <div className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">
+              Showing transactions from 
+              {startDate ? ` ${startDate.toLocaleDateString()}` : ' the beginning'} 
+              to
+              {endDate ? ` ${endDate.toLocaleDateString()}` : ' now'}
+            </div>
+          )}
+
           <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
             <thead className="bg-gray-50 dark:bg-gray-800">
               <tr>
@@ -70,21 +157,67 @@ export const TransactionsList = ({
               </tr>
             </thead>
             <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
-              {displayTransactions.map((transaction, index) => (
+              {paginatedTransactions.map((transaction, index) => (
                 <TransactionItem 
                   key={transaction.id} 
                   transaction={transaction} 
-                  index={index + 1}
+                  index={(currentPage - 1) * itemsPerPage + index + 1}
                 />
               ))}
             </tbody>
           </table>
+          
+          {/* Pagination Controls - Update display text to show filtered counts */}
+          {!limit && totalPages > 1 && (
+            <div className="flex items-center justify-between px-4 py-3 border-t border-gray-200 dark:border-gray-700">
+              <div className="flex items-center">
+                <p className="text-sm text-gray-700 dark:text-gray-300">
+                  Showing{' '}
+                  <span className="font-medium">
+                    {Math.min(((currentPage - 1) * itemsPerPage) + 1, transactions.length)}
+                  </span>
+                  {' '}-{' '}
+                  <span className="font-medium">
+                    {Math.min(currentPage * itemsPerPage, transactions.length)}
+                  </span>
+                  {' '}of{' '}
+                  <span className="font-medium">{transactions.length}</span>
+                  {' '}filtered results
+                </p>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  className="px-3 py-1 text-sm rounded-md border border-gray-300 dark:border-gray-600 
+                    disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-gray-800"
+                >
+                  Previous
+                </button>
+                <button
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                  className="px-3 py-1 text-sm rounded-md border border-gray-300 dark:border-gray-600 
+                    disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-gray-800"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
   );
 };
 
+/**
+ * Renders a single transaction row item
+ * @component
+ * @param {Object} props - Component props
+ * @param {Transaction} props.transaction - Transaction data to display
+ * @param {number} props.index - Index number to display
+ */
 const TransactionItem = ({ 
   transaction, 
   index 
@@ -185,6 +318,10 @@ const TransactionItem = ({
   );
 };
 
+/**
+ * Loading skeleton for the transactions list
+ * Shows different layouts for mobile and desktop
+ */
 const TransactionSkeleton = () => (
   <>
     {/* Mobile Skeleton */}
@@ -201,6 +338,9 @@ const TransactionSkeleton = () => (
   </>
 );
 
+/**
+ * Empty state component shown when no transactions are available
+ */
 const EmptyState = () => (
   <div className="text-center py-8 text-gray-500 bg-white dark:bg-gray-900 rounded-lg">
     No transactions found

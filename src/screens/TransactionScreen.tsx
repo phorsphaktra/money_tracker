@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { DateRangeSelect } from '../components/shared/DateRangeSelect';
 import { useTransactions} from '../contexts/TransactionContext';
 import { Button } from '../components/shared/Button';
 import { TransactionModal } from '../components/transaction/TransactionModal';
@@ -12,13 +13,24 @@ export const TransactionsScreen = () => {
   const [filter, setFilter] = useState<'all' | 'income' | 'expense'>('all');
   const [search, setSearch] = useState('');
   const [isAddingNew, setIsAddingNew] = useState(false);
+  const [dateRange, setDateRange] = useState<{start: Date | null, end: Date | null}>({
+    start: null,
+    end: null
+  });
   const { t } = useTranslation();
 
   const filteredTransactions = transactions.filter(transaction => {
     const matchesFilter = filter === 'all' || transaction.type === filter;
     const matchesSearch = transaction.description.toLowerCase().includes(search.toLowerCase()) ||
                          transaction.category.toLowerCase().includes(search.toLowerCase());
-    return matchesFilter && matchesSearch;
+    
+    // Add date filtering
+    const transactionDate = new Date(transaction.date);
+    const matchesDateRange = 
+      (!dateRange.start || transactionDate >= dateRange.start) &&
+      (!dateRange.end || transactionDate <= dateRange.end);
+
+    return matchesFilter && matchesSearch && matchesDateRange;
   });
 
   if (error) {
@@ -63,6 +75,12 @@ export const TransactionsScreen = () => {
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
+        <DateRangeSelect
+          startDate={dateRange.start}
+          endDate={dateRange.end}
+          onDateChange={(start, end) => setDateRange({ start, end })}
+          className="w-full sm:w-56"
+        />
         <div className="flex gap-2 overflow-x-auto py-1 -mx-3 px-3 sm:mx-0 sm:px-0">
           {(['all', 'income', 'expense'] as const).map((type) => (
             <Button
@@ -83,6 +101,8 @@ export const TransactionsScreen = () => {
           transactions={filteredTransactions}
           isLoading={isLoading}
           showFilters={false}
+          startDate={dateRange.start}
+          endDate={dateRange.end}
         />
       </div>
 

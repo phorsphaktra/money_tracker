@@ -176,6 +176,16 @@
     "type": {
       "income": "ចំណូល",
       "expense": "ចំណាយ"
+    },
+    "dateRange":{
+      "allTime": "រយៈពេលទាំងអស់",
+      "today": "ថ្ងៃនេះ",
+      "yesterday": "ម្សិលមិញ",
+      "thisWeek": "សប្តាហ៍នេះ",
+      "last7Days": "៧ ថ្ងៃចុងក្រោយ",
+      "thisMonth": "ខែនេះ",
+      "lastMonth": "ខែមុន",
+      "custom": "រយៈពេលកំណត់"
     }
   },
   "transaction": {
