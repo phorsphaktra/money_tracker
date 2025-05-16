@@ -1,5 +1,11 @@
 import { Transaction } from '../contexts/TransactionContext';
 
+type DateRange = {
+  label: string;
+  start: Date | null;
+  end: Date | null;
+};
+
 const parseDate = (dateString: string): Date => {
   const date = new Date(dateString);
   if (isNaN(date.getTime())) {
@@ -8,16 +14,66 @@ const parseDate = (dateString: string): Date => {
   return date;
 };
 
-const startOfDay = (date: Date): Date => {
-  const newDate = new Date(date);
-  newDate.setHours(0, 0, 0, 0);
-  return newDate;
+export const getEndOfDay = (date: Date): Date => {
+  const end = new Date(date);
+  end.setHours(23, 59, 59, 999);
+  return end;
 };
 
-const endOfDay = (date: Date): Date => {
-  const newDate = new Date(date);
-  newDate.setHours(23, 59, 59, 999);
-  return newDate;
+export const getStartOfDay = (date: Date): Date => {
+  const start = new Date(date);
+  start.setHours(0, 0, 0, 0);
+  return start;
+};
+
+export const createDateRanges = (t: (key: string) => string): DateRange[] => {
+  const today = getStartOfDay(new Date());
+  const yesterday = new Date(today.getTime() - 24 * 60 * 60 * 1000);
+  const startOfWeek = new Date(today);
+  startOfWeek.setDate(today.getDate() - today.getDay());
+
+  return [
+    { 
+      label: t('transactions.dateRange.allTime'), 
+      start: null, 
+      end: null 
+    },
+    {
+      label: t('transactions.dateRange.today'),
+      start: today,
+      end: getEndOfDay(today)
+    },
+    {
+      label: t('transactions.dateRange.yesterday'),
+      start: yesterday,
+      end: getEndOfDay(yesterday)
+    },
+    {
+      label: t('transactions.dateRange.thisWeek'),
+      start: startOfWeek,
+      end: getEndOfDay(today)
+    },
+    {
+      label: t('transactions.dateRange.last7Days'),
+      start: new Date(today.getTime() - 6 * 24 * 60 * 60 * 1000),
+      end: getEndOfDay(today)
+    },
+    {
+      label: t('transactions.dateRange.thisMonth'),
+      start: new Date(today.getFullYear(), today.getMonth(), 1),
+      end: getEndOfDay(new Date(today.getFullYear(), today.getMonth() + 1, 0))
+    },
+    {
+      label: t('transactions.dateRange.lastMonth'),
+      start: new Date(today.getFullYear(), today.getMonth() - 1, 1),
+      end: getEndOfDay(new Date(today.getFullYear(), today.getMonth(), 0))
+    },
+    {
+      label: t('transactions.dateRange.custom'),
+      start: null,
+      end: null
+    }
+  ];
 };
 
 export const filterTransactionsByPeriod = (transactions: Transaction[], period: string): Transaction[] => {
@@ -55,8 +111,8 @@ export const filterTransactionsByPeriod = (transactions: Transaction[], period: 
     .filter(transaction => {
       try {
         const transactionDate = parseDate(transaction.date);
-        return transactionDate >= startOfDay(startDate) && 
-               transactionDate <= endOfDay(now);
+        return transactionDate >= getStartOfDay(startDate) && 
+               transactionDate <= getEndOfDay(now);
       } catch (error) {
         console.error('Invalid transaction date:', transaction.date);
         return false;

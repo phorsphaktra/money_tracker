@@ -43,7 +43,9 @@
     "close": "Close",
     "loading": "Loading...",
     "confirm": "Confirm",
-    "settings": "Settings"
+    "settings": "Settings",
+    "done": "Done",
+    "clear": "Clear"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -164,7 +166,10 @@
       "last7Days": "Last 7 Days",
       "thisMonth": "This Month",
       "lastMonth": "Last Month",
-      "custom": "Custom Range"
+      "custom": "Custom Range",
+      "endDate": "End Date",
+      "startDate": "Start Date",
+      "selectDate" : "Select Date"
     }
   },
   "transaction": {
