@@ -1,0 +1,250 @@
+{
+  "main": {
+    "appName": "Expense Tracker",
+    "welcome": "Welcome to Expense Tracker",
+    "login": {
+      "title": "Login",
+      "subtitle": "Please enter your credentials to continue",
+      "email": "Email",
+      "password": "Password",
+      "rememberMe": "Remember me",
+      "forgotPassword": "Forgot password?",
+      "loginButton": "Login"
+    },
+    "register": {
+      "title": "Register",
+      "subtitle": "Create a new account",
+      "name": "Name",
+      "confirmPassword": "Confirm Password",
+      "registerButton": "Register"
+    }
+  },
+  "settings": {
+    "title": "Settings",
+    "subtitle": "Manage your account settings and preferences",
+    "appearance": {
+      "title": "Appearance",
+      "darkMode": "Dark Mode"
+    },
+    "preferences": {
+      "title": "Preferences",
+      "language": "Language",
+      "currency": "Currency"
+    }
+  },
+  "common": {
+    "version": "Version",
+    "add": "Add",
+    "edit": "Edit",
+    "update": "Update",
+    "delete": "Delete",
+    "cancel": "Cancel",
+    "save": "Save",
+    "close": "Close",
+    "loading": "Loading...",
+    "confirm": "Confirm",
+    "settings": "Settings",
+    "done": "Done",
+    "clear": "Clear"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "monthly_metrics": "Monthly Metrics",
+    "navigation": {
+      "dashboard": "Dashboard",
+      "transactions": "Transactions",
+      "analytics": "Analytics",
+      "settings": "Settings"
+    },
+    "top_income":" Top Income",
+    "top_expenses":" Top Expense",
+    "header": {
+      "welcome": "Welcome back",
+      "signOut": "Sign out"
+    },
+    "version": "Version",
+    "overview": {
+      "total_balance": "Total Balance",
+      "income": "Income",
+      "expenses": "Expenses",
+      "savings": "Savings",
+      "this_month": "This Month",
+      "view_all": "View All",
+      "recent_transactions": "Recent Transactions",
+      "no_transactions": "No recent transactions"
+    },
+    "task_overview": "Task Overview",
+    "total_tasks": "Total Tasks",
+    "completed_tasks": "Completed Tasks",
+    "in_progress_tasks": "In Progress Tasks",
+    "blocked_tasks": "Blocked Tasks",
+    "no_transactions_month": "No transactions this month",
+    "stats": {
+      "spending_by_category": "Spending by Category",
+      "monthly_summary": "Monthly Summary"
+    },
+    "subtitle": "Overview of your financial status",
+    "spending_overview": "Spending Overview",
+    "last_6_months": "Last 6 months",
+    "last_3_months": "Last 3 months",
+    "this_year": "This year",
+    "monthly_spending": "Monthly Spending",
+    "monthly_income": "Monthly Income",
+    "savings_rate": "Savings",
+    "net_balance": "Net Balance",
+    "loading": "Loading...",
+    "error": "Error: ",
+    "filters": {
+      "select_period": "Select period",
+      "7days": "Last 7 days",
+      "30days": "Last 30 days",
+      "3months": "Last 3 months",
+      "6months": "Last 6 months",
+      "1year": "Last 1 year",
+      "ytd": "Year to date"
+    },
+    "financial_summary": "Financial Summary",
+    "monthly_average": "Monthly Average",
+    "financial_health": "Financial Health",
+    "spending_alert": "Spending Alert",
+    "last_updated": "Last updated",
+    "top_categories": "Top Spending Categories",
+    "top_spending_areas": "Top Spending Areas",
+    "health": {
+      "excellent": "Excellent",
+      "good":"Good",
+      "warning": "Warning",
+      "needs-attention": "Needs Attention",
+      "unknown": "Unknown"
+    },
+    "trends": {
+      "increasing": "Increasing",
+      "decreasing": "Decreasing",
+      "stable": "Stable"
+    },
+    "analysis": {
+      "high_spending": "High Spending",
+      "good_savings": "Good Savings",
+      "need_improvement": "Needs Improvement"
+    }
+  },
+  "transactions": {
+    "title": "Transactions",
+    "subtitle": "Manage and track your transactions",
+    "filters": {
+      "all": "All",
+      "income": "Income",
+      "expense": "Expense",
+      "date": "Date",
+      "category": "Category",
+      "amount": "Amount",
+      "search": "Search transactions..."
+    },
+    "empty": {
+      "title": "No transactions found",
+      "message": "Start adding your transactions to track your spending"
+    },
+    "actions": {
+      "add": "Add Transaction",
+      "edit": "Edit",
+      "delete": "Delete",
+      "confirm_delete": "Are you sure you want to delete this transaction?"
+    },
+    "table": {
+      "no": "No",
+      "date": "Date",
+      "description": "Description",
+      "category": "Category",
+      "amount": "Amount",
+      "actions": "Actions"
+    },
+    "dateRange":{
+      "allTime": "All Time",
+      "today": "Today",
+      "yesterday": "Yesterday",
+      "thisWeek": "This Week",
+      "last7Days": "Last 7 Days",
+      "thisMonth": "This Month",
+      "lastMonth": "Last Month",
+      "custom": "Custom Range",
+      "endDate": "End Date",
+      "startDate": "Start Date",
+      "selectDate" : "Select Date"
+    }
+  },
+  "transaction": {
+    "title": "Transaction",
+    "addNew": "Add Transaction",
+    "edit": "Edit Transaction",
+    "fields": {
+      "description": "Description",
+      "amount": "Amount",
+      "date": "Date",
+      "category": "Category",
+      "type": "Type"
+    },
+    "types": {
+      "income": "Income",
+      "expense": "Expense"
+    },
+    "delete":{
+      "title": "Delete Transaction",
+      "description": "Are you sure you want to delete this transaction?",
+      "confirm": "Yes, delete it",
+      "cancel": "No, keep it"
+    }
+  },
+  "validation": {
+    "required": "{{field}} is required",
+    "amountPositive": "Amount must be greater than 0",
+    "validCategory": "Please select a valid category",
+    "validDate": "Please select a valid date",
+    "saveFailed": "Failed to save transaction"
+  },
+  "categories": {
+    "income": {
+      "salary": "Salary",
+      "business": "Business",
+      "investment": "Investment",
+      "rental": "Rental",
+      "other": "Other Income"
+    },
+    "expense": {
+      "food": "Food & Drinks",
+      "transport": "Transportation",
+      "utilities": "Utilities",
+      "shopping": "Shopping",
+      "healthcare": "Healthcare",
+      "education": "Education",
+      "entertainment": "Entertainment",
+      "other": "Other Expense"
+    }
+  },
+  "task":{
+      "title": "Task",
+      "add": "Add Task",
+      "edit": "Edit Task",
+      "delete": "Delete Task",
+      "confirm_delete": "Are you sure you want to delete this task?",
+      "empty": {
+        "title": "No tasks found",
+        "message": "Start adding your tasks to track your progress"
+      },
+      "fields": {
+        "description": "Description",
+        "due_date": "Due Date",
+        "priority": "Priority",
+        "status": "Status"
+      },
+      "priorities": {
+        "low": "Low",
+        "medium": "Medium",
+        "high": "High"
+      },
+      "status": {
+        "pending": "Pending",
+        "in_progress": "In Progress",
+        "completed": "Completed"
+      }
+    }
+}

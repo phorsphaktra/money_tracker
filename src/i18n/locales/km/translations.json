@@ -1,0 +1,265 @@
+{
+  "main":{
+    "appName": "កម្មវិធីតាមដានចំណាយ",
+    "welcome": "សូមស្វាគមន៍មកកាន់កម្មវិធីតាមដានចំណាយ",
+    "login": {
+      "title": "ចូល",
+      "subtitle": "សូមបញ្ចូលព័ត៌មានសម្គាល់របស់អ្នកដើម្បីបន្ត",
+      "email": "អ៊ីមែល",
+      "password": "ពាក្យសម្ងាត់",
+      "rememberMe": "ចងចាំខ្ញុំ",
+      "forgotPassword": "ភ្លេចពាក្យសម្ងាត់?",
+      "loginButton": "ចូល"
+    },
+    "register": {
+      "title": "ចុះឈ្មោះ",
+      "subtitle": "បង្កើតគណនីថ្មី",
+      "name": "ឈ្មោះ",
+      "confirmPassword": "បញ្ជាក់ពាក្យសម្ងាត់",
+      "registerButton": "ចុះឈ្មោះ"
+    }
+  },
+  "settings": {
+    "title": "ការកំណត់",
+    "subtitle": "គ្រប់គ្រងការកំណត់គណនីនិងចំណូលចិត្តរបស់អ្នក",
+    "appearance": {
+      "title": "រូបរាង",
+      "darkMode": "របៀបងងឹត"
+    },
+    "preferences": {
+      "title": "ចំណូលចិត្ត",
+      "language": "ភាសា",
+      "currency": "រូបិយប័ណ្ណ"
+    }
+  },
+  "common": {
+    "version": "កំណែ",
+    "add": "បន្ថែម",
+    "edit": "កែប្រែ",
+    "update": "ធ្វើបច្ចុប្បន្នភាព",
+    "delete": "លុប",
+    "cancel": "បោះបង់",
+    "save": "រក្សាទុក",
+    "close": "បិទ",
+    "loading": "កំពុងដំណើរការ...",
+    "confirm": "បញ្ជាក់",
+    "settings": "ការកំណត់"
+  },
+  "dashboard": {
+    "title": "ផ្ទាំងគ្រប់គ្រង",
+    "navigation": {
+      "dashboard": "ផ្ទាំងគ្រប់គ្រង",
+      "transactions": "ប្រតិបត្តិការ",
+      "analytics": "វិភាគ",
+      "settings": "ការកំណត់"
+    },
+    "header": {
+      "welcome": "សូមស្វាគមន៍",
+      "signOut": "ចាកចេញ"
+    },
+    "version": "កំណែ",
+    "overview": {
+      "total_balance": "សមតុល្យសរុប",
+      "income": "ចំណូល",
+      "expenses": "ចំណាយ",
+      "savings": "ការសន្សំ",
+      "this_month": "ខែនេះ",
+      "view_all": "មើលទាំងអស់",
+      "recent_transactions": "ប្រតិបត្តិការថ្មីៗ",
+      "no_transactions": "មិនមានប្រតិបត្តិការថ្មីៗ"
+    },
+    "task_overview": "ទិដ្ឋភាពទូទៅនៃការងារ",
+    "total_tasks": "ការងារសរុប",
+    "completed_tasks": "ការងារបញ្ចប់",
+    "in_progress_tasks": "ការងារកំពុងដំណើរការ",
+    "blocked_tasks": "ការងារដែលបានចាក់សោ",
+    "stats": {
+      "spending_by_category": "ការចំណាយតាមប្រភេទ",
+      "monthly_summary": "សង្ខេបប្រចាំខែ",
+      "balance_trend": "ការប្រែប្រួលសមតុល្យ",
+      "spending_trend": "ការប្រែប្រួលចំណាយ",
+      "income_trend": "ការប្រែប្រួលចំណូល",
+      "savings_trend": "ការប្រែប្រួលការសន្សំ"
+    },
+    "no_transactions_month": "មិនមានប្រតិបត្តិការនៅខែនេះទេ",
+    "subtitle": "ទិដ្ឋភាពទូទៅនៃស្ថានភាពហិរញ្ញវត្ថុរបស់អ្នក",
+    "spending_overview": "ទិដ្ឋភាពទូទៅនៃការចំណាយ",
+    "last_6_months": "៦ ខែចុងក្រោយ",
+    "last_3_months": "៣ ខែចុងក្រោយ",
+    "this_year": "ឆ្នាំនេះ",
+    "monthly_spending": "ការចំណាយប្រចាំខែ",
+    "monthly_income": "ចំណូលប្រចាំខែ",
+    "savings_rate": "អត្រាសន្សំ",
+    "net_balance": "សមតុល្យសុទ្ធ",
+    "loading": "កំពុងផ្ទុក...",
+    "error": "បញ្ហា: ",
+    "recent_transactions": "ប្រតិបត្តិការថ្មីៗ",
+    "view_all": "មើលទាំងអស់",
+    "filters": {
+      "select_period": "ជ្រើសរើសរយៈពេល",
+      "7days": "៧ ថ្ងៃចុងក្រោយ",
+      "30days": "៣០ ថ្ងៃចុងក្រោយ",
+      "3months": "៣ ខែចុងក្រោយ",
+      "6months": "៦ ខែចុងក្រោយ",
+      "1year": "១ ឆ្នាំចុងក្រោយ",
+      "ytd": "ឆ្នាំនេះដល់ថ្ងៃនេះ"
+    },
+    "currencies": {
+      "KHR": "រៀល",
+      "USD": "ដុល្លារ"
+    },
+    "financial_summary": "សេចក្តីសង្ខេបហិរញ្ញវត្ថុ",
+    "monthly_average": "ការចំណាយជាមធ្យមប្រចាំខែ",
+    "financial_health": "សុខភាពហិរញ្ញវត្ថុ",
+    "spending_alert": "ការចំណាយកើនឡើងខ្ពស់ជាងធម្មតា",
+    "last_updated": "បានធ្វើបច្ចុប្បន្នភាពចុងក្រោយ",
+    "top_categories": "ប្រភេទចំណាយខ្ពស់បំផុត",
+    "top_spending_areas": "តំបន់ចំណាយខ្ពស់បំផុត",
+    "health": {
+      "excellent": "ល្អប្រសើរ",
+      "good": "ល្អ",
+      "warning": "ត្រូវប្រុងប្រយ័ត្ន",
+      "needs-attention": "ត្រូវការការយកចិត្តទុកដាក់",
+      "unknown": "មិនអាចវាយតម្លៃបាន"
+    },
+    "trends": {
+      "increasing": "កំពុងកើនឡើង",
+      "decreasing": "កំពុងថយចុះ",
+      "stable": "ស្ថិរភាព"
+    },
+    "analysis": {
+      "high_spending": "ការចំណាយខ្ពស់",
+      "good_savings": "ការសន្សំល្អ",
+      "need_improvement": "ត្រូវការការកែលម្អ"
+    }
+  },
+  "transactions": {
+    "title": "ប្រតិបត្តិការ",
+    "subtitle": "គ្រប់គ្រង និងតាមដានប្រតិបត្តិការរបស់អ្នក",
+    "filters": {
+      "all": "ទាំងអស់",
+      "income": "ចំណូល",
+      "expense": "ចំណាយ",
+      "date": "កាលបរិច្ឆេទ",
+      "category": "ប្រភេទ",
+      "amount": "ចំនួនទឹកប្រាក់",
+      "search": "ស្វែងរកប្រតិបត្តិការ..."
+    },
+    "empty": {
+      "title": "រកមិនឃើញប្រតិបត្តិការ",
+      "message": "ចាប់ផ្តើមបន្ថែមប្រតិបត្តិការរបស់អ្នកដើម្បីតាមដានការចំណាយរបស់អ្នក"
+    },
+    "actions": {
+      "add": "បន្ថែមប្រតិបត្តិការ",
+      "edit": "កែប្រែ",
+      "delete": "លុប",
+      "confirm_delete": "តើអ្នកប្រាកដថាចង់លុបប្រតិបត្តិការនេះមែនទេ?"
+    },
+    "table": {
+      "no": "ល.រ",
+      "date": "កាលបរិច្ឆេទ",
+      "description": "បរិយាយ",
+      "category": "ប្រភេទ",
+      "amount": "ចំនួនទឹកប្រាក់",
+      "actions": "សកម្មភាព"
+    },
+    "categories": {
+      "food": "អាហារ",
+      "transport": "ការដឹកជញ្ជូន",
+      "utilities": "សេវាសាធារណៈ",
+      "entertainment": "ការកម្សាន្ត",
+      "shopping": "ការទិញទំនិញ",
+      "healthcare": "សុខភាព",
+      "education": "ការអប់រំ",
+      "others": "ផ្សេងៗ"
+    },
+    "type": {
+      "income": "ចំណូល",
+      "expense": "ចំណាយ"
+    },
+    "dateRange":{
+      "allTime": "រយៈពេលទាំងអស់",
+      "today": "ថ្ងៃនេះ",
+      "yesterday": "ម្សិលមិញ",
+      "thisWeek": "សប្តាហ៍នេះ",
+      "last7Days": "៧ ថ្ងៃចុងក្រោយ",
+      "thisMonth": "ខែនេះ",
+      "lastMonth": "ខែមុន",
+      "custom": "រយៈពេលកំណត់"
+    }
+  },
+  "transaction": {
+    "title": "ប្រតិបត្តិការ",
+    "addNew": "បន្ថែមប្រតិបត្តិការថ្មី",
+    "edit": "កែប្រែប្រតិបត្តិការ",
+    "fields": {
+      "description": "ការពិពណ៌នា",
+      "amount": "ចំនួនទឹកប្រាក់",
+      "date": "កាលបរិច្ឆេទ",
+      "category": "ប្រភេទ",
+      "type": "ប្រភេទប្រតិបត្តិការ"
+    },
+    "types": {
+      "income": "ចំណូល",
+      "expense": "ចំណាយ"
+    },
+    "delete":{
+      "title": "លុបប្រតិបត្តិការ",
+      "description": "តើអ្នកប្រាកដថាចង់លុបប្រតិបត្តិការនេះមែនទេ?",
+      "confirm": "យល់ព្រម, លុបវា",
+      "cancel": "មិន, រក្សាទុកវា"
+    }
+  },
+  "validation": {
+    "required": "សូមបញ្ចូល{{field}}",
+    "amountPositive": "ចំនួនទឹកប្រាក់ត្រូវតែធំជាង ០",
+    "validCategory": "សូមជ្រើសរើសប្រភេទ",
+    "validDate": "សូមជ្រើសរើសកាលបរិច្ឆេទ",
+    "saveFailed": "មិនអាចរក្សាទុកប្រតិបត្តិការបានទេ"
+  },
+  "categories": {
+    "income": {
+      "salary": "ប្រាក់ខែ",
+      "business": "អាជីវកម្ម",
+      "investment": "ការវិនិយោគ",
+      "rental": "ជួល",
+      "other": "ចំណូលផ្សេងៗ"
+    },
+    "expense": {
+      "food": "អាហារនិងភេសជ្ជៈ",
+      "transport": "ការដឹកជញ្ជូន",
+      "utilities": "សេវាសាធារណៈ",
+      "shopping": "ការទិញទំនិញ",
+      "healthcare": "សុខភាព",
+      "education": "ការអប់រំ",
+      "entertainment": "ការកម្សាន្ត",
+      "other": "ចំណាយផ្សេងៗ"
+    }
+  },
+  "task":{
+    "title": "ការងារ",
+    "addNew": "បន្ថែមការងារថ្មី",
+    "edit": "កែប្រែការងារ",
+    "fields": {
+      "description": "ការពិពណ៌នា",
+      "dueDate": "កាលបរិច្ឆេទផុតកំណត់",
+      "priority": "អាទិភាព",
+      "status": "ស្ថានភាព"
+    },
+    "confirm_delete":"តើអ្នកប្រាកដថាចង់លុបប្រតិបត្តិការនេះមែនទេ?",
+    "empty":{
+      "title": "មិនមានការងារទេ",
+      "message": "បន្ថែមការងារថ្មីដើម្បីតាមដាន"
+    },
+    "priorities": {
+      "low": "ទាប",
+      "medium": "មធ្យម",
+      "high": "ខ្ពស់"
+    },
+    "status": {
+      "pending": "កំពុងរង់ចាំ",
+      "in_progress": "កំពុងដំណើរការ",
+      "completed": "បានបញ្ចប់"
+    }
+  }
+}

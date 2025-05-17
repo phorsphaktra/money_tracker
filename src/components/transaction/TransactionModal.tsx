@@ -3,6 +3,9 @@ import { useTransactions, Transaction } from '../../contexts/TransactionContext'
 import { Button } from '../shared/Button';
 import { EXPENSE_CATEGORIES, INCOME_CATEGORIES, isValidCategory } from '../../utils/categories';
 import { CategorySelect } from './CategorySelect';
+import { useUserCurrency } from '../../hooks/useUserCurrency';
+import { getCurrencySymbol } from '../../utils/currencyUtils';
+import { useSettings } from '../../contexts/SettingsContext';
 
 interface TransactionModalProps {
   transaction?: Transaction;
@@ -21,20 +24,50 @@ type FormData = {
 type FormField = 'description' | 'amount' | 'category' | 'date' | 'type';
 type FormErrors = Partial<Record<FormField | 'submit', string>>;
 
+
+// Add utility functions at the top
+const getInitialAmount = (
+  transaction: Transaction | undefined,
+  userCurrency: string,
+  exchangeRate: number
+): string => {
+  if (!transaction) return '';
+  
+  // For KHR transactions, use originalAmount
+  if (transaction.originalCurrency === 'KHR' && userCurrency === 'KHR') {
+    return Math.abs(transaction.originalAmount || 0).toString();
+  }
+  
+  // For USD, convert if needed
+  const amount = Math.abs(transaction.amount);
+  return userCurrency === 'KHR' 
+    ? Math.round(amount * exchangeRate).toString()
+    : amount.toString();
+};
+
 export const TransactionModal = ({ transaction, onClose, type = 'expense' }: TransactionModalProps) => {
   const { addTransaction, updateTransaction } = useTransactions();
+  const userCurrency = useUserCurrency();
+  const { exchangeRates } = useSettings();
+  
+  // Local state
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<FormErrors>({});
+  const [convertedAmount, setConvertedAmount] = useState<string>('');
 
-  const [formData, setFormData] = useState<FormData>({
+  // Initialize form data from transaction or defaults
+  const [formData, setFormData] = useState<FormData>(() => ({
     description: transaction?.description || '',
-    amount: transaction ? Math.abs(transaction.amount).toString() : '',
+    amount: getInitialAmount(transaction, userCurrency, exchangeRates.KHR_USD),
     category: transaction?.category || 
       (type === 'income' ? INCOME_CATEGORIES[0].id : EXPENSE_CATEGORIES[0].id),
     type: transaction?.type || type,
     date: transaction?.date || new Date().toISOString().split('T')[0]
-  });
+  }));
 
+  /**
+   * Validates the form data and returns any errors
+   */
   const validateForm = () => {
     const newErrors: FormErrors = {};
 
@@ -55,39 +88,44 @@ export const TransactionModal = ({ transaction, onClose, type = 'expense' }: Tra
       newErrors.date = 'Please select a valid date';
     }
 
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    return { isValid: Object.keys(newErrors).length === 0, errors: newErrors };
   };
 
+  /**
+   * Handles form submission and transaction creation/update
+   */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!validateForm()) return;
+    const { isValid, errors: validationErrors } = validateForm();
+    if (!isValid) {
+      setErrors(validationErrors);
+      return;
+    }
 
     setIsSubmitting(true);
     setErrors({});
 
     try {
-      const amount = parseFloat(formData.amount);
+      const amount = Math.abs(parseFloat(formData.amount)); // Ensure positive amount
+      // Convert to USD if user currency is KHR
+      const usdAmount = userCurrency === 'KHR' 
+        ? amount / exchangeRates.KHR_USD 
+        : amount;
+
       const transactionData = {
         description: formData.description.trim(),
-        amount: formData.type === 'expense' ? -Math.abs(amount) : Math.abs(amount),
+        amount: usdAmount, // Always store positive amount
         category: formData.category,
-        type: formData.type,
-        date: formData.date
+        type: formData.type, // Use type field to determine if it's expense or income
+        date: formData.date,
+        ...(userCurrency === 'KHR' && {
+          originalAmount: amount,
+          originalCurrency: 'KHR',
+          exchangeRate: exchangeRates.KHR_USD
+        })
       };
 
-      if (transaction) {
-        // Check if anything has actually changed
-        const hasChanges = Object.keys(transactionData).some(
-          key => transactionData[key as keyof typeof transactionData] !== 
-                 transaction[key as keyof typeof transactionData]
-        );
-
-        if (!hasChanges) {
-          onClose();
-          return;
-        }
-
+      if (transaction?.id) {
         await updateTransaction(transaction.id, transactionData);
       } else {
         await addTransaction(transactionData);
@@ -95,14 +133,15 @@ export const TransactionModal = ({ transaction, onClose, type = 'expense' }: Tra
       
       onClose();
     } catch (err) {
-      setErrors({ 
-        submit: err instanceof Error ? err.message : 'Failed to save transaction' 
-      });
+      setErrors({ submit: err instanceof Error ? err.message : 'Failed to save transaction' });
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  /**
+   * Handles form field changes and updates converted amount for KHR currency
+   */
   const handleChange = (field: FormField) => (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
@@ -110,15 +149,18 @@ export const TransactionModal = ({ transaction, onClose, type = 'expense' }: Tra
     setFormData(prev => {
       const newData = { ...prev, [field]: value };
       
-      // Update category if type changes
-      if (field === 'type') {
-        const categories = value === 'income' ? INCOME_CATEGORIES : EXPENSE_CATEGORIES;
-        newData.category = categories[0].id;
+      if (field === 'amount' && userCurrency === 'KHR') {
+        const numericAmount = parseFloat(value) || 0;
+        const usdAmount = (numericAmount / exchangeRates.KHR_USD).toFixed(2);
+        setConvertedAmount(usdAmount);
+      } else if (field === 'type') {
+        newData.category = (value === 'income' ? INCOME_CATEGORIES : EXPENSE_CATEGORIES)[0].id;
       }
       
       return newData;
     });
     
+    // Clear field-specific error when value changes
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: undefined }));
     }
@@ -127,8 +169,10 @@ export const TransactionModal = ({ transaction, onClose, type = 'expense' }: Tra
   const categories = formData.type === 'income' ? INCOME_CATEGORIES : EXPENSE_CATEGORIES;
 
   return (
-    <div className="fixed inset-0 bg-gray-600 bg-opacity-50 z-50 flex items-center justify-center">
-      <div className="bg-white rounded-xl shadow-2xl max-w-md w-full mx-4 p-6">
+    <div className="fixed inset-0 bg-gray-600 bg-opacity-50 backdrop-blur-sm z-50 
+      flex items-center justify-center animate-fadeIn">
+      <div className="bg-white rounded-xl shadow-2xl max-w-md w-full mx-4 p-6 
+        animate-slideUp">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold text-gray-900">
             {transaction ? 'Edit' : 'Add'} Transaction
@@ -168,26 +212,50 @@ export const TransactionModal = ({ transaction, onClose, type = 'expense' }: Tra
           <div className="space-y-4">
             {[
               { id: 'description' as const, label: 'Description', type: 'text' },
-              { id: 'amount' as const, label: 'Amount', type: 'number', step: '0.01' },
+              { 
+                id: 'amount' as const, 
+                label: `Amount ${userCurrency === 'KHR' ? `(Rate: ${exchangeRates.KHR_USD} KHR/USD)` : ''}`,
+                type: 'number', 
+                step: userCurrency === 'KHR' ? '1' : '0.01',
+                prefix: getCurrencySymbol(userCurrency),
+                showConverted: userCurrency === 'KHR'
+              },
               { id: 'date' as const, label: 'Date', type: 'date' }
-            ].map(field => (
-              <div key={field.id} className="space-y-1">
-                <label className="block text-sm font-medium text-gray-700">
-                  {field.label}
-                </label>
-                <input
-                  {...field}
-                  value={formData[field.id]}
-                  onChange={handleChange(field.id)}
-                  className={`block w-full px-3 py-2 rounded-md border 
-                    ${errors[field.id] ? 'border-red-500' : 'border-gray-300'}
-                    focus:ring-indigo-500 focus:border-indigo-500 shadow-sm`}
-                />
-                {errors[field.id] && (
-                  <p className="text-sm text-red-600 mt-1">{errors[field.id]}</p>
-                )}
-              </div>
-            ))}
+            ].map(field => {
+              // Separate DOM props from custom props
+              const { showConverted, prefix, label, ...inputProps } = field;
+              return (
+                <div key={field.id} className="space-y-1">
+                  <label className="block text-sm font-medium text-gray-700">
+                    {label}
+                  </label>
+                  <div className="relative">
+                    {prefix && (
+                      <span className="absolute left-3 top-2 text-gray-500">
+                        {prefix}
+                      </span>
+                    )}
+                    <input
+                      {...inputProps}
+                      value={formData[field.id]}
+                      onChange={handleChange(field.id)}
+                      className={`block w-full px-3 py-2 rounded-md border 
+                        ${errors[field.id] ? 'border-red-500' : 'border-gray-300'}
+                        ${prefix ? 'pl-7' : ''}
+                        focus:ring-indigo-500 focus:border-indigo-500 shadow-sm`}
+                    />
+                  </div>
+                  {showConverted && userCurrency === 'KHR' && formData.amount && (
+                    <div className="text-sm text-gray-500 mt-1">
+                      Amount in USD: {convertedAmount}
+                    </div>
+                  )}
+                  {errors[field.id] && (
+                    <p className="text-sm text-red-600 mt-1">{errors[field.id]}</p>
+                  )}
+                </div>
+              );
+            })}
           </div>
 
           {/* Category Selection */}

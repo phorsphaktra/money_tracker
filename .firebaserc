@@ -1,0 +1,19 @@
+{
+  "projects": {
+    "default": "money-tracker-e9a76",
+    "uat": "money-tracker-e9a76",
+    "prod": "money-tracker-1256"
+  },
+  "targets": {
+    "money-tracker-e9a76": {
+      "hosting": {
+        "uat": ["money-tracker-e9a76"]
+      }
+    },
+    "money-tracker-1256": {
+      "hosting": {
+        "prod": ["money-tracker-1256"]
+      }
+    }
+  }
+}

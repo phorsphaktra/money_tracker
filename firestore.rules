@@ -1,0 +1,59 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    match /stats/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    match /monthly_tracker/{userId}/transactions/{transactionId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    
+    function isProjectMember(projectData) {
+      return isSignedIn() && 
+        (projectData.members.hasAny([request.auth.uid]) || 
+         projectData.createdBy == request.auth.uid);
+    }
+
+    function isValidTask() {
+      let incoming = request.resource.data;
+      return incoming.title is string &&
+        incoming.title.size() > 0 &&
+        incoming.projectId is string &&
+        incoming.status in ['initial', 'in_progress', 'review', 'completed', 'blocked'] &&
+        incoming.priority in ['Low', 'Medium', 'High'];
+    }
+
+    function canDeleteTask() {
+      let task = resource.data;
+      return isSignedIn() && 
+        (request.auth.uid == userId || 
+         task.createdBy == request.auth.uid || 
+         task.assignedTo == request.auth.uid);
+    }
+
+    match /tasks/{userId} {
+      allow read: if request.auth != null && request.auth.uid == userId;
+
+      match /projects/{projectId} {
+        allow read: if request.auth != null && request.auth.uid == userId;
+        allow create: if request.auth != null && request.auth.uid == userId;
+        allow update: if request.auth != null && request.auth.uid == userId;
+        allow delete: if request.auth != null && request.auth.uid == userId;
+
+        match /tasks/{taskId} {
+          allow read: if request.auth != null && request.auth.uid == userId;
+          allow create: if request.auth != null && request.auth.uid == userId;
+          allow update: if request.auth != null && request.auth.uid == userId;
+          allow delete: if request.auth != null && request.auth.uid == userId;
+        }
+      }
+    }
+  }
+}

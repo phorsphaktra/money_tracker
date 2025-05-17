@@ -1,23 +1,22 @@
 import { useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
-// Add prop type for switching screens
-interface LoginScreenProps {
-  onSwitchToSignUp: () => void;
-}
-
-export const LoginScreen = ({ onSwitchToSignUp }: LoginScreenProps) => {
+export const LoginScreen = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const { login, isLoading, error } = useAuth();
+  const { login, error ,loginWithGoogle} = useAuth();
+  const [isLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     await login(email, password);
   };
 
+  const navigate = useNavigate();
+
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-gradient-to-r from-indigo-500 to-purple-600 p-4">
+    <div className="min-h-screen w-full flex items-center justify-center bg-gray-100">
       <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl p-8 space-y-6">
         {/* Header */}
         <div className="space-y-2">
@@ -101,13 +100,38 @@ export const LoginScreen = ({ onSwitchToSignUp }: LoginScreenProps) => {
         <p className="text-center text-sm text-gray-600">
           Don't have an account?{' '}
           <button
-            onClick={onSwitchToSignUp}
+            onClick={() => navigate('/signup')}
             className="text-indigo-600 hover:text-indigo-500 font-medium"
           >
             Sign up
           </button>
         </p>
+
+        <div className="mt-6">
+                            <div className="relative">
+                                <div className="absolute inset-0 flex items-center">
+                                    <div className="w-full border-t border-gray-300" />
+                                </div>
+                                <div className="relative flex justify-center text-sm">
+                                    <span className="px-2 bg-white text-gray-500">Or continue with</span>
+                                </div>
+                            </div>
+
+                            <button
+                                type="button"
+                                onClick={loginWithGoogle}
+                                className="mt-4 w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+                            >
+                                <img
+                                    className="h-5 w-5 mr-2"
+                                    src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
+                                    alt="Google"
+                                />
+                                Sign up with Google
+                            </button>
+                        </div>
       </div>
+      
     </div>
   );
 };

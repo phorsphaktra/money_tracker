@@ -1,123 +1,195 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-
-interface NavItem {
-  name: string;
-  icon: JSX.Element;
-  path: string;
-}
-
-const navigation: NavItem[] = [
-  {
-    name: 'Dashboard',
-    icon: (
-      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-      </svg>
-    ),
-    path: '/',
-  },
-  {
-    name: 'Transactions',
-    icon: (
-      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-      </svg>
-    ),
-    path: '/transactions',
-  },
-  {
-    name: 'Analytics',
-    icon: (
-      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-      </svg>
-    ),
-    path: '/analytics',
-  },
-  {
-    name: 'Settings',
-    icon: (
-      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-      </svg>
-    ),
-    path: '/settings',
-  },
-];
+import { NavLink } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import {
+  HomeIcon,
+  CurrencyDollarIcon,
+  ChartBarIcon,
+  Cog6ToothIcon,
+  ArrowRightOnRectangleIcon,
+  CameraIcon,
+  ClipboardDocumentCheckIcon,
+  XMarkIcon
+} from '@heroicons/react/24/outline';
 
 interface SidebarProps {
-  onNavigate: (path: string) => void;
+  isOpen: boolean;
+  setIsOpen: (isOpen: boolean) => void;
+  isCollapsed: boolean;
 }
 
-export const Sidebar = ({ onNavigate }: SidebarProps) => {
-  const { logout } = useAuth();
-  const [isOpen, setIsOpen] = useState(false);
-  const [activePath, setActivePath] = useState('/');
+const navItems = [
+  { path: '/', label: 'dashboard.navigation.dashboard', icon: HomeIcon },
+  { path: '/transactions', label: 'dashboard.navigation.transactions', icon: CurrencyDollarIcon },
+  { path: '/analytics', label: 'dashboard.navigation.analytics', icon: ChartBarIcon },
+  { path: '/task', label: 'task.title', icon: ClipboardDocumentCheckIcon },
+  { path: '/settings', label: 'dashboard.navigation.settings', icon: Cog6ToothIcon },
+];
 
-  const handleNavigation = (path: string) => {
-    setActivePath(path);
-    setIsOpen(false);
-    onNavigate(path);
+export const Sidebar = ({ isOpen, setIsOpen, isCollapsed }: SidebarProps) => {
+  const { logout, user } = useAuth();
+  const { t } = useTranslation();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [localPhotoURL, setLocalPhotoURL] = useState<string>(() => 
+    localStorage.getItem(`userPhoto_${user?.email}`) || ''
+  );
+
+  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Image size should be less than 5MB');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const photoURL = reader.result as string;
+      setLocalPhotoURL(photoURL);
+      if (user?.email) {
+        localStorage.setItem(`userPhoto_${user.email}`, photoURL);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleMobileNavClick = () => {
+    if (window.innerWidth < 1024) { // 1024px is the lg breakpoint in Tailwind
+      setIsOpen(false);
+    }
   };
 
   return (
     <>
-      {/* Mobile menu button */}
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="lg:hidden fixed top-4 left-4 z-20 p-2 rounded-md bg-indigo-600 text-white"
-      >
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-        </svg>
-      </button>
-
-      {/* Backdrop */}
+      {/* Mobile backdrop */}
       {isOpen && (
-        <div
-          className="lg:hidden fixed inset-0 bg-gray-600 bg-opacity-75 z-10"
-          onClick={() => setIsOpen(false)}
+        <div 
+          className="lg:hidden fixed inset-0 bg-black/40 backdrop-blur-sm z-30 
+          animate-in fade-in duration-300"
+          onClick={() => setIsOpen(false)} 
         />
       )}
 
-      {/* Sidebar */}
-      <div className={`
-        fixed lg:sticky top-0 left-0 h-screen w-64 bg-white shadow-lg transform 
-        ${isOpen ? 'translate-x-0' : '-translate-x-full'} 
-        lg:translate-x-0 transition-transform duration-300 ease-in-out z-20
+      <aside className={`
+        fixed lg:sticky top-0 lg:top-16 left-0 h-screen lg:h-[calc(100vh-64px)]
+        bg-white dark:bg-slate-900
+        border-r border-slate-200/50 dark:border-slate-700/50
+        transform ${isOpen ? 'translate-x-0' : '-translate-x-full'} 
+        lg:translate-x-0 transition-all duration-300 ease-out z-40
+        flex flex-col overflow-hidden
+        ${isCollapsed ? 'lg:w-20' : 'lg:w-72'} w-[280px]
       `}>
-        {/* Logo */}
-        <div className="p-6">
-          <h1 className="text-2xl font-bold text-indigo-600">Money Tracker</h1>
+        {/* Mobile close button */}
+        <div className="lg:hidden flex justify-end p-4">
+          <button
+            onClick={() => setIsOpen(false)}
+            className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
+          >
+            <XMarkIcon className="w-6 h-6 text-slate-500" />
+          </button>
         </div>
 
-        {/* Navigation */}
-        <nav className="px-4 space-y-2">
-          {navigation.map((item) => (
-            <button
-              key={item.name}
-              onClick={() => handleNavigation(item.path)}
-              className={`
-                w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors
-                ${activePath === item.path 
-                  ? 'bg-indigo-50 text-indigo-600' 
-                  : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'}
-              `}
-            >
-              {item.icon}
-              <span className="font-medium">{item.name}</span>
-            </button>
-          ))}
+        <div className="flex-1 flex flex-col overflow-y-auto">
+          {/* Profile section */}
+          <div className={`px-4 pb-4 lg:py-4 border-b border-slate-200/50 dark:border-slate-700/50
+            ${isCollapsed ? 'items-center' : ''}`}>
+            <div className="flex flex-col items-center">
+              <div className="relative group cursor-pointer"
+                onClick={() => fileInputRef.current?.click()}>
+                <div className={`${isCollapsed ? 'w-10 h-10' : 'w-16 h-16'} rounded-full 
+                  ring-2 ring-indigo-500/20 dark:ring-indigo-400/20
+                  overflow-hidden transition-all duration-300`}>
+                  {(user?.photoURL || localPhotoURL) ? (
+                    <img 
+                      src={localPhotoURL || user?.photoURL || ''}
+                      alt="Profile"
+                      className="w-full h-full object-cover"
+                      onError={() => setLocalPhotoURL('')}
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-indigo-500 to-violet-500
+                      flex items-center justify-center">
+                      <span className="text-2xl text-white font-medium">
+                        {user?.displayName?.[0].toUpperCase() || '?'}
+                      </span>
+                    </div>
+                  )}
+                </div>
+                <div className="absolute inset-0 rounded-full flex items-center justify-center
+                  bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <CameraIcon className="w-6 h-6 text-white" />
+                </div>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleImageUpload}
+                />
+              </div>
+              {!isCollapsed && (
+                <div className="mt-3 text-center">
+                  <p className="font-medium text-slate-900 dark:text-slate-100">
+                    {user?.displayName || 'User'}
+                  </p>
+                  <p className="text-sm text-slate-500 dark:text-slate-400 truncate max-w-[200px]">
+                    {user?.email}
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Navigation */}
+          <nav className="flex-1 p-2">
+            {navItems.map(({ path, label, icon: Icon }) => (
+              <NavLink
+                key={path}
+                to={path}
+                end={path === '/'}
+                title={isCollapsed ? t(label) : undefined}
+                onClick={handleMobileNavClick}
+                className={({ isActive }) =>
+                  `flex items-center ${isCollapsed ? 'justify-center' : ''} 
+                  px-4 py-3 my-1 text-sm font-medium rounded-xl
+                  transition-all duration-200 group
+                  ${isActive
+                    ? 'bg-gradient-to-r from-indigo-50 to-violet-50/50 dark:from-indigo-500/10 dark:to-violet-500/10 text-indigo-600 dark:text-indigo-400'
+                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'}`
+                }
+              >
+                <Icon className={`w-5 h-5 transition-transform group-hover:scale-110
+                  ${isCollapsed ? '' : 'mr-3'}`} />
+                {!isCollapsed && <span className="font-medium">{t(label)}</span>}
+              </NavLink>
+            ))}
+          </nav>
+        </div>
+
+        {/* Footer */}
+        <div className="flex-shrink-0 p-2 border-t border-slate-200/50 dark:border-slate-700/50">
           <button
             onClick={logout}
-            className="w-full text-left px-4 py-2 rounded hover:bg-gray-700"
+            title={isCollapsed ? t('dashboard.header.signOut') : undefined}
+            className={`w-full rounded-xl text-sm font-medium
+              text-slate-600 dark:text-slate-400 
+              hover:bg-red-50 dark:hover:bg-red-500/10
+              hover:text-red-600 dark:hover:text-red-400
+              flex items-center ${isCollapsed ? 'justify-center p-3' : 'px-4 py-3'}
+              transition-all duration-200 group`}
           >
-            Logout
+            <ArrowRightOnRectangleIcon className="w-5 h-5 group-hover:translate-x-0.5" />
+            {!isCollapsed && <span className="ml-2">{t('dashboard.header.signOut')}</span>}
           </button>
-        </nav>
-      </div>
+          {!isCollapsed && (
+            <div className="mt-4 text-xs text-center text-slate-400 dark:text-slate-500">
+              {t('dashboard.version')} {import.meta.env.VITE_APP_VERSION}
+            </div>
+          )}
+        </div>
+      </aside>
     </>
   );
 };

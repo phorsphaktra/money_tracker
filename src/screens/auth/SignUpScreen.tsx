@@ -1,11 +1,8 @@
 import { useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
-interface SignUpScreenProps {
-    onSwitchToLogin: () => void;
-}
-
-export const SignUpScreen = ({ onSwitchToLogin }: SignUpScreenProps) => {
+export const SignUpScreen = () => {
     const [formData, setFormData] = useState({
         email: '',
         password: '',
@@ -26,6 +23,7 @@ export const SignUpScreen = ({ onSwitchToLogin }: SignUpScreenProps) => {
             [e.target.name]: e.target.value
         }));
     };
+    const navigate = useNavigate();
 
     const validateForm = () => {
         if (formData.password !== formData.confirmPassword) {
@@ -56,8 +54,8 @@ export const SignUpScreen = ({ onSwitchToLogin }: SignUpScreenProps) => {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-blue-500 to-indigo-600 py-12 px-4 sm:px-6 lg:px-8">
-            <div className="max-w-md w-full bg-white rounded-xl shadow-2xl p-8 space-y-8">
+        <div className="min-h-screen w-full flex items-center justify-center bg-gray-100">
+            <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl p-8 space-y-6">
                 <div>
                     <h2 className="mt-2 text-center text-3xl font-extrabold text-gray-900">
                         {step === 1 ? 'Create Account' : 'Complete Profile'}
@@ -200,7 +198,7 @@ export const SignUpScreen = ({ onSwitchToLogin }: SignUpScreenProps) => {
 
                 <div className="text-sm text-center">
                     <button
-                        onClick={onSwitchToLogin}
+                        onClick={() => navigate('/login')}
                         className="font-medium text-indigo-600 hover:text-indigo-500"
                     >
                         Already have an account? Sign in

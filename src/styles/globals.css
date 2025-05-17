@@ -1,0 +1,30 @@
+@keyframes bell {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  20%, 60% {
+    transform: rotate(15deg);
+  }
+  40%, 80% {
+    transform: rotate(-15deg);
+  }
+}
+
+.animate-bell {
+  animation: bell 2s infinite;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
