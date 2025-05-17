@@ -7,10 +7,7 @@ import {
   getAvailableYears,
   filterTransactionsByYear,
 } from "../utils/analytics";
-import { EXPENSE_CATEGORIES, INCOME_CATEGORIES } from "../utils/categories";
-import { OverviewChart } from "../components/analytics/charts/OverviewChart";
-import { CategoryChart } from "../components/analytics/charts/CategoryChart";
-import { SavingsBreakdown } from "../components/analytics/charts/SavingsBreakdown";
+import { OverviewTab } from '../components/analytics/OverviewTab';
 
 export const AnalyticsView = () => {
   const { transactions } = useTransactions();
@@ -151,72 +148,6 @@ export const AnalyticsView = () => {
     };
   }, [transactions, selectedYear, totals, monthlyData, filteredTransactions]);
 
-  const renderOverviewTab = () => (
-    <div className="space-y-6">
-      {/* Charts Grid */}
-      <div className="grid grid-cols-1">
-        <div
-          className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-xl 
-          shadow-sm hover:shadow-lg transition-all duration-300 p-6"
-        >
-          <OverviewChart data={monthlyData} />
-        </div>
-      </div>
-
-      {/* Savings Strategy */}
-      <div className="grid grid-cols-1">
-        <div
-          className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-xl 
-          shadow-sm hover:shadow-lg transition-all duration-300 p-6"
-        >
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-            <span className="bg-indigo-50 dark:bg-indigo-900/50 p-1.5 rounded-lg">
-              💎
-            </span>
-            Savings Strategy
-          </h2>
-          <SavingsBreakdown netIncome={totals.income - totals.expense} />
-        </div>
-      </div>
-
-      {/* Category Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div
-          className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-xl 
-          shadow-sm hover:shadow-lg transition-all duration-300 p-6"
-        >
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-            <span className="bg-indigo-50 dark:bg-indigo-900/50 p-1.5 rounded-lg">
-              💫
-            </span>
-            Income Distribution
-          </h2>
-          <CategoryChart
-            categories={INCOME_CATEGORIES}
-            categoryTotals={categoryTotals}
-            type="income"
-          />
-        </div>
-
-        <div
-          className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-xl 
-          shadow-sm hover:shadow-lg transition-all duration-300 p-6"
-        >
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-            <span className="bg-indigo-50 dark:bg-indigo-900/50 p-1.5 rounded-lg">
-              🎯
-            </span>
-            Expense Breakdown
-          </h2>
-          <CategoryChart
-            categories={EXPENSE_CATEGORIES}
-            categoryTotals={categoryTotals}
-            type="expense"
-          />
-        </div>
-      </div>
-    </div>
-  );
 
   // Details Tab
   // This tab will show the detailed analysis of income and expenses
@@ -857,15 +788,13 @@ export const AnalyticsView = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
-        {/* Enhanced Header with Health Score */}
-        <div
-          className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl p-6 md:p-8 
-          shadow-lg relative overflow-hidden"
-        >
-          <div className="absolute inset-0 bg-white/5 backdrop-blur-sm"></div>
-          <div className="relative z-10 space-y-6">
+        {/* Header Card */}
+        <div className="relative bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl 
+          p-6 md:p-8 shadow-lg overflow-hidden group">
+          <div className="absolute inset-0 bg-white/5 backdrop-blur-sm opacity-0 
+            group-hover:opacity-100 transition-opacity duration-500"></div>
+          <div className="relative z-10">
             <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
               <div className="flex-1">
                 <h1 className="text-2xl sm:text-3xl font-bold text-white">
@@ -959,11 +888,28 @@ export const AnalyticsView = () => {
               ))}
             </div>
           </div>
+
+          {/* Animated Background Pattern */}
+          <div className="absolute inset-0 opacity-10 dark:opacity-20">
+            <div className="absolute inset-0 bg-[linear-gradient(45deg,transparent_25%,rgba(68,64,60,0.2)_50%,transparent_75%,transparent_100%)] 
+              bg-repeat pattern-bg animate-pattern-slide"></div>
+          </div>
         </div>
 
         {/* Content */}
-        {activeTab === "overview" ? renderOverviewTab() : renderDetailsTab()}
+        <div className="relative">
+          {activeTab === "overview" ? (
+            <OverviewTab
+              monthlyData={monthlyData}
+              categoryTotals={categoryTotals}
+              totals={totals}
+            />
+          ) : (
+            <div className="animate-fadeIn">
+              {renderDetailsTab()}
+            </div>
+          )}
+        </div>
       </div>
-    </div>
   );
 };

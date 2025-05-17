@@ -167,8 +167,8 @@ export const OverviewChart = ({ data }: OverviewChartProps) => {
       </div>
 
       {/* Chart Stats Summary */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
-        {[
+      {/* <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6"> */}
+        {/* {[
           {
             label: 'Total Income',
             value: data.reduce((sum, d) => sum + d.income, 0),
@@ -204,7 +204,7 @@ export const OverviewChart = ({ data }: OverviewChartProps) => {
             </p>
           </div>
         ))}
-      </div>
+      </div> */}
 
       <div className="h-[250px] sm:h-[350px]">
         <Line data={chartData} options={options} />
