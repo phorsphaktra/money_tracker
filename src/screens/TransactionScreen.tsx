@@ -50,73 +50,87 @@ export const TransactionsScreen = () => {
   }
 
   return (
-    <div className="space-y-4 sm:space-y-6 pb-20 w-full max-w-7xl mx-auto px-3 sm:px-6 py-4 sm:py-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
-            {t('transactions.title')}
-          </h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400">
-            {t('transactions.subtitle')}
-          </p>
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+        {/* Header with Stats */}
+        <div className="bg-gradient-to-br from-indigo-600 to-purple-600 rounded-2xl p-6 md:p-8 shadow-lg">
+            <h1 className="text-2xl md:text-3xl font-bold text-white mb-2">
+              {t('transactions.title')}
+            </h1>
+            <p className="text-indigo-100 text-sm md:text-base">
+              {t('transactions.subtitle')}
+            </p>
         </div>
-      </div>
 
-      {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-3">
-        <div className="w-full sm:flex-1">
-          <input
-            type="text"
-            placeholder={t('transactions.filters.search')}
-            className="w-full px-4 py-2.5 text-sm rounded-xl border border-gray-300 
-              focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:border-gray-700"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
+        {/* Filters Container */}
+        <div className="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm space-y-4">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+            {/* Search */}
+            <div className="lg:col-span-5">
+              <input
+                type="text"
+                placeholder={t('transactions.filters.search')}
+                className="w-full px-4 py-3 text-sm rounded-xl border border-gray-200 
+                  focus:ring-2 focus:ring-indigo-500 focus:border-transparent
+                  dark:bg-gray-800 dark:border-gray-700 transition-all duration-200
+                  hover:border-indigo-300"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </div>
+            
+            {/* Date Range */}
+            <div className="lg:col-span-3">
+              <DateRangeSelect
+                startDate={dateRange.start}
+                endDate={dateRange.end}
+                onDateChange={(start, end) => setDateRange({ start, end })}
+                className="w-full"
+              />
+            </div>
+
+            {/* Filter Buttons */}
+            <div className="lg:col-span-4 flex items-center gap-2">
+              {(['all', 'income', 'expense'] as const).map((type) => (
+                <Button
+                  key={type}
+                  variant={filter === type ? 'primary' : 'secondary'}
+                  onClick={() => setFilter(type)}
+                  className={`flex-1 justify-center capitalize transition-all duration-200
+                    ${filter === type ? 'shadow-lg shadow-indigo-500/30' : ''}
+                  `}
+                >
+                  {t(`transactions.filters.${type}`)}
+                </Button>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* List Container */}
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm overflow-hidden">
+          <TransactionsList 
+            transactions={filteredTransactions}
+            isLoading={isLoading}
+            showFilters={false}
+            startDate={dateRange.start}
+            endDate={dateRange.end}
           />
         </div>
-        <DateRangeSelect
-          startDate={dateRange.start}
-          endDate={dateRange.end}
-          onDateChange={(start, end) => setDateRange({ start, end })}
-          className="w-full sm:w-56"
-        />
-        <div className="flex gap-2 overflow-x-auto py-1 -mx-3 px-3 sm:mx-0 sm:px-0">
-          {(['all', 'income', 'expense'] as const).map((type) => (
-            <Button
-              key={type}
-              variant={filter === type ? 'primary' : 'secondary'}
-              onClick={() => setFilter(type)}
-              className="capitalize"
-            >
-              {t(`transactions.filters.${type}`)}
-            </Button>
-          ))}
-        </div>
-      </div>
 
-      {/* List Container */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden">
-        <TransactionsList 
-          transactions={filteredTransactions}
-          isLoading={isLoading}
-          showFilters={false}
-          startDate={dateRange.start}
-          endDate={dateRange.end}
+        {/* FAB */}
+        <FloatingActionButton 
+          onClick={() => setIsAddingNew(true)} 
+          label={t('transactions.actions.add')}
         />
+        
+        {/* Modal */}
+        {isAddingNew && (
+          <TransactionModal
+            onClose={() => setIsAddingNew(false)}
+          />
+        )}
       </div>
-
-      {/* FAB and Modal */}
-      <FloatingActionButton 
-        onClick={() => setIsAddingNew(true)} 
-        label={t('transactions.actions.add')}
-      />
-      
-      {isAddingNew && (
-        <TransactionModal
-          onClose={() => setIsAddingNew(false)}
-        />
-      )}
     </div>
   );
 };

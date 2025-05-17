@@ -260,127 +260,152 @@ export const DashboardScreen = () => {
 
   if (transactionsLoading || tasksLoading) {
     return (
-      <div className="grid gap-6 animate-pulse">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {[...Array(4)].map((_, i) => (
-            <div key={i} className="bg-white rounded-xl shadow-sm p-6">
-              <div className="h-4 bg-gray-200 rounded w-1/2 mb-4"></div>
-              <div className="h-8 bg-gray-200 rounded w-3/4 mb-2"></div>
-              <div className="h-4 bg-gray-200 rounded w-1/4"></div>
-            </div>
-          ))}
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          {/* Header Skeleton */}
+          <div className="bg-gradient-to-r from-indigo-600/80 to-purple-600/80 rounded-2xl p-6 md:p-8 shadow-lg mb-6 animate-pulse">
+            <div className="h-8 w-48 bg-white/20 rounded-lg mb-2"></div>
+            <div className="h-4 w-32 bg-white/10 rounded"></div>
+          </div>
+
+          {/* Metrics Grid Skeleton */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-100 dark:border-gray-700">
+                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded-lg w-1/2 mb-4"></div>
+                <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded-lg w-3/4 mb-2"></div>
+                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded-lg w-1/4"></div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 space-y-8">
-      <header>
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">
-            {t("dashboard.title")}
-          </h1>
-          <select
-            value={selectedMonth}
-            onChange={(e) => setSelectedMonth(Number(e.target.value))}
-            className="text-sm border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 focus:ring-indigo-500 focus:border-indigo-500"
-          >
-            {monthOptions.map((month) => (
-              <option key={month.value} value={month.value}>
-                {month.label}
-              </option>
-            ))}
-          </select>
-        </div>
-      </header>
-
-      <MonthlyMetricsCard
-        monthLabel={monthOptions[selectedMonth].label}
-        metrics={monthlyMetrics}
-        formatNumber={formatNumber}
-        language={language}
-        t={t}
-      />
-
-      <FinancialSummary
-        enhancedStats={enhancedStats}
-        monthlyStats={monthlyStats}
-        language={language}
-        isCollapsed={isCollapsed}
-        onToggleCollapse={() => setIsCollapsed(!isCollapsed)}
-        formatNumber={formatNumber}
-        t={t}
-        topCategories={enhancedStats.topCategories}
-      />
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 hover:shadow-lg transition-all duration-300 border border-gray-100 dark:border-gray-700">
-          <div className="flex justify-between items-center mb-6">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-              {t("dashboard.spending_overview")}
-              <span className="text-sm font-normal text-gray-500">
-                {monthOptions[selectedMonth].label}
-              </span>
-            </h3>
-          </div>
-          <SpendingChart
-            transactions={filteredTransactionsByMonth}
-            isLoading={transactionsLoading}
-          />
-        </div>
-
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 hover:shadow-lg transition-all duration-300 border border-gray-100 dark:border-gray-700">
-          <div className="flex justify-between items-center mb-6">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-              {t("dashboard.overview.recent_transactions")}
-              <span className="ml-2 text-sm font-normal text-gray-500">
-                {monthOptions[selectedMonth].label}
-              </span>
-            </h3>
-            <button
-              onClick={handleViewAll}
-              className="text-sm text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 font-medium transition-colors duration-200"
-            >
-              {t("dashboard.overview.view_all")}
-            </button>
-          </div>
-          <div className="overflow-hidden space-y-2">
-            {recentTransactions.map((transaction, index) => (
-              <TransactionCard
-                key={transaction.id}
-                transaction={transaction}
-                index={index}
-              />
-            ))}
-            {recentTransactions.length === 0 && (
-              <p className="text-center text-gray-500 dark:text-gray-400 py-4">
-                {t("dashboard.no_transactions_month", {
-                  month: monthOptions[selectedMonth].label,
-                })}
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+        {/* Header */}
+        <header className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl p-6 md:p-8 shadow-lg">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div className="flex-1">
+              <h1 className="text-2xl sm:text-3xl font-bold text-white">
+                {t("dashboard.title")}
+              </h1>
+              <p className="text-sm text-indigo-100 mt-1 max-w-lg">
+                {t("dashboard.subtitle")}
               </p>
-            )}
+            </div>
+            <div className="w-full sm:w-auto">
+              <select
+                value={selectedMonth}
+                onChange={(e) => setSelectedMonth(Number(e.target.value))}
+                className="w-full sm:w-auto px-4 py-2 text-sm border-0 rounded-xl 
+                  bg-white/10 text-white backdrop-blur-sm hover:bg-white/20 
+                  focus:ring-2 focus:ring-white/50 transition-all duration-200"
+              >
+                {monthOptions.map((month) => (
+                  <option 
+                    key={month.value} 
+                    value={month.value} 
+                    className="text-gray-900 dark:text-gray-100"
+                  >
+                    {month.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+        </header>
+
+        <MonthlyMetricsCard
+          monthLabel={monthOptions[selectedMonth].label}
+          metrics={monthlyMetrics}
+          formatNumber={formatNumber}
+          language={language}
+          t={t}
+        />
+
+        <FinancialSummary
+          enhancedStats={enhancedStats}
+          monthlyStats={monthlyStats}
+          language={language}
+          isCollapsed={isCollapsed}
+          onToggleCollapse={() => setIsCollapsed(!isCollapsed)}
+          formatNumber={formatNumber}
+          t={t}
+          topCategories={enhancedStats.topCategories}
+        />
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 hover:shadow-lg transition-all duration-300 border border-gray-100 dark:border-gray-700">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                {t("dashboard.spending_overview")}
+                <span className="text-sm font-normal text-gray-500">
+                  {monthOptions[selectedMonth].label}
+                </span>
+              </h3>
+            </div>
+            <SpendingChart
+              transactions={filteredTransactionsByMonth}
+              isLoading={transactionsLoading}
+            />
+          </div>
+
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 hover:shadow-lg transition-all duration-300 border border-gray-100 dark:border-gray-700">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                {t("dashboard.overview.recent_transactions")}
+                <span className="ml-2 text-sm font-normal text-gray-500">
+                  {monthOptions[selectedMonth].label}
+                </span>
+              </h3>
+              <button
+                onClick={handleViewAll}
+                className="text-sm text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 font-medium transition-colors duration-200"
+              >
+                {t("dashboard.overview.view_all")}
+              </button>
+            </div>
+            <div className="overflow-hidden space-y-2">
+              {recentTransactions.map((transaction, index) => (
+                <TransactionCard
+                  key={transaction.id}
+                  transaction={transaction}
+                  index={index}
+                />
+              ))}
+              {recentTransactions.length === 0 && (
+                <p className="text-center text-gray-500 dark:text-gray-400 py-4">
+                  {t("dashboard.no_transactions_month", {
+                    month: monthOptions[selectedMonth].label,
+                  })}
+                </p>
+              )}
+            </div>
           </div>
         </div>
+
+        <TaskStatsSection
+          stats={taskStats}
+          isLoading={tasksLoading}
+          formatNumber={formatNumber}
+          language={language}
+          t={t}
+        />
+
+        <FloatingActionButton
+          onClick={() => setIsAddingNew(true)}
+          label={t("dashboard.add_transaction")}
+          position="bottom-right"
+        />
+
+        {isAddingNew && (
+          <TransactionModal onClose={() => setIsAddingNew(false)} />
+        )}
       </div>
-
-      <TaskStatsSection
-        stats={taskStats}
-        isLoading={tasksLoading}
-        formatNumber={formatNumber}
-        language={language}
-        t={t}
-      />
-
-      <FloatingActionButton
-        onClick={() => setIsAddingNew(true)}
-        label={t("dashboard.add_transaction")}
-        position="bottom-right"
-      />
-
-      {isAddingNew && (
-        <TransactionModal onClose={() => setIsAddingNew(false)} />
-      )}
     </div>
   );
 };
