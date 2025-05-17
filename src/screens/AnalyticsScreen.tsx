@@ -179,6 +179,8 @@ export const AnalyticsView = () => {
     </div>
   );
 
+  // Details Tab
+  // This tab will show the detailed analysis of income and expenses
   const renderDetailsTab = () => (
     <div className="space-y-6">
       {/* Yearly Performance Summary */}
@@ -285,14 +287,15 @@ export const AnalyticsView = () => {
                   <div key={category} className="space-y-2 group hover:bg-gray-50 dark:hover:bg-gray-700/50 p-2 rounded-lg transition-colors">
                     <div className="flex justify-between items-center">
                       <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                        {category}
+                        {/* {category} */}
+                         {category.charAt(0).toUpperCase() + category.slice(1).toLowerCase()}
                       </span>
                       <div className="text-right">
                         <span className="text-sm text-emerald-600 dark:text-emerald-400">
                           ${amount.toLocaleString()}
                         </span>
                         <span className="block text-xs text-gray-500 dark:text-gray-400">
-                          {Math.round(percentage)}% of income
+                          {Math.round(percentage)}% of Incomes
                         </span>
                       </div>
                     </div>
@@ -340,14 +343,15 @@ export const AnalyticsView = () => {
                   <div key={category} className="space-y-2 group hover:bg-gray-50 dark:hover:bg-gray-700/50 p-2 rounded-lg transition-colors">
                     <div className="flex justify-between items-center">
                       <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                        {category}
+                        {/* {category} */}
+                         {category.charAt(0).toUpperCase() + category.slice(1).toLowerCase()}
                       </span>
                       <div className="text-right">
                         <span className="text-sm text-rose-600 dark:text-rose-400">
                           ${amount.toLocaleString()}
                         </span>
                         <span className="block text-xs text-gray-500 dark:text-gray-400">
-                          {Math.round(percentage)}% of expenses
+                          {Math.round(percentage)}% of Expenses
                         </span>
                       </div>
                     </div>
