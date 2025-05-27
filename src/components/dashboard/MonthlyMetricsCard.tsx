@@ -19,14 +19,14 @@ export const MonthlyMetricsCard: FC<MonthlyMetricsCardProps> = ({
   language,
   t,
 }) => (
-  <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 hover:shadow-lg transition-all duration-300 border border-gray-100 dark:border-gray-700">
-    <div className="flex justify-between items-center mb-4">
-      <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+  <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 sm:p-6 hover:shadow-lg transition-all duration-300 border border-gray-100 dark:border-gray-700">
+    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-2">
+      <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white">
         {t("dashboard.monthly_metrics")}
       </h3>
-      <span className="text-sm text-gray-500">{monthLabel}</span>
+      <span className="text-xs sm:text-sm text-gray-500">{monthLabel}</span>
     </div>
-    <div className="grid grid-cols-3 gap-6">
+    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
       {/* Income Section */}
       <MetricItem
         label={t("dashboard.monthly_income")}
@@ -105,21 +105,24 @@ const MetricItem: FC<MetricItemProps> = ({
 
   const styles = getStyles();
 
+  // Prevent division by zero for bar width
+  const barWidth = total > 0 ? `${(Math.abs(value) / total) * 100}%` : '0%';
+
   return (
     <div className="space-y-2">
-      <div className="flex justify-between items-center">
-        <span className="text-sm text-gray-500 dark:text-gray-400">{label}</span>
-        <span className={styles.text}>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-1">
+        <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">{label}</span>
+        <span className={`text-base sm:text-lg font-semibold ${styles.text}`}>
           {styles.prefix}${formatNumber(Math.abs(value), language)}
           {type === 'balance' && (
             <span className="text-xs ml-1">{value >= 0 ? '▲' : '▼'}</span>
           )}
         </span>
       </div>
-      <div className={`h-1 ${styles.bg} rounded-full`}>
+      <div className={`h-1.5 ${styles.bg} rounded-full`}>
         <div 
-          className={`h-1 ${styles.bar} rounded-full transition-all duration-300`} 
-          style={{ width: `${(Math.abs(value) / total) * 100}%` }}
+          className={`h-1.5 ${styles.bar} rounded-full transition-all duration-300`} 
+          style={{ width: barWidth }}
         />
       </div>
     </div>
