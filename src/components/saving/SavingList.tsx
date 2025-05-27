@@ -9,6 +9,7 @@ import {
   ChevronDownIcon,
 } from '@heroicons/react/24/outline';
 import { formatUSD } from '../../utils/currencyUtils';
+import { ConfirmDialog } from '../ConfirmDialog';
 
 interface SavingListProps {
   savings: Saving[];
@@ -29,6 +30,7 @@ export const SavingList: React.FC<SavingListProps> = ({
   const [currentPage, setCurrentPage] = useState(1);
   const [sortField, setSortField] = useState<keyof Saving>('date');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+  const [savingToDelete, setSavingToDelete] = useState<string | null>(null);
 
   const sortedSavings = useMemo(() => {
     return [...savings].sort((a, b) => {
@@ -61,6 +63,17 @@ export const SavingList: React.FC<SavingListProps> = ({
     }
   };
 
+  const handleDeleteClick = (id: string) => {
+    setSavingToDelete(id);
+  };
+
+  const handleConfirmDelete = () => {
+    if (savingToDelete) {
+      onDelete(savingToDelete);
+      setSavingToDelete(null);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex justify-center py-8">
@@ -84,6 +97,9 @@ export const SavingList: React.FC<SavingListProps> = ({
         <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
           <thead className="bg-gray-50 dark:bg-gray-800">
             <tr>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                {t('common.no')}
+              </th>
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                 {t('savings.date')}
                 <button onClick={() => handleSort('date')} className="ml-2 inline-flex">
@@ -111,8 +127,11 @@ export const SavingList: React.FC<SavingListProps> = ({
             </tr>
           </thead>
           <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
-            {paginatedSavings.map((saving) => (
+            {paginatedSavings.map((saving, index) => (
               <tr key={saving.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                  {index + 1 + (currentPage - 1) * itemsPerPage}
+                </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                   {new Date(saving.date).toLocaleDateString()}
                 </td>
@@ -132,7 +151,7 @@ export const SavingList: React.FC<SavingListProps> = ({
                     <PencilIcon className="h-5 w-5" />
                   </button>
                   <button
-                    onClick={() => onDelete(saving.id)}
+                    onClick={() => handleDeleteClick(saving.id)}
                     className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
                   >
                     <TrashIcon className="h-5 w-5" />
@@ -189,6 +208,16 @@ export const SavingList: React.FC<SavingListProps> = ({
             </div>
           </div>
         </div>
+      )}
+
+      {savingToDelete && (
+        <ConfirmDialog
+          isOpen={!!savingToDelete}
+          onClose={() => setSavingToDelete(null)}
+          onConfirm={handleConfirmDelete}
+          title={t('common.confirmDelete')}
+          message={t('savings.confirmDeleteMessage')}
+        />
       )}
     </div>
   );

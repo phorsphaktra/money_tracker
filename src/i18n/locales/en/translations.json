@@ -47,7 +47,10 @@
     "done": "Done",
     "clear": "Clear",
     "created": "Created at",
-    "updated": "Updated at"
+    "updated": "Updated at",
+    "confirmDelete": "Delete Saving",
+    "no":"No"
+  
   },
   "dashboard": {
     "title": "Dashboard",
@@ -250,18 +253,19 @@
       "completed": "Completed"
     }
   },
-  "savings":{
+  "savings": {
     "title": "Savings",
     "subtitle": "Track your savings goals and progress",
     "search": "Search savings...",
     "no_savings": "No savings found",
     "add_new": "Add New Savings",
-    "amount":"Amount",
+    "amount": "Amount",
     "description": "Description",
-    "add":"Add Savings",
+    "add": "Add Savings",
     "date": "Date",
     "select_date": "Select date",
-        "form_subtitle": "Enter the details of your saving",
-    "description_placeholder": "Enter a description for this saving (optional)"
+    "form_subtitle": "Enter the details of your saving",
+    "description_placeholder": "Enter a description for this saving (optional)",
+    "confirmDeleteMessage": "Are you sure you want to delete this saving?"
   }
 }
