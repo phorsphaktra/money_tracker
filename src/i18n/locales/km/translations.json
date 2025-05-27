@@ -132,7 +132,11 @@
       "high_spending": "ការចំណាយខ្ពស់",
       "good_savings": "ការសន្សំល្អ",
       "need_improvement": "ត្រូវការការកែលម្អ"
-    }
+    },
+    "recent_savings": "ការសន្សំថ្មីៗ",
+    "savings_overview": "ទិដ្ឋភាពទូទៅនៃការសន្សំ",
+    "monthly_savings": "ការសន្សំប្រចាំខែ",
+    "savings_goal_achieved": "សម្រេចគោលដៅសន្សំ!"
   },
   "transactions": {
     "title": "ប្រតិបត្តិការ",
@@ -262,5 +266,8 @@
       "in_progress": "កំពុងដំណើរការ",
       "completed": "បានបញ្ចប់"
     }
+  },
+  "savings": {
+    "no_description": "គ្មានការពិពណ៌នា"
   }
 }

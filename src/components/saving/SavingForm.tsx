@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import DatePicker from 'react-datepicker';
 import { Button } from '../shared/Button';
@@ -6,14 +6,14 @@ import { XMarkIcon, CalendarIcon } from '@heroicons/react/24/outline';
 import { MiddlewareReturn } from '@floating-ui/core';
 
 interface SavingFormProps {
-  amount: string;
-  description: string;
-  selectedDate: Date;
-  onSubmit: (e: React.FormEvent) => Promise<void>;
+  amount?: string;
+  description?: string;
+  selectedDate?: Date;
+  onSubmit: (saving: { amount: number; description: string; date: string }) => Promise<void>;
   onCancel: () => void;
-  onAmountChange: (value: string) => void;
-  onDescriptionChange: (value: string) => void;
-  onDateChange: (date: Date) => void;
+  onAmountChange?: (value: string) => void;
+  onDescriptionChange?: (value: string) => void;
+  onDateChange?: (date: Date) => void;
 }
 
 // Add custom input component for the date picker
@@ -45,16 +45,47 @@ const CustomDateInput = React.forwardRef<HTMLDivElement, { value?: string; onCli
 CustomDateInput.displayName = 'CustomDateInput';
 
 export const SavingForm: React.FC<SavingFormProps> = ({
-  amount,
-  description,
-  selectedDate,
+  amount: initialAmount = '',
+  description: initialDescription = '',
+  selectedDate: initialDate = new Date(),
   onSubmit,
   onCancel,
-  onAmountChange,
-  onDescriptionChange,
-  onDateChange,
+  onAmountChange: externalAmountChange,
+  onDescriptionChange: externalDescriptionChange,
+  onDateChange: externalDateChange,
 }) => {
   const { t } = useTranslation();
+  const [amount, setAmount] = useState(initialAmount);
+  const [description, setDescription] = useState(initialDescription);
+  const [selectedDate, setSelectedDate] = useState(initialDate);
+
+  const handleAmountChange = (value: string) => {
+    setAmount(value);
+    externalAmountChange?.(value);
+  };
+
+  const handleDescriptionChange = (value: string) => {
+    setDescription(value);
+    externalDescriptionChange?.(value);
+  };
+
+  const handleDateChange = (date: Date | null) => {
+    if (date) {
+      setSelectedDate(date);
+      externalDateChange?.(date);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!amount) return;
+
+    await onSubmit({
+      amount: parseFloat(amount),
+      description,
+      date: selectedDate.toISOString()
+    });
+  };
 
   return (
     <div className="relative">
@@ -68,7 +99,7 @@ export const SavingForm: React.FC<SavingFormProps> = ({
         <XMarkIcon className="w-5 h-5 text-gray-500 dark:text-gray-400" />
       </button>
 
-      <form onSubmit={onSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-6">
         {/* Title */}
         <div className="text-center mb-6">
           <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
@@ -91,7 +122,7 @@ export const SavingForm: React.FC<SavingFormProps> = ({
               min="0"
               step="0.01"
               value={amount}
-              onChange={(e) => onAmountChange(e.target.value)}
+              onChange={(e) => handleAmountChange(e.target.value)}
               className="w-full pl-8 pr-4 py-3 rounded-xl border border-gray-300 
                 focus:ring-2 focus:ring-indigo-500 focus:border-transparent
                 dark:bg-gray-800 dark:border-gray-700 transition-all duration-200
@@ -109,7 +140,7 @@ export const SavingForm: React.FC<SavingFormProps> = ({
           </label>
           <DatePicker
             selected={selectedDate}
-            onChange={(date: Date | null) => date && onDateChange(date)}
+            onChange={handleDateChange}
             dateFormat="MMMM d, yyyy"
             maxDate={new Date()}
             minDate={new Date(2000, 0, 1)}
@@ -148,7 +179,7 @@ export const SavingForm: React.FC<SavingFormProps> = ({
           </label>
           <textarea
             value={description}
-            onChange={(e) => onDescriptionChange(e.target.value)}
+            onChange={(e) => handleDescriptionChange(e.target.value)}
             className="w-full px-4 py-3 rounded-xl border border-gray-300 
               focus:ring-2 focus:ring-indigo-500 focus:border-transparent
               dark:bg-gray-800 dark:border-gray-700 transition-all duration-200

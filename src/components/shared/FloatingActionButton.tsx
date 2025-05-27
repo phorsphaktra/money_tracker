@@ -5,12 +5,14 @@ interface FloatingActionButtonProps {
   onClick: () => void;
   label?: string;
   position?: 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left';
+  icon?: React.ReactNode;
 }
 
 export const FloatingActionButton = ({ 
   onClick, 
   label = 'Add',
-  position = 'bottom-right' 
+  position = 'bottom-right',
+  icon
 }: FloatingActionButtonProps) => {
   const positionClasses = {
     'bottom-right': 'bottom-6 right-6',
@@ -34,20 +36,26 @@ export const FloatingActionButton = ({
       aria-label={label}
     >
       <div className="relative flex items-center justify-center">
-        <svg 
-          xmlns="http://www.w3.org/2000/svg" 
-          className="h-8 w-8 sm:h-6 sm:w-6 transform transition-transform duration-200 group-hover:rotate-90" 
-          fill="none" 
-          viewBox="0 0 24 24" 
-          stroke="currentColor"
-        >
-          <path 
-            strokeLinecap="round" 
-            strokeLinejoin="round" 
-            strokeWidth={2} 
-            d="M12 4v16m8-8H4" 
-          />
-        </svg>
+        {icon ? (
+          <div className="transform transition-transform duration-200 group-hover:rotate-90">
+            {icon}
+          </div>
+        ) : (
+          <svg 
+            xmlns="http://www.w3.org/2000/svg" 
+            className="h-8 w-8 sm:h-6 sm:w-6 transform transition-transform duration-200 group-hover:rotate-90" 
+            fill="none" 
+            viewBox="0 0 24 24" 
+            stroke="currentColor"
+          >
+            <path 
+              strokeLinecap="round" 
+              strokeLinejoin="round" 
+              strokeWidth={2} 
+              d="M12 4v16m8-8H4" 
+            />
+          </svg>
+        )}
         
         {/* Tooltip */}
         <span className="absolute right-full mr-3 bg-gray-900 text-white px-3 py-2

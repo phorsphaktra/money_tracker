@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { Transaction, useTransactions } from "../contexts/TransactionContext";
 import { calculateDashboardStats } from "../utils/statsCalculator";
 import { useTranslation } from "react-i18next";
@@ -13,6 +13,9 @@ import { FinancialSummary } from "../components/dashboard/FinancialSummary";
 import { MonthlyMetricsCard } from "../components/dashboard/MonthlyMetricsCard";
 import { TaskStatsSection } from "../components/dashboard/TaskStatsSection";
 import { calculateDetailedHealth } from "../utils/financialCalculations";
+import { useSaving } from "../contexts/SavingContext";
+import { ArrowTrendingUpIcon, PlusIcon, BanknotesIcon, WalletIcon } from "@heroicons/react/24/outline";
+import { SavingForm } from "../components/saving/SavingForm";
 
 const formatNumber = (num: number, language: string) => {
   if (language === "km") {
@@ -194,16 +197,148 @@ const calculateMonthlyMetrics = (transactions: Transaction[]) => {
   };
 };
 
+const SavingsOverviewCard = ({ 
+  savings, 
+  monthlyMetrics, 
+  formatNumber, 
+  language, 
+  t 
+}: { 
+  savings: any[], 
+  monthlyMetrics: any,
+  formatNumber: (num: number, language: string) => string,
+  language: string,
+  t: (key: string) => string 
+}) => {
+  const totalSavings = savings.reduce((acc, saving) => acc + saving.amount, 0);
+  const monthlyIncome = monthlyMetrics.income || 0;
+  const savingsRate = monthlyIncome > 0 ? (totalSavings / monthlyIncome) * 100 : 0;
+  
+  return (
+    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 hover:shadow-lg transition-all duration-300 border border-gray-100 dark:border-gray-700">
+      <div className="flex justify-between items-center mb-6">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+          {t("dashboard.overview.savings")}
+          <ArrowTrendingUpIcon className="w-5 h-5 text-green-500" />
+        </h3>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">
+          <p className="text-sm text-gray-600 dark:text-gray-300">{t("dashboard.savings_rate")}</p>
+          <p className="text-2xl font-bold text-gray-900 dark:text-white">
+            {formatNumber(savingsRate, language)}%
+          </p>
+        </div>
+        <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">
+          <p className="text-sm text-gray-600 dark:text-gray-300">{t("dashboard.overview.savings")}</p>
+          <p className="text-2xl font-bold text-gray-900 dark:text-white">
+            {formatNumber(totalSavings, language)}
+          </p>
+        </div>
+      </div>
+
+      {savings.length > 0 && (
+        <div className="mt-6">
+          <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+            {t("dashboard.recent_savings")}
+          </h4>
+          <div className="space-y-3">
+            {savings.slice(0, 3).map((saving) => (
+              <div 
+                key={saving.id}
+                className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg"
+              >
+                <div>
+                  <p className="text-sm font-medium text-gray-900 dark:text-white">
+                    {saving.description || t("savings.no_description")}
+                  </p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    {new Date(saving.date).toLocaleDateString()}
+                  </p>
+                </div>
+                <p className="text-sm font-semibold text-green-600 dark:text-green-400">
+                  {formatNumber(saving.amount, language)}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+const ActionMenu = ({ 
+  isOpen, 
+  onClose, 
+  onAddTransaction, 
+  onAddSaving,
+  t 
+}: { 
+  isOpen: boolean; 
+  onClose: () => void;
+  onAddTransaction: () => void;
+  onAddSaving: () => void;
+  t: (key: string) => string;
+}) => {
+  if (!isOpen) return null;
+
+  return (
+    <>
+      {/* Backdrop */}
+      <div 
+        className="fixed inset-0 bg-black/20 dark:bg-black/40 backdrop-blur-sm z-40"
+        onClick={onClose}
+      />
+      
+      {/* Menu */}
+      <div className="fixed right-4 bottom-20 z-50 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 overflow-hidden min-w-[200px]">
+        <div className="p-2 space-y-1">
+          <button
+            onClick={() => {
+              onAddTransaction();
+              onClose();
+            }}
+            className="w-full flex items-center gap-3 px-4 py-3 text-left text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-lg transition-colors duration-200"
+          >
+            <BanknotesIcon className="w-5 h-5 text-indigo-500" />
+            {t("transaction.addNew")}
+          </button>
+          
+          <button
+            onClick={() => {
+              onAddSaving();
+              onClose();
+            }}
+            className="w-full flex items-center gap-3 px-4 py-3 text-left text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-lg transition-colors duration-200"
+          >
+            <WalletIcon className="w-5 h-5 text-green-500" />
+            {t("savings.add_new")}
+          </button>
+        </div>
+      </div>
+    </>
+  );
+};
+
 export const DashboardScreen = () => {
   const { transactions, isLoading: transactionsLoading } = useTransactions();
+  const { state: savingState, loadSavings, addSaving } = useSaving();
   const { tasks, loading: tasksLoading } = useTaskContext();
   const { t } = useTranslation();
   const { language } = useLanguage();
-  const [isAddingNew, setIsAddingNew] = useState(false);
+  const [isAddingTransaction, setIsAddingTransaction] = useState(false);
+  const [isAddingSaving, setIsAddingSaving] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const navigate = useNavigate();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
   const monthOptions = useMemo(() => getMonthOptions(), []);
+
+  useEffect(() => {
+    loadSavings();
+  }, [loadSavings]);
 
   const filteredTransactionsByMonth = useMemo(
     () => filterTransactionsByMonth(transactions, selectedMonth),
@@ -258,25 +393,18 @@ export const DashboardScreen = () => {
     });
   };
 
-  if (transactionsLoading || tasksLoading) {
+  if (transactionsLoading || tasksLoading || savingState.isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          {/* Header Skeleton */}
-          <div className="bg-gradient-to-r from-indigo-600/80 to-purple-600/80 rounded-2xl p-6 md:p-8 shadow-lg mb-6 animate-pulse">
-            <div className="h-8 w-48 bg-white/20 rounded-lg mb-2"></div>
-            <div className="h-4 w-32 bg-white/10 rounded"></div>
-          </div>
-
-          {/* Metrics Grid Skeleton */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-            {[...Array(4)].map((_, i) => (
-              <div key={i} className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-100 dark:border-gray-700">
-                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded-lg w-1/2 mb-4"></div>
-                <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded-lg w-3/4 mb-2"></div>
-                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded-lg w-1/4"></div>
-              </div>
-            ))}
+          <div className="animate-pulse space-y-6">
+            {/* Loading skeletons */}
+            <div className="h-32 bg-white dark:bg-gray-800 rounded-xl" />
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {[...Array(4)].map((_, i) => (
+                <div key={i} className="h-24 bg-white dark:bg-gray-800 rounded-xl" />
+              ))}
+            </div>
           </div>
         </div>
       </div>
@@ -327,17 +455,6 @@ export const DashboardScreen = () => {
           t={t}
         />
 
-        <FinancialSummary
-          enhancedStats={enhancedStats}
-          monthlyStats={monthlyStats}
-          language={language}
-          isCollapsed={isCollapsed}
-          onToggleCollapse={() => setIsCollapsed(!isCollapsed)}
-          formatNumber={formatNumber}
-          t={t}
-          topCategories={enhancedStats.topCategories}
-        />
-
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 hover:shadow-lg transition-all duration-300 border border-gray-100 dark:border-gray-700">
             <div className="flex justify-between items-center mb-6">
@@ -354,37 +471,56 @@ export const DashboardScreen = () => {
             />
           </div>
 
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 hover:shadow-lg transition-all duration-300 border border-gray-100 dark:border-gray-700">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                {t("dashboard.overview.recent_transactions")}
-                <span className="ml-2 text-sm font-normal text-gray-500">
-                  {monthOptions[selectedMonth].label}
-                </span>
-              </h3>
-              <button
-                onClick={handleViewAll}
-                className="text-sm text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 font-medium transition-colors duration-200"
-              >
-                {t("dashboard.overview.view_all")}
-              </button>
-            </div>
-            <div className="overflow-hidden space-y-2">
-              {recentTransactions.map((transaction, index) => (
-                <TransactionCard
-                  key={transaction.id}
-                  transaction={transaction}
-                  index={index}
-                />
-              ))}
-              {recentTransactions.length === 0 && (
-                <p className="text-center text-gray-500 dark:text-gray-400 py-4">
-                  {t("dashboard.no_transactions_month", {
-                    month: monthOptions[selectedMonth].label,
-                  })}
-                </p>
-              )}
-            </div>
+          <SavingsOverviewCard
+            savings={savingState.savings}
+            monthlyMetrics={monthlyMetrics}
+            formatNumber={formatNumber}
+            language={language}
+            t={t}
+          />
+        </div>
+
+        <FinancialSummary
+          enhancedStats={enhancedStats}
+          monthlyStats={monthlyStats}
+          language={language}
+          isCollapsed={isCollapsed}
+          onToggleCollapse={() => setIsCollapsed(!isCollapsed)}
+          formatNumber={formatNumber}
+          t={t}
+          topCategories={enhancedStats.topCategories}
+        />
+
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 hover:shadow-lg transition-all duration-300 border border-gray-100 dark:border-gray-700">
+          <div className="flex justify-between items-center mb-6">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+              {t("dashboard.overview.recent_transactions")}
+              <span className="ml-2 text-sm font-normal text-gray-500">
+                {monthOptions[selectedMonth].label}
+              </span>
+            </h3>
+            <button
+              onClick={handleViewAll}
+              className="text-sm text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 font-medium transition-colors duration-200"
+            >
+              {t("dashboard.overview.view_all")}
+            </button>
+          </div>
+          <div className="overflow-hidden space-y-2">
+            {recentTransactions.map((transaction, index) => (
+              <TransactionCard
+                key={transaction.id}
+                transaction={transaction}
+                index={index}
+              />
+            ))}
+            {recentTransactions.length === 0 && (
+              <p className="text-center text-gray-500 dark:text-gray-400 py-4">
+                {t("dashboard.no_transactions_month", {
+                  month: monthOptions[selectedMonth].label,
+                })}
+              </p>
+            )}
           </div>
         </div>
 
@@ -397,13 +533,44 @@ export const DashboardScreen = () => {
         />
 
         <FloatingActionButton
-          onClick={() => setIsAddingNew(true)}
-          label={t("dashboard.add_transaction")}
+          onClick={() => setIsMenuOpen(true)}
+          label={t("common.add")}
           position="bottom-right"
+          icon={<PlusIcon className="w-6 h-6" />}
         />
 
-        {isAddingNew && (
-          <TransactionModal onClose={() => setIsAddingNew(false)} />
+        <ActionMenu
+          isOpen={isMenuOpen}
+          onClose={() => setIsMenuOpen(false)}
+          onAddTransaction={() => setIsAddingTransaction(true)}
+          onAddSaving={() => setIsAddingSaving(true)}
+          t={t}
+        />
+
+        {isAddingTransaction && (
+          <TransactionModal onClose={() => setIsAddingTransaction(false)} />
+        )}
+
+        {isAddingSaving && (
+          <div className="fixed inset-0 bg-black/20 dark:bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 w-full max-w-md">
+              <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">
+                {t("savings.add_new")}
+              </h2>
+              <SavingForm
+                onSubmit={async (saving) => {
+                  try {
+                    await addSaving(saving);
+                    setIsAddingSaving(false);
+                    loadSavings(); // Refresh savings list
+                  } catch (error) {
+                    console.error("Failed to add saving:", error);
+                  }
+                }}
+                onCancel={() => setIsAddingSaving(false)}
+              />
+            </div>
+          </div>
         )}
       </div>
     </div>

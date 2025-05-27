@@ -132,7 +132,11 @@
       "high_spending": "High Spending",
       "good_savings": "Good Savings",
       "need_improvement": "Needs Improvement"
-    }
+    },
+    "recent_savings": "Recent Savings",
+    "savings_overview": "Savings Overview",
+    "monthly_savings": "Monthly Savings",
+    "savings_goal_achieved": "Savings Goal Achieved!"
   },
   "transactions": {
     "title": "Transactions",
@@ -266,6 +270,7 @@
     "select_date": "Select date",
     "form_subtitle": "Enter the details of your saving",
     "description_placeholder": "Enter a description for this saving (optional)",
-    "confirmDeleteMessage": "Are you sure you want to delete this saving?"
+    "confirmDeleteMessage": "Are you sure you want to delete this saving?",
+    "no_description": "No description"
   }
 }
