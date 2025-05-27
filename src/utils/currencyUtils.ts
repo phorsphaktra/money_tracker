@@ -85,3 +85,9 @@ export const calculateDisplayAmount = (
     showOriginal: false
   };
 };
+
+export const formatUSD = (amount: number) =>
+  new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+  }).format(amount);

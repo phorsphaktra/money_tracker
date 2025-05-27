@@ -45,7 +45,9 @@
     "confirm": "Confirm",
     "settings": "Settings",
     "done": "Done",
-    "clear": "Clear"
+    "clear": "Clear",
+    "created": "Created at",
+    "updated": "Updated at"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -256,6 +258,10 @@
     "add_new": "Add New Savings",
     "amount":"Amount",
     "description": "Description",
-    "add":"Add Savings"
+    "add":"Add Savings",
+    "date": "Date",
+    "select_date": "Select date",
+        "form_subtitle": "Enter the details of your saving",
+    "description_placeholder": "Enter a description for this saving (optional)"
   }
 }
