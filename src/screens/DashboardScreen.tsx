@@ -16,6 +16,7 @@ import { calculateDetailedHealth } from "../utils/financialCalculations";
 import { useSaving } from "../contexts/SavingContext";
 import { ArrowTrendingUpIcon, PlusIcon, BanknotesIcon, WalletIcon } from "@heroicons/react/24/outline";
 import { SavingForm } from "../components/saving/SavingForm";
+import { formatUSD } from "../utils/currencyUtils";
 
 const formatNumber = (num: number, language: string) => {
   if (language === "km") {
@@ -223,13 +224,13 @@ const SavingsOverviewCard = ({
         </h3>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">
+      <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
+        {/* <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">
           <p className="text-sm text-gray-600 dark:text-gray-300">{t("dashboard.savings_rate")}</p>
           <p className="text-2xl font-bold text-gray-900 dark:text-white">
             {formatNumber(savingsRate, language)}%
           </p>
-        </div>
+        </div> */}
         <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">
           <p className="text-sm text-gray-600 dark:text-gray-300">{t("dashboard.overview.savings")}</p>
           <p className="text-2xl font-bold text-gray-900 dark:text-white">
@@ -258,7 +259,7 @@ const SavingsOverviewCard = ({
                   </p>
                 </div>
                 <p className="text-sm font-semibold text-green-600 dark:text-green-400">
-                  {formatNumber(saving.amount, language)}
+                  {formatUSD(saving.amount)}
                 </p>
               </div>
             ))}
