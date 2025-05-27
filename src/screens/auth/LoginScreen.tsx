@@ -16,30 +16,30 @@ export const LoginScreen = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-gray-100">
-      <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl p-8 space-y-6">
+    <div className="min-h-screen w-full flex items-center justify-center bg-gray-100 px-2">
+      <div className="w-full max-w-xs sm:max-w-sm md:max-w-md bg-white rounded-2xl shadow-2xl p-4 sm:p-8 space-y-6">
         {/* Header */}
         <div className="space-y-2">
-          <h2 className="text-3xl font-bold text-center text-gray-900">
+          <h2 className="text-2xl sm:text-3xl font-bold text-center text-gray-900">
             Money Tracker
           </h2>
-          <p className="text-center text-sm text-gray-600">
+          <p className="text-center text-xs sm:text-sm text-gray-600">
             Please sign in to your account
           </p>
         </div>
 
         {/* Error Message */}
         {error && (
-          <div className="bg-red-50 text-sm border-l-4 border-red-500 p-4 text-red-700">
+          <div className="bg-red-50 text-xs sm:text-sm border-l-4 border-red-500 p-3 sm:p-4 text-red-700 rounded">
             {error}
           </div>
         )}
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-5">
           {/* Email Field */}
           <div className="space-y-1">
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+            <label htmlFor="email" className="block text-xs sm:text-sm font-medium text-gray-700">
               Email address
             </label>
             <input
@@ -47,18 +47,19 @@ export const LoginScreen = () => {
               type="email"
               required
               placeholder="Enter your email"
-              className="block w-full px-4 py-3 rounded-lg border border-gray-300 shadow-sm 
+              className="block w-full px-3 py-2 sm:px-4 sm:py-3 rounded-lg border border-gray-300 shadow-sm 
                        placeholder-gray-400 focus:outline-none focus:ring-2 
                        focus:ring-indigo-500 focus:border-transparent
                        text-gray-900 text-base"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              autoComplete="email"
             />
           </div>
 
           {/* Password Field */}
           <div className="space-y-1">
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+            <label htmlFor="password" className="block text-xs sm:text-sm font-medium text-gray-700">
               Password
             </label>
             <input
@@ -66,12 +67,13 @@ export const LoginScreen = () => {
               type="password"
               required
               placeholder="Enter your password"
-              className="block w-full px-4 py-3 rounded-lg border border-gray-300 shadow-sm 
+              className="block w-full px-3 py-2 sm:px-4 sm:py-3 rounded-lg border border-gray-300 shadow-sm 
                        placeholder-gray-400 focus:outline-none focus:ring-2 
                        focus:ring-indigo-500 focus:border-transparent
                        text-gray-900 text-base"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              autoComplete="current-password"
             />
           </div>
 
@@ -79,7 +81,7 @@ export const LoginScreen = () => {
           <button
             type="submit"
             disabled={isLoading}
-            className={`w-full flex justify-center items-center py-3 px-4 
+            className={`w-full flex justify-center items-center py-2 sm:py-3 px-4 
                      rounded-lg text-base font-medium text-white transition-colors
                      ${isLoading 
                        ? 'bg-indigo-400 cursor-not-allowed' 
@@ -97,7 +99,7 @@ export const LoginScreen = () => {
           </button>
         </form>
 
-        <p className="text-center text-sm text-gray-600">
+        <p className="text-center text-xs sm:text-sm text-gray-600">
           Don't have an account?{' '}
           <button
             onClick={() => navigate('/signup')}
@@ -107,29 +109,29 @@ export const LoginScreen = () => {
           </button>
         </p>
 
-        <div className="mt-6">
-                            <div className="relative">
-                                <div className="absolute inset-0 flex items-center">
-                                    <div className="w-full border-t border-gray-300" />
-                                </div>
-                                <div className="relative flex justify-center text-sm">
-                                    <span className="px-2 bg-white text-gray-500">Or continue with</span>
-                                </div>
-                            </div>
+        <div className="mt-4 sm:mt-6">
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-300" />
+            </div>
+            <div className="relative flex justify-center text-xs sm:text-sm">
+              <span className="px-2 bg-white text-gray-500">Or continue with</span>
+            </div>
+          </div>
 
-                            <button
-                                type="button"
-                                onClick={loginWithGoogle}
-                                className="mt-4 w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
-                            >
-                                <img
-                                    className="h-5 w-5 mr-2"
-                                    src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
-                                    alt="Google"
-                                />
-                                Sign up with Google
-                            </button>
-                        </div>
+          <button
+            type="button"
+            onClick={loginWithGoogle}
+            className="mt-3 sm:mt-4 w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-xs sm:text-sm font-medium text-gray-500 hover:bg-gray-50"
+          >
+            <img
+              className="h-5 w-5 mr-2"
+              src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
+              alt="Google"
+            />
+            Sign up with Google
+          </button>
+        </div>
       </div>
       
     </div>
