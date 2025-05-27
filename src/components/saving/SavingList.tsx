@@ -2,14 +2,13 @@ import React, { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Saving } from '../../services/savingService';
 import { LoadingSpinner } from '../shared/LoadingSpinner';
-import { formatCurrency } from '../../utils/formatters';
 import {
   TrashIcon,
   PencilIcon,
   ChevronUpIcon,
   ChevronDownIcon,
 } from '@heroicons/react/24/outline';
-import { convertCurrency, formatUSD } from '../../utils/currencyUtils';
+import { formatUSD } from '../../utils/currencyUtils';
 
 interface SavingListProps {
   savings: Saving[];
