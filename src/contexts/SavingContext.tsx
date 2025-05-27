@@ -1,9 +1,11 @@
 import React, { createContext, useContext, useReducer, useCallback } from 'react';
 import { Saving, savingService } from '../services/savingService';
 import { useAuth } from './AuthContext';
+import { calculateSavingsBreakdown, SavingsBreakdown } from '../utils/savings';
 
 interface SavingState {
   savings: Saving[];
+  savingsBreakdown: SavingsBreakdown[];
   isLoading: boolean;
   error: string | null;
 }
@@ -18,6 +20,7 @@ type SavingAction =
 
 const initialState: SavingState = {
   savings: [],
+  savingsBreakdown: [],
   isLoading: false,
   error: null
 };
@@ -31,18 +34,24 @@ const SavingContext = createContext<{
 } | undefined>(undefined);
 
 const savingReducer = (state: SavingState, action: SavingAction): SavingState => {
+  let newState = state;
+
   switch (action.type) {
     case 'SET_SAVINGS':
-      return { ...state, savings: action.payload };
+      newState = { ...state, savings: action.payload };
+      break;
     case 'ADD_SAVING':
-      return { ...state, savings: [...state.savings, action.payload] };
+      newState = { ...state, savings: [...state.savings, action.payload] };
+      break;
     case 'DELETE_SAVING':
-      return { ...state, savings: state.savings.filter(s => s.id !== action.payload) };
+      newState = { ...state, savings: state.savings.filter(s => s.id !== action.payload) };
+      break;
     case 'UPDATE_SAVING':
-      return {
+      newState = {
         ...state,
         savings: state.savings.map(s => s.id === action.payload.id ? action.payload : s)
       };
+      break;
     case 'SET_LOADING':
       return { ...state, isLoading: action.payload };
     case 'SET_ERROR':
@@ -50,6 +59,12 @@ const savingReducer = (state: SavingState, action: SavingAction): SavingState =>
     default:
       return state;
   }
+
+  // Recalculate breakdown whenever savings change
+  return {
+    ...newState,
+    savingsBreakdown: calculateSavingsBreakdown(newState.savings)
+  };
 };
 
 export const SavingProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -70,13 +85,11 @@ export const SavingProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }
   }, [user]);
 
-  const addSaving = useCallback(async (saving: Omit<Saving, 'id' | 'createdAt' | 'updatedAt'>) => {
+  const addSaving = useCallback(async () => {
     if (!user?.uid) return;
     
     try {
       dispatch({ type: 'SET_LOADING', payload: true });
-      const newSaving = await savingService.addSaving(user.uid, saving);
-      dispatch({ type: 'ADD_SAVING', payload: newSaving });
     } catch (error) {
       dispatch({ type: 'SET_ERROR', payload: 'Failed to add saving' });
     } finally {

@@ -28,22 +28,23 @@ const SavingScreen: React.FC = () => {
     loadSavings();
   }, [loadSavings]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!amount) return;
+  const handleSubmit = async (savingData: { amount: number; description: string; date: string; categoryId?: string }) => {
+    if (!savingData.amount) return;
 
     try {
       if (editingId) {
         await updateSaving(editingId, {
-          amount: parseFloat(amount),
-          date: selectedDate.toISOString(),
-          description
+          amount: savingData.amount,
+          date: savingData.date,
+          description: savingData.description,
+          categoryId: savingData.categoryId
         });
       } else {
         await addSaving({
-          amount: parseFloat(amount),
-          date: selectedDate.toISOString(),
-          description
+          amount: savingData.amount,
+          date: savingData.date,
+          description: savingData.description,
+          categoryId: savingData.categoryId
         });
       }
 

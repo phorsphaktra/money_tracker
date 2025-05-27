@@ -2,14 +2,21 @@ import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import DatePicker from 'react-datepicker';
 import { Button } from '../shared/Button';
-import { XMarkIcon, CalendarIcon } from '@heroicons/react/24/outline';
+import { XMarkIcon, CalendarIcon, PlusIcon, MinusIcon } from '@heroicons/react/24/outline';
 import { MiddlewareReturn } from '@floating-ui/core';
+import { SAVINGS_CATEGORIES } from '../../utils/savings';
 
 interface SavingFormProps {
   amount?: string;
   description?: string;
   selectedDate?: Date;
-  onSubmit: (saving: { amount: number; description: string; date: string }) => Promise<void>;
+  onSubmit: (saving: { 
+    amount: number; 
+    description: string; 
+    date: string;
+    categoryId?: string;
+    type: 'credit' | 'debit';
+  }) => Promise<void>;
   onCancel: () => void;
   onAmountChange?: (value: string) => void;
   onDescriptionChange?: (value: string) => void;
@@ -58,6 +65,8 @@ export const SavingForm: React.FC<SavingFormProps> = ({
   const [amount, setAmount] = useState(initialAmount);
   const [description, setDescription] = useState(initialDescription);
   const [selectedDate, setSelectedDate] = useState(initialDate);
+  const [selectedCategory, setSelectedCategory] = useState<string>('');
+  const [transactionType, setTransactionType] = useState<'credit' | 'debit'>('credit');
 
   const handleAmountChange = (value: string) => {
     setAmount(value);
@@ -76,14 +85,17 @@ export const SavingForm: React.FC<SavingFormProps> = ({
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleFormSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
     if (!amount) return;
 
-    await onSubmit({
-      amount: parseFloat(amount),
+    const finalAmount = parseFloat(amount);
+    onSubmit({
+      amount: transactionType === 'debit' ? -Math.abs(finalAmount) : Math.abs(finalAmount),
       description,
-      date: selectedDate.toISOString()
+      date: selectedDate.toISOString(),
+      categoryId: selectedCategory || undefined,
+      type: transactionType
     });
   };
 
@@ -91,6 +103,7 @@ export const SavingForm: React.FC<SavingFormProps> = ({
     <div className="relative">
       {/* Close button for mobile */}
       <button
+        type="button"
         onClick={onCancel}
         className="absolute -top-2 -right-2 p-2 rounded-full bg-gray-100 
           dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 
@@ -99,7 +112,7 @@ export const SavingForm: React.FC<SavingFormProps> = ({
         <XMarkIcon className="w-5 h-5 text-gray-500 dark:text-gray-400" />
       </button>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleFormSubmit} className="space-y-6">
         {/* Title */}
         <div className="text-center mb-6">
           <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
@@ -108,6 +121,36 @@ export const SavingForm: React.FC<SavingFormProps> = ({
           <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
             {t('savings.form_subtitle')}
           </p>
+        </div>
+
+        {/* Transaction Type */}
+        <div className="grid grid-cols-2 gap-4">
+          <button
+            type="button"
+            onClick={() => setTransactionType('credit')}
+            className={`flex items-center justify-center gap-2 px-4 py-3 rounded-xl border 
+              transition-all duration-200 ${
+              transactionType === 'credit'
+                ? 'bg-green-50 border-green-500 text-green-700'
+                : 'border-gray-300 hover:border-green-300'
+            }`}
+          >
+            <PlusIcon className="h-5 w-5" />
+            {t('savings.credit')}
+          </button>
+          <button
+            type="button"
+            onClick={() => setTransactionType('debit')}
+            className={`flex items-center justify-center gap-2 px-4 py-3 rounded-xl border 
+              transition-all duration-200 ${
+              transactionType === 'debit'
+                ? 'bg-red-50 border-red-500 text-red-700'
+                : 'border-gray-300 hover:border-red-300'
+            }`}
+          >
+            <MinusIcon className="h-5 w-5" />
+            {t('savings.debit')}
+          </button>
         </div>
 
         {/* Amount Field */}
@@ -131,6 +174,33 @@ export const SavingForm: React.FC<SavingFormProps> = ({
               required
             />
           </div>
+        </div>
+
+        {/* Category Field */}
+        <div className="space-y-2">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            {t('savings.category')}
+          </label>
+          <select
+            value={selectedCategory}
+            onChange={(e) => setSelectedCategory(e.target.value)}
+            className="w-full px-4 py-3 rounded-xl border border-gray-300 
+              focus:ring-2 focus:ring-indigo-500 focus:border-transparent
+              dark:bg-gray-800 dark:border-gray-700 transition-all duration-200
+              hover:border-indigo-300"
+          >
+            <option value="">{t('savings.auto_allocate')}</option>
+            {SAVINGS_CATEGORIES.map((category) => (
+              <option key={category.id} value={category.id}>
+                {category.label} ({category.percentage}%)
+              </option>
+            ))}
+          </select>
+          {!selectedCategory && (
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+              {t('savings.auto_allocate_hint')}
+            </p>
+          )}
         </div>
 
         {/* Date Field */}
@@ -202,7 +272,11 @@ export const SavingForm: React.FC<SavingFormProps> = ({
           <Button
             variant="primary"
             type="submit"
-            className="w-full sm:w-1/2"
+            className={`w-full sm:w-1/2 ${
+              transactionType === 'credit'
+                ? 'bg-green-600 hover:bg-green-700'
+                : 'bg-red-600 hover:bg-red-700'
+            }`}
           >
             {t('savings.add')}
           </Button>

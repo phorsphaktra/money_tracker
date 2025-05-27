@@ -200,7 +200,6 @@ const calculateMonthlyMetrics = (transactions: Transaction[]) => {
 
 const SavingsOverviewCard = ({ 
   savings, 
-  monthlyMetrics, 
   formatNumber, 
   language, 
   t 
@@ -212,8 +211,6 @@ const SavingsOverviewCard = ({
   t: (key: string) => string 
 }) => {
   const totalSavings = savings.reduce((acc, saving) => acc + saving.amount, 0);
-  const monthlyIncome = monthlyMetrics.income || 0;
-  const savingsRate = monthlyIncome > 0 ? (totalSavings / monthlyIncome) * 100 : 0;
   
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 hover:shadow-lg transition-all duration-300 border border-gray-100 dark:border-gray-700">
@@ -559,11 +556,19 @@ export const DashboardScreen = () => {
                 {t("savings.add_new")}
               </h2>
               <SavingForm
-                onSubmit={async (saving) => {
+                onSubmit={async (savingData) => {
                   try {
-                    await addSaving(saving);
+                    if (!savingData.amount || isNaN(savingData.amount)) {
+                      throw new Error('Invalid amount');
+                    }
+                    await addSaving({
+                      amount: savingData.amount,
+                      description: savingData.description || '',
+                      date: savingData.date,
+                      categoryId: savingData.categoryId
+                    });
                     setIsAddingSaving(false);
-                    loadSavings(); // Refresh savings list
+                    await loadSavings();
                   } catch (error) {
                     console.error("Failed to add saving:", error);
                   }
