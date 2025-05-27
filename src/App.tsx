@@ -9,6 +9,7 @@ import { TaskProvider } from './contexts/TaskContext';
 import { NotificationProvider } from './contexts/NotificationContext';
 import { SettingsProvider } from './contexts/SettingsContext';
 import { router } from './routes';
+import { SavingProvider } from './contexts/SavingContext';
 
 export default function App() {
   return (
@@ -16,15 +17,17 @@ export default function App() {
       <SettingsProvider>
         <LoadingProvider>
           <TransactionProvider>
-            <LanguageProvider>
-              <DarkModeProvider>
-                <TaskProvider>
-                  <NotificationProvider>
-                    <RouterProvider router={router} />
-                  </NotificationProvider>
-                </TaskProvider>
-              </DarkModeProvider>
-            </LanguageProvider>
+            <SavingProvider>
+              <LanguageProvider>
+                <DarkModeProvider>
+                  <TaskProvider>
+                    <NotificationProvider>
+                      <RouterProvider router={router} />
+                    </NotificationProvider>
+                  </TaskProvider>
+                </DarkModeProvider>
+              </LanguageProvider>
+            </SavingProvider>
           </TransactionProvider>
         </LoadingProvider>
       </SettingsProvider>

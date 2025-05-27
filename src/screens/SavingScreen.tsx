@@ -1,0 +1,202 @@
+import React, { useEffect, useState } from 'react';
+import { useSaving } from '../contexts/SavingContext';
+import { useTranslation } from 'react-i18next';
+import { PlusIcon } from '@heroicons/react/24/outline';
+import { Button } from '../components/shared/Button';
+import { LoadingSpinner } from '../components/shared/LoadingSpinner';
+import { DateRangeSelect } from '../components/shared/DateRangeSelect';
+import { FloatingActionButton } from '../components/shared/FloatingActionButton';
+
+const SavingScreen: React.FC = () => {
+  const { t } = useTranslation();
+  const { state, loadSavings, addSaving, deleteSaving } = useSaving();
+  const [amount, setAmount] = useState<string>('');
+  const [description, setDescription] = useState<string>('');
+  const { savings, isLoading, error } = state;
+  const [isAddingNew, setIsAddingNew] = useState(false);
+  const [search, setSearch] = useState('');
+  const [dateRange, setDateRange] = useState<{start: Date | null, end: Date | null}>({
+    start: null,
+    end: null
+  });
+
+  useEffect(() => {
+    loadSavings();
+  }, [loadSavings]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!amount) return;
+
+    await addSaving({
+      amount: parseFloat(amount),
+      date: new Date().toISOString(),
+      description
+    });
+
+    setAmount('');
+    setDescription('');
+    setIsAddingNew(false);
+  };
+
+  const filteredSavings = savings.filter(saving => {
+    const matchesSearch = saving.description?.toLowerCase().includes(search.toLowerCase()) || false;
+    const savingDate = new Date(saving.date);
+    const matchesDateRange = 
+      (!dateRange.start || savingDate >= dateRange.start) &&
+      (!dateRange.end || savingDate <= dateRange.end);
+
+    return matchesSearch && matchesDateRange;
+  });
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <LoadingSpinner size="large" className="text-indigo-600" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+        {/* Header */}
+        <div className="bg-gradient-to-br from-indigo-600 to-purple-600 rounded-2xl p-6 md:p-8 shadow-lg">
+          <h1 className="text-2xl md:text-3xl font-bold text-white mb-2">
+            {t('savings.title')}
+          </h1>
+          <p className="text-indigo-100 text-sm md:text-base">
+            {t('savings.subtitle')}
+          </p>
+        </div>
+
+        {error && (
+          <div className="bg-red-50 border-l-4 border-red-400 p-4 rounded-xl">
+            <p className="text-red-700">{error}</p>
+          </div>
+        )}
+
+        {/* Filters Container */}
+        <div className="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm space-y-4">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+            {/* Search */}
+            <div className="lg:col-span-8">
+              <input
+                type="text"
+                placeholder={t('savings.search')}
+                className="w-full px-4 py-3 text-sm rounded-xl border border-gray-200 
+                  focus:ring-2 focus:ring-indigo-500 focus:border-transparent
+                  dark:bg-gray-800 dark:border-gray-700 transition-all duration-200
+                  hover:border-indigo-300"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </div>
+            
+            {/* Date Range */}
+            <div className="lg:col-span-4">
+              <DateRangeSelect
+                startDate={dateRange.start}
+                endDate={dateRange.end}
+                onDateChange={(start, end) => setDateRange({ start, end })}
+                className="w-full"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Savings List */}
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm overflow-hidden">
+          <div className="divide-y divide-gray-200 dark:divide-gray-700">
+            {filteredSavings.map((saving) => (
+              <div
+                key={saving.id}
+                className="p-4 sm:p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center 
+                  hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors duration-150"
+              >
+                <div className="flex-1">
+                  <p className="text-lg font-semibold text-gray-900 dark:text-white">
+                    ${saving.amount.toFixed(2)}
+                  </p>
+                  {saving.description && (
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                      {saving.description}
+                    </p>
+                  )}
+                  <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
+                    {new Date(saving.date).toLocaleDateString()}
+                  </p>
+                </div>
+                <Button
+                  variant="secondary"
+                  onClick={() => deleteSaving(saving.id)}
+                  className="mt-2 sm:mt-0"
+                >
+                  {t('common.delete')}
+                </Button>
+              </div>
+            ))}
+
+            {filteredSavings.length === 0 && (
+              <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+                {t('savings.no_savings')}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Add New Saving Modal */}
+        {isAddingNew && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 w-full max-w-md">
+              <h2 className="text-xl font-bold mb-4">{t('savings.add_new')}</h2>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    {t('savings.amount')}
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={amount}
+                    onChange={(e) => setAmount(e.target.value)}
+                    className="w-full px-4 py-2 rounded-xl border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    {t('savings.description')}
+                  </label>
+                  <input
+                    type="text"
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    className="w-full px-4 py-2 rounded-xl border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  />
+                </div>
+                <div className="flex gap-2 justify-end mt-6">
+                  <Button variant="secondary" onClick={() => setIsAddingNew(false)}>
+                    {t('common.cancel')}
+                  </Button>
+                  <Button variant="primary" type="submit">
+                    {t('savings.add')}
+                  </Button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* FAB */}
+        <FloatingActionButton 
+          onClick={() => setIsAddingNew(true)} 
+          label={t('savings.add')}
+        />
+      </div>
+    </div>
+  );
+};
+
+export default SavingScreen;

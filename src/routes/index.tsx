@@ -10,6 +10,7 @@ import { SplashScreen } from '../screens/SplashScreen';
 import { PrivateRoute } from './PrivateRoute';
 import { useAuth } from '../contexts/AuthContext';
 import { TasksScreen } from '../screens/TasksScreen';
+import SavingScreen from '../screens/SavingScreen';
 
 const AuthRedirect = () => {
   const { isAuthenticated } = useAuth();
@@ -49,6 +50,7 @@ export const router = createBrowserRouter([
     children: [
       { index: true, element: <DashboardScreen /> },
       { path: 'transactions', element: <TransactionsScreen /> },
+      { path: 'saving', element: <SavingScreen /> },
       { path: 'analytics', element: <AnalyticsView /> },
       { path: 'settings', element: <SettingsScreen /> },
       { path: 'task', element: <TasksScreen /> }

@@ -10,7 +10,8 @@ import {
   ArrowRightOnRectangleIcon,
   CameraIcon,
   ClipboardDocumentCheckIcon,
-  XMarkIcon
+  XMarkIcon,
+  WalletIcon
 } from '@heroicons/react/24/outline';
 
 interface SidebarProps {
@@ -22,6 +23,7 @@ interface SidebarProps {
 const navItems = [
   { path: '/', label: 'dashboard.navigation.dashboard', icon: HomeIcon },
   { path: '/transactions', label: 'dashboard.navigation.transactions', icon: CurrencyDollarIcon },
+  { path: '/saving', label: 'dashboard.navigation.saving', icon: WalletIcon },
   { path: '/analytics', label: 'dashboard.navigation.analytics', icon: ChartBarIcon },
   { path: '/task', label: 'task.title', icon: ClipboardDocumentCheckIcon },
   { path: '/settings', label: 'dashboard.navigation.settings', icon: Cog6ToothIcon },
@@ -31,14 +33,14 @@ export const Sidebar = ({ isOpen, setIsOpen, isCollapsed }: SidebarProps) => {
   const { logout, user } = useAuth();
   const { t } = useTranslation();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [localPhotoURL, setLocalPhotoURL] = useState<string>(() => 
+  const [localPhotoURL, setLocalPhotoURL] = useState<string>(() =>
     localStorage.getItem(`userPhoto_${user?.email}`) || ''
   );
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
-    
+
     if (file.size > 5 * 1024 * 1024) {
       alert('Image size should be less than 5MB');
       return;
@@ -65,10 +67,10 @@ export const Sidebar = ({ isOpen, setIsOpen, isCollapsed }: SidebarProps) => {
     <>
       {/* Mobile backdrop */}
       {isOpen && (
-        <div 
+        <div
           className="lg:hidden fixed inset-0 bg-black/40 backdrop-blur-sm z-30 
           animate-in fade-in duration-300"
-          onClick={() => setIsOpen(false)} 
+          onClick={() => setIsOpen(false)}
         />
       )}
 
@@ -102,7 +104,7 @@ export const Sidebar = ({ isOpen, setIsOpen, isCollapsed }: SidebarProps) => {
                   ring-2 ring-indigo-500/20 dark:ring-indigo-400/20
                   overflow-hidden transition-all duration-300`}>
                   {(user?.photoURL || localPhotoURL) ? (
-                    <img 
+                    <img
                       src={localPhotoURL || user?.photoURL || ''}
                       alt="Profile"
                       className="w-full h-full object-cover"
