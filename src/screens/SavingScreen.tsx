@@ -2,8 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { useSaving } from '../contexts/SavingContext';
 import { useTranslation } from 'react-i18next';
 import { LoadingSpinner } from '../components/shared/LoadingSpinner';
-import { DateRangeSelect } from '../components/shared/DateRangeSelect';
 import { FloatingActionButton } from '../components/shared/FloatingActionButton';
+import { formatUSD } from '../utils/currencyUtils';
 import 'react-datepicker/dist/react-datepicker.css';
 import { SavingForm } from '../components/saving/SavingForm';
 import { Saving } from '../services/savingService';
@@ -11,13 +11,14 @@ import { SavingList } from '../components/saving/SavingList';
 
 const SavingScreen: React.FC = () => {
   const { t } = useTranslation();
-  const { state, loadSavings, addSaving, deleteSaving, updateSaving } = useSaving();
+  const { state, loadSavings, loadSavingsByType, addSaving, deleteSaving, updateSaving } = useSaving();
   const [amount, setAmount] = useState<string>('');
   const [description, setDescription] = useState<string>('');
-  const { savings, isLoading, error } = state;
+  const { savings, summary, isLoading, error } = state;
   const [isAddingNew, setIsAddingNew] = useState(false);
-  const [search, setSearch] = useState('');
-  const [dateRange, setDateRange] = useState<{ start: Date | null, end: Date | null }>({
+  const [] = useState('');
+  const [selectedType, setSelectedType] = useState<'all' | 'credit' | 'debit'>('all');
+  const [] = useState<{ start: Date | null, end: Date | null }>({
     start: null,
     end: null
   });
@@ -25,10 +26,14 @@ const SavingScreen: React.FC = () => {
   const [editingId, setEditingId] = useState<string | null>(null);
 
   useEffect(() => {
-    loadSavings();
-  }, [loadSavings]);
+    if (selectedType === 'all') {
+      loadSavings();
+    } else {
+      loadSavingsByType(selectedType);
+    }
+  }, [loadSavings, loadSavingsByType, selectedType]);
 
-  const handleSubmit = async (savingData: { amount: number; description: string; date: string; categoryId?: string }) => {
+  const handleSubmit = async (savingData: { amount: number; description: string; date: string; categoryId?: string; type: 'credit' | 'debit' }) => {
     if (!savingData.amount) return;
 
     try {
@@ -37,20 +42,29 @@ const SavingScreen: React.FC = () => {
           amount: savingData.amount,
           date: savingData.date,
           description: savingData.description,
-          categoryId: savingData.categoryId
+          categoryId: savingData.categoryId,
+          type: savingData.type
         });
       } else {
         await addSaving({
           amount: savingData.amount,
           date: savingData.date,
           description: savingData.description,
-          categoryId: savingData.categoryId
+          categoryId: savingData.categoryId,
+          type: savingData.type
         });
       }
 
       resetForm();
+      // Reload savings based on current type filter
+      if (selectedType === 'all') {
+        loadSavings();
+      } else {
+        loadSavingsByType(selectedType);
+      }
     } catch (error) {
       console.error('Error saving:', error);
+      throw error;
     }
   };
 
@@ -70,15 +84,6 @@ const SavingScreen: React.FC = () => {
     setIsAddingNew(true);
   };
 
-  const filteredSavings = savings.filter(saving => {
-    const matchesSearch = saving.description?.toLowerCase().includes(search.toLowerCase()) || false;
-    const savingDate = new Date(saving.date);
-    const matchesDateRange =
-      (!dateRange.start || savingDate >= dateRange.start) &&
-      (!dateRange.end || savingDate <= dateRange.end);
-
-    return matchesSearch && matchesDateRange;
-  });
 
   if (isLoading) {
     return (
@@ -107,39 +112,41 @@ const SavingScreen: React.FC = () => {
           </div>
         )}
 
-        {/* Filters Container */}
-        <div className="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm space-y-4">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-            {/* Search */}
-            <div className="lg:col-span-8">
-              <input
-                type="text"
-                placeholder={t('savings.search')}
-                className="w-full px-4 py-3 text-sm rounded-xl border border-gray-200 
-                  focus:ring-2 focus:ring-indigo-500 focus:border-transparent
-                  dark:bg-gray-800 dark:border-gray-700 transition-all duration-200
-                  hover:border-indigo-300"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-            </div>
-
-            {/* Date Range */}
-            <div className="lg:col-span-4">
-              <DateRangeSelect
-                startDate={dateRange.start}
-                endDate={dateRange.end}
-                onDateChange={(start, end) => setDateRange({ start, end })}
-                className="w-full"
-              />
-            </div>
+        {/* Summary Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div 
+            className={`bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm cursor-pointer transition-all duration-200 ${
+              selectedType === 'credit' ? 'ring-2 ring-green-500' : ''
+            }`}
+            onClick={() => setSelectedType(current => current === 'credit' ? 'all' : 'credit')}
+          >
+            <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">
+              {t('savings.totalCredits')} ({summary.creditCount})
+            </h3>
+            <p className="text-2xl font-bold text-green-600 dark:text-green-400">+{formatUSD(summary.credits)}</p>
+          </div>
+          <div 
+            className={`bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm cursor-pointer transition-all duration-200 ${
+              selectedType === 'debit' ? 'ring-2 ring-red-500' : ''
+            }`}
+            onClick={() => setSelectedType(current => current === 'debit' ? 'all' : 'debit')}
+          >
+            <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">
+              {t('savings.totalDebits')} ({summary.debitCount})
+            </h3>
+            <p className="text-2xl font-bold text-red-600 dark:text-red-400">-{formatUSD(Math.abs(summary.debits))}</p>
+          </div>
+          <div className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm">
+            <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('savings.netBalance')}</h3>
+            <p className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">{formatUSD(summary.credits - summary.debits)}</p>
           </div>
         </div>
 
         {/* Savings List */}
         <div className="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm">
           <SavingList
-            savings={filteredSavings}
+            savings={savings}
+            isLoading={isLoading}
             onEdit={handleEdit}
             onDelete={deleteSaving}
           />

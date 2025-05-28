@@ -39,24 +39,22 @@ export const SavingList: React.FC<SavingListProps> = ({
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [focusedRowIndex, setFocusedRowIndex] = useState<number>(-1);
+  const [selectedType, setSelectedType] = useState<'all' | 'credit' | 'debit'>('all');
 
   // Calculate summary statistics
-  const summary = useMemo(() => {
-    const total = savings.reduce((sum, s) => sum + s.amount, 0);
-    const credits = savings.filter(s => s.amount > 0).reduce((sum, s) => sum + s.amount, 0);
-    const debits = savings.filter(s => s.amount < 0).reduce((sum, s) => sum + s.amount, 0);
-    return { total, credits, debits };
-  }, [savings]);
 
-  // Filter savings based on search and category
+  // Filter savings based on search, category, and type
   const filteredSavings = useMemo(() => {
     return savings.filter(saving => {
       const matchesSearch = saving.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         formatUSD(saving.amount).includes(searchTerm);
       const matchesCategory = !selectedCategory || saving.categoryId === selectedCategory;
-      return matchesSearch && matchesCategory;
+      const matchesType = selectedType === 'all' || 
+        (selectedType === 'credit' && saving.amount > 0) ||
+        (selectedType === 'debit' && saving.amount < 0);
+      return matchesSearch && matchesCategory && matchesType;
     });
-  }, [savings, searchTerm, selectedCategory]);
+  }, [savings, searchTerm, selectedCategory, selectedType]);
 
   const sortedSavings = useMemo(() => {
     return [...filteredSavings].sort((a, b) => {
@@ -83,7 +81,7 @@ export const SavingList: React.FC<SavingListProps> = ({
   useEffect(() => {
     // Reset to first page when filters change
     setCurrentPage(1);
-  }, [searchTerm, selectedCategory]);
+  }, [searchTerm, selectedCategory, selectedType]);
 
   const handleSort = (field: keyof Saving) => {
     if (sortField === field) {
@@ -145,22 +143,6 @@ export const SavingList: React.FC<SavingListProps> = ({
 
   return (
     <div className="space-y-4">
-      {/* Summary Section */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow">
-          <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('savings.totalSavings')}</h3>
-          <p className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">{formatUSD(summary.total)}</p>
-        </div>
-        <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow">
-          <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('savings.totalCredits')}</h3>
-          <p className="text-2xl font-bold text-green-600 dark:text-green-400">{formatUSD(summary.credits)}</p>
-        </div>
-        <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow">
-          <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('savings.totalDebits')}</h3>
-          <p className="text-2xl font-bold text-red-600 dark:text-red-400">{formatUSD(summary.debits)}</p>
-        </div>
-      </div>
-
       {/* Filters Section */}
       <div className="flex flex-col sm:flex-row gap-4 mb-4">
         <div className="relative flex-1">
@@ -190,6 +172,17 @@ export const SavingList: React.FC<SavingListProps> = ({
                 {category.label}
               </option>
             ))}
+          </select>
+        </div>
+        <div className="relative w-full sm:w-48">
+          <select
+            className="block w-full px-3 py-2 border border-gray-300 rounded-md leading-5 bg-white dark:bg-gray-800 dark:border-gray-700 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+            value={selectedType}
+            onChange={(e) => setSelectedType(e.target.value as 'all' | 'credit' | 'debit')}
+          >
+            <option value="all">{t('savings.allTransactions')}</option>
+            <option value="credit">{t('savings.onlyCredits')}</option>
+            <option value="debit">{t('savings.onlyDebits')}</option>
           </select>
         </div>
       </div>
@@ -233,6 +226,9 @@ export const SavingList: React.FC<SavingListProps> = ({
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                 {t('savings.category')}
               </th>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                {t('savings.type')}
+              </th>
               <th scope="col" className="relative px-6 py-3">
                 <span className="sr-only">{t('common.actions')}</span>
               </th>
@@ -241,6 +237,7 @@ export const SavingList: React.FC<SavingListProps> = ({
           <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
             {paginatedSavings.map((saving, index) => {
               const category = SAVINGS_CATEGORIES.find(c => c.id === saving.categoryId);
+              const isCredit = saving.type === 'credit';
               return (
                 <tr 
                   key={saving.id} 
@@ -256,15 +253,15 @@ export const SavingList: React.FC<SavingListProps> = ({
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center space-x-2">
-                      {saving.amount > 0 ? (
+                      {isCredit ? (
                         <ArrowUpIcon className="h-4 w-4 text-green-500" />
                       ) : (
                         <ArrowDownIcon className="h-4 w-4 text-red-500" />
                       )}
                       <span className={`text-lg font-semibold ${
-                        saving.amount > 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
+                        isCredit ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
                       }`}>
-                        {formatUSD(Math.abs(saving.amount))}
+                        {isCredit ? '+' : '-'}{formatUSD(Math.abs(saving.amount))}
                       </span>
                     </div>
                   </td>
@@ -283,6 +280,15 @@ export const SavingList: React.FC<SavingListProps> = ({
                         {category.label}
                       </span>
                     ) : '-'}
+                  </td>
+                  <td className="px-6 py-4 text-sm">
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                      isCredit 
+                        ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400'
+                        : 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400'
+                    }`}>
+                      {isCredit ? t('savings.credit') : t('savings.debit')}
+                    </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <button

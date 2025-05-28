@@ -10,6 +10,7 @@ export interface Saving {
   categoryId?: string;
   createdAt: string;
   updatedAt: string;
+  type: 'credit' | 'debit';
 }
 
 export class SavingService {
@@ -76,7 +77,8 @@ export class SavingService {
             date: saving.date || now.split('T')[0],
             categoryId: category.id,
             createdAt: now,
-            updatedAt: now
+            updatedAt: now,
+            type: saving.type
           });
           return addDoc(collectionRef, savingData);
         });
@@ -90,6 +92,7 @@ export class SavingService {
           description: saving.description || '',
           date: saving.date || now.split('T')[0],
           categoryId: saving.categoryId,
+          type: saving.type,
           createdAt: now,
           updatedAt: now
         });
@@ -145,6 +148,47 @@ export class SavingService {
       })) as Saving[];
     } catch (error) {
       console.error('Error getting all savings:', error);
+      throw error;
+    }
+  }
+
+  async getSavingsByType(userId: string, type: 'credit' | 'debit') {
+    try {
+      const collectionRef = collection(db, this.getSavingPath(userId));
+      const querySnapshot = await getDocs(collectionRef);
+      
+      const savings = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as Saving[];
+
+      // Filter by type
+      return savings.filter(saving => saving.type === type);
+    } catch (error) {
+      console.error(`Error getting ${type} savings:`, error);
+      throw error;
+    }
+  }
+
+  async getSavingsSummary(userId: string) {
+    try {
+      const savings = await this.getAllSavings(userId);
+      
+      const credits = savings.filter(s => s.type === 'credit');
+      const debits = savings.filter(s => s.type === 'debit');
+      
+      const totalCredits = credits.reduce((sum, s) => sum + s.amount, 0);
+      const totalDebits = debits.reduce((sum, s) => sum + s.amount, 0);
+      
+      return {
+        total: totalCredits + totalDebits,
+        credits: totalCredits,
+        debits: Math.abs(totalDebits), // Make sure debits are positive for display
+        creditCount: credits.length,
+        debitCount: debits.length
+      };
+    } catch (error) {
+      console.error('Error getting savings summary:', error);
       throw error;
     }
   }

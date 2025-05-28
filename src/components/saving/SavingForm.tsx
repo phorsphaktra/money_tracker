@@ -85,18 +85,24 @@ export const SavingForm: React.FC<SavingFormProps> = ({
     }
   };
 
-  const handleFormSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleFormSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!amount) return;
+    if (!amount || isNaN(parseFloat(amount))) {
+      return;
+    }
 
-    const finalAmount = parseFloat(amount);
-    onSubmit({
-      amount: transactionType === 'debit' ? -Math.abs(finalAmount) : Math.abs(finalAmount),
-      description,
-      date: selectedDate.toISOString(),
-      categoryId: selectedCategory || undefined,
-      type: transactionType
-    });
+    try {
+      const finalAmount = parseFloat(amount);
+      await onSubmit({
+        amount:  Math.abs(finalAmount),
+        description: description.trim(),
+        date: selectedDate.toISOString(),
+        categoryId: selectedCategory || undefined,
+        type: transactionType
+      });
+    } catch (error) {
+      console.error('Error submitting form:', error);
+    }
   };
 
   return (
