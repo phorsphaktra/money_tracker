@@ -53,6 +53,10 @@
   
   },
   "dashboard": {
+    "monthly_expenses": "Monthly Expenses",
+    "total_savings": "Total Savings",
+    "savings_progress": "Saving Progress",
+    "spending_analysis": "Spending Analysis",
     "title": "Dashboard",
     "monthly_metrics": "Monthly Metrics",
     "navigation": {
@@ -62,81 +66,11 @@
       "settings": "Settings",
       "saving": "Saving"
     },
-    "top_income": " Top Income",
-    "top_expenses": " Top Expense",
     "header": {
       "welcome": "Welcome back",
       "signOut": "Sign out"
     },
-    "version": "Version",
-    "overview": {
-      "total_balance": "Total Balance",
-      "income": "Income",
-      "expenses": "Expenses",
-      "savings": "Savings",
-      "this_month": "This Month",
-      "view_all": "View All",
-      "recent_transactions": "Recent Transactions",
-      "no_transactions": "No recent transactions"
-    },
-    "task_overview": "Task Overview",
-    "total_tasks": "Total Tasks",
-    "completed_tasks": "Completed Tasks",
-    "in_progress_tasks": "In Progress Tasks",
-    "blocked_tasks": "Blocked Tasks",
-    "no_transactions_month": "No transactions this month",
-    "stats": {
-      "spending_by_category": "Spending by Category",
-      "monthly_summary": "Monthly Summary"
-    },
-    "subtitle": "Overview of your financial status",
-    "spending_overview": "Spending Overview",
-    "last_6_months": "Last 6 months",
-    "last_3_months": "Last 3 months",
-    "this_year": "This year",
-    "monthly_spending": "Monthly Spending",
-    "monthly_income": "Monthly Income",
-    "savings_rate": "Savings",
-    "net_balance": "Net Balance",
-    "loading": "Loading...",
-    "error": "Error: ",
-    "filters": {
-      "select_period": "Select period",
-      "7days": "Last 7 days",
-      "30days": "Last 30 days",
-      "3months": "Last 3 months",
-      "6months": "Last 6 months",
-      "1year": "Last 1 year",
-      "ytd": "Year to date"
-    },
-    "financial_summary": "Financial Summary",
-    "monthly_average": "Monthly Average",
-    "financial_health": "Financial Health",
-    "spending_alert": "Spending Alert",
-    "last_updated": "Last updated",
-    "top_categories": "Top Spending Categories",
-    "top_spending_areas": "Top Spending Areas",
-    "health": {
-      "excellent": "Excellent",
-      "good": "Good",
-      "warning": "Warning",
-      "needs-attention": "Needs Attention",
-      "unknown": "Unknown"
-    },
-    "trends": {
-      "increasing": "Increasing",
-      "decreasing": "Decreasing",
-      "stable": "Stable"
-    },
-    "analysis": {
-      "high_spending": "High Spending",
-      "good_savings": "Good Savings",
-      "need_improvement": "Needs Improvement"
-    },
-    "recent_savings": "Recent Savings",
-    "savings_overview": "Savings Overview",
-    "monthly_savings": "Monthly Savings",
-    "savings_goal_achieved": "Savings Goal Achieved!"
+    "version": "Version"
   },
   "transactions": {
     "title": "Transactions",

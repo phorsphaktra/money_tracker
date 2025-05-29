@@ -1,19 +1,13 @@
-import React, { useMemo, useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useMemo, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useLanguage } from '../contexts/LanguageContext';
 import { Transaction, useTransactions } from '../contexts/TransactionContext';
 import { useSaving } from '../contexts/SavingContext';
 import { useTaskContext } from '../contexts/TaskContext';
-import { calculateDashboardStats } from '../utils/statsCalculator';
-import { calculateDetailedHealth } from '../utils/financialCalculations';
 import { formatUSD } from '../utils/currencyUtils';
 import {
   ArrowTrendingUpIcon,
   ArrowTrendingDownIcon,
   BanknotesIcon,
-  WalletIcon,
-  ChartBarIcon,
   CheckCircleIcon,
   ClockIcon,
   ExclamationCircleIcon,
@@ -24,14 +18,6 @@ import {
 } from '@heroicons/react/24/outline';
 
 // Helper Functions
-const formatNumber = (num: number, language: string) => {
-  if (language === 'km') {
-    const khmerNumerals = ['០', '១', '២', '៣', '៤', '៥', '៦', '៧', '៨', '៩'];
-    return num.toLocaleString('en-US', { minimumFractionDigits: 2 })
-      .replace(/[0-9]/g, digit => khmerNumerals[parseInt(digit)]);
-  }
-  return num.toLocaleString('en-US', { minimumFractionDigits: 2 });
-};
 
 const calculateGrowthRate = (current: number, previous: number) => {
   if (previous === 0) return 0;
@@ -110,76 +96,7 @@ const MetricCard = ({
   );
 };
 
-const TransactionList = ({ 
-  transactions, 
-  title,
-  onViewAll 
-}: { 
-  transactions: Transaction[];
-  title: string;
-  onViewAll: () => void;
-}) => (
-  <div className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-100 dark:border-gray-700">
-    <div className="flex justify-between items-center mb-6">
-      <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{title}</h3>
-      <button
-        onClick={onViewAll}
-        className="text-sm text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 
-          dark:hover:text-indigo-300 font-medium"
-      >
-        View All
-      </button>
-    </div>
-    <div className="space-y-4">
-      {transactions.map(transaction => (
-        <div 
-          key={transaction.id}
-          className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg"
-        >
-          <div>
-            <p className="text-sm font-medium text-gray-900 dark:text-white">
-              {transaction.description}
-            </p>
-            <p className="text-xs text-gray-500 dark:text-gray-400">
-              {new Date(transaction.date).toLocaleDateString()}
-            </p>
-          </div>
-          <div className={`text-sm font-semibold ${
-            transaction.type === 'income' 
-              ? 'text-green-600 dark:text-green-400' 
-              : 'text-red-600 dark:text-red-400'
-          }`}>
-            {transaction.type === 'income' ? '+' : '-'}{formatUSD(Math.abs(transaction.amount))}
-          </div>
-        </div>
-      ))}
-    </div>
-  </div>
-);
 
-const TaskOverview = ({ stats }: { stats: any }) => (
-  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-    <MetricCard
-      title="Completed Tasks"
-      value={stats.completed.toString()}
-      icon={CheckCircleIcon}
-      type="positive"
-      trend={{ value: stats.completionRate, label: `${stats.completionRate.toFixed(1)}%` }}
-    />
-    <MetricCard
-      title="In Progress"
-      value={stats.inProgress.toString()}
-      icon={ClockIcon}
-      type="neutral"
-    />
-    <MetricCard
-      title="Blocked Tasks"
-      value={stats.blocked.toString()}
-      icon={ExclamationCircleIcon}
-      type="negative"
-    />
-  </div>
-);
 
 const SpendingAnalysis = ({ 
   transactions,
@@ -451,9 +368,7 @@ const FinancialOverview = ({
 };
 
 export const DashboardScreen = () => {
-  const navigate = useNavigate();
   const { t } = useTranslation();
-  const { language } = useLanguage();
   const { transactions, isLoading: transactionsLoading } = useTransactions();
   const { state: savingState, loadSavings } = useSaving();
   const { tasks, loading: tasksLoading } = useTaskContext();
