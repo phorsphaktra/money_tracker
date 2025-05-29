@@ -33,7 +33,6 @@ const calculateGrowthRate = (current: number, previous: number) => {
 const DashboardHeader = ({ 
   title, 
   subtitle, 
-  period,
   selectedMonth,
   onMonthChange 
 }: { 
