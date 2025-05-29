@@ -1,915 +1,958 @@
-import { useState, useEffect, useMemo } from "react";
-import { useTransactions } from "../contexts/TransactionContext";
+import { useState, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
-  calculateTotalsByType,
-  getMonthlyData,
-  getCategoryTotals,
-  getAvailableYears,
-  filterTransactionsByYear,
-} from "../utils/analytics";
-import { OverviewTab } from '../components/analytics/OverviewTab';
+  ChartPieIcon,
+  CalendarIcon,
+  ChevronDownIcon,
+  BanknotesIcon,
+  ArrowTrendingUpIcon,
+  ArrowTrendingDownIcon,
+  ChartBarIcon,
+  ScaleIcon,
+  WalletIcon,
+  PlusIcon,
+  XMarkIcon,
+  CurrencyDollarIcon,
+} from '@heroicons/react/24/outline';
+import { useTransactions, Transaction } from '../contexts/TransactionContext';
+import { useSaving } from '../contexts/SavingContext';
+import { formatUSD } from '../utils/currencyUtils';
+import { CategoryId, EXPENSE_CATEGORIES, INCOME_CATEGORIES } from '../utils/categories';
+import { Saving } from '../services/savingService';
+import { SAVINGS_CATEGORIES } from '../utils/savings';
+import { TransactionModal } from '../components/transaction/TransactionModal';
+import { SavingForm } from '../components/saving/SavingForm';
 
-export const AnalyticsView = () => {
-  const { transactions } = useTransactions();
-  const availableYears = getAvailableYears(transactions);
-  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
-  const [activeTab, setActiveTab] = useState<"overview" | "details">(
-    "overview"
-  );
+interface SavingData extends Saving {}
 
-  useEffect(() => {
-    if (availableYears.length > 0 && !availableYears.includes(selectedYear)) {
-      setSelectedYear(availableYears[0]);
-    }
-  }, [availableYears, selectedYear]);
+interface CardGroupProps {
+  title: string;
+  icon: React.ElementType;
+  defaultExpanded?: boolean;
+  children: React.ReactNode;
+  className?: string;
+  accentColor?: string;
+}
 
-  const filteredTransactions = filterTransactionsByYear(
-    transactions,
-    selectedYear
-  );
-  const totals = calculateTotalsByType(filteredTransactions);
-  const monthlyData = getMonthlyData(transactions, selectedYear);
-  const categoryTotals = getCategoryTotals(filteredTransactions);
+const CardGroup: React.FC<CardGroupProps> = ({
+  title,
+  icon: Icon,
+  defaultExpanded = true,
+  children,
+  className = '',
+  accentColor = 'from-indigo-500 to-indigo-600'
+}) => {
+  const [isExpanded, setIsExpanded] = useState(defaultExpanded);
 
-  // Calculate additional financial metrics
-  const financialSummary = useMemo(() => {
-    const monthlyIncome = totals.income / 12;
-    const monthlyExpense = totals.expense / 12;
-    const savingsRate =
-      ((totals.income - totals.expense) / totals.income) * 100;
-    const expenseRatio = (totals.expense / totals.income) * 100;
-
-    // Get top spending categories
-    const topExpenses = Object.entries(categoryTotals)
-      .filter(([_, amount]) => amount < 0)
-      .map(([category, amount]) => ({
-        category,
-        amount: Math.abs(amount),
-        percentage: (Math.abs(amount) / totals.expense) * 100,
-      }))
-      .sort((a, b) => b.amount - a.amount)
-      .slice(0, 3);
-
-    // Calculate month-over-month changes
-    const monthlyChanges = monthlyData.reduce((acc, curr, idx, arr) => {
-      if (idx === 0) return acc;
-      const prevMonth = arr[idx - 1];
-      const expenseChange =
-        ((curr.expense - prevMonth.expense) / prevMonth.expense) * 100;
-      const incomeChange =
-        ((curr.income - prevMonth.income) / prevMonth.income) * 100;
-
-      acc.push({
-        month: curr.month,
-        expenseChange,
-        incomeChange,
-      });
-      return acc;
-    }, [] as Array<{ month: string; expenseChange: number; incomeChange: number }>);
-
-    // Add health score calculation
-    const healthScore = {
-      score: Math.min(
-        100,
-        Math.max(0, savingsRate * 0.4 + (1 - expenseRatio) * 60)
-      ),
-      status:
-        savingsRate >= 20 && expenseRatio < 0.7 ? "healthy" : "needs-attention",
-    };
-
-    return {
-      monthly: {
-        income: monthlyIncome,
-        expense: monthlyExpense,
-        savings: monthlyIncome - monthlyExpense,
-      },
-      metrics: {
-        savingsRate,
-        expenseRatio,
-        monthlyChanges: monthlyChanges.slice(-3), // Last 3 months
-        topExpenses,
-      },
-      insights: {
-        hasSufficientSavings: savingsRate >= 20,
-        hasHighExpenses: totals.expense / totals.income > 0.7,
-        isImproving:
-          monthlyChanges[monthlyChanges.length - 1]?.expenseChange < 0,
-      },
-      healthScore,
-    };
-  }, [totals, categoryTotals, monthlyData]);
-
-  const yearlyAnalysis = useMemo(() => {
-    // Calculate year-over-year changes
-    const prevYearTransactions = filterTransactionsByYear(
-      transactions,
-      selectedYear - 1
-    );
-    const prevYearTotals = calculateTotalsByType(prevYearTransactions);
-
-    // Yearly comparisons
-    const yearOverYearChange = {
-      income:
-        ((totals.income - prevYearTotals.income) / prevYearTotals.income) * 100,
-      expense:
-        ((totals.expense - prevYearTotals.expense) / prevYearTotals.expense) *
-        100,
-      savings:
-        ((totals.income -
-          totals.expense -
-          (prevYearTotals.income - prevYearTotals.expense)) /
-          Math.abs(prevYearTotals.income - prevYearTotals.expense)) *
-        100,
-    };
-
-    // Quarterly breakdown
-    const quarterlyData = monthlyData.reduce((acc, month, index) => {
-      const quarter = Math.floor(index / 3);
-      if (!acc[quarter]) {
-        acc[quarter] = { income: 0, expense: 0, savings: 0 };
-      }
-      acc[quarter].income += month.income;
-      acc[quarter].expense += month.expense;
-      acc[quarter].savings += month.income - month.expense;
-      return acc;
-    }, {} as Record<number, { income: number; expense: number; savings: number }>);
-
-    return {
-      yearOverYearChange,
-      quarterlyData,
-      annualMetrics: {
-        totalTransactions: filteredTransactions.length,
-        avgMonthlyIncome: totals.income / 12,
-        avgMonthlyExpense: totals.expense / 12,
-        avgMonthlySavings: (totals.income - totals.expense) / 12,
-        savingsRate: ((totals.income - totals.expense) / totals.income) * 100,
-        expenseToIncomeRatio: (totals.expense / totals.income) * 100,
-      },
-    };
-  }, [transactions, selectedYear, totals, monthlyData, filteredTransactions]);
-
-
-  // Details Tab
-  // This tab will show the detailed analysis of income and expenses
-  const renderDetailsTab = () => (
-    <div className="space-y-8">
-      {/* Yearly Performance Summary */}
-      <div
-        className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl rounded-2xl p-6 
-        shadow-sm hover:shadow-lg transition-all duration-300 border border-gray-100 dark:border-gray-700"
+  return (
+    <div className={`space-y-4 ${className}`}>
+      <button
+        onClick={() => setIsExpanded(!isExpanded)}
+        className={`w-full flex items-center justify-between p-4 bg-gradient-to-r ${accentColor}
+          rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 group`}
       >
-        <h2 className="text-xl font-semibold mb-8 flex items-center gap-3">
-          <span
-            className="p-2 rounded-xl bg-gradient-to-r from-indigo-100 to-purple-100 
-            dark:from-indigo-900/50 dark:to-purple-900/50"
-          >
-            📅
-          </span>
-          <span className="bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-            Yearly Performance {selectedYear}
-          </span>
-        </h2>
+        <div className="flex items-center gap-3">
+          <div className="p-2 rounded-lg bg-white/10 text-white">
+            <Icon className="w-5 h-5" />
+          </div>
+          <h2 className="text-lg font-semibold text-white">
+            {title}
+          </h2>
+        </div>
+        <div className={`p-2 rounded-full bg-white/10 text-white transition-transform duration-300
+          ${isExpanded ? 'rotate-180' : ''} group-hover:bg-white/20`}>
+          <ChevronDownIcon className="w-4 h-4" />
+        </div>
+      </button>
+      
+      <div className={`transition-all duration-500 ease-in-out space-y-4
+        ${isExpanded 
+          ? 'opacity-100 max-h-[2000px] transform translate-y-0' 
+          : 'opacity-0 max-h-0 overflow-hidden transform -translate-y-4'}`}>
+        {children}
+      </div>
+    </div>
+  );
+};
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {/* Year over Year Changes - Enhanced with better visualization */}
-          <div
-            className="bg-gradient-to-br from-gray-50 to-white dark:from-gray-800/50 dark:to-gray-800 
-            rounded-xl p-5 border border-gray-100 dark:border-gray-700"
+const AnalyticsHeader = ({ 
+  selectedYear,
+  onYearChange 
+}: { 
+  selectedYear: number;
+  onYearChange: (year: number) => void;
+}) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const { t } = useTranslation();
+  const years = useMemo(() => {
+    const currentYear = new Date().getFullYear();
+    return Array.from({ length: 5 }, (_, i) => currentYear - i);
+  }, []);
+
+  return (
+    <div className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl p-6 md:p-8 shadow-lg">
+      <div className="flex justify-between items-start">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-bold text-white">{t('analytics.title')}</h1>
+          <p className="text-sm text-indigo-100 mt-2">{t('analytics.subtitle')}</p>
+        </div>
+        <div className="relative">
+          <button
+            onClick={() => setIsOpen(!isOpen)}
+            className="flex items-center gap-2 bg-white/10 px-4 py-2 rounded-lg 
+              hover:bg-white/20 transition-colors duration-200"
           >
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                Year over Year Changes
-              </h3>
-              <span className="text-xs text-gray-500 dark:text-gray-400 px-2 py-1 bg-gray-100 dark:bg-gray-700/50 rounded-full">
-                vs {selectedYear - 1}
-              </span>
-            </div>
-            <div className="space-y-4">
-              {Object.entries(yearlyAnalysis.yearOverYearChange).map(
-                ([key, value]) => (
-                  <div
-                    key={key}
-                    className="group p-4 rounded-xl bg-white dark:bg-gray-800/50 border border-gray-100 
-                    dark:border-gray-700 hover:shadow-md transition-all duration-300"
+            <CalendarIcon className="w-5 h-5 text-white/70" />
+            <span className="text-sm text-white">{selectedYear}</span>
+            <ChevronDownIcon className={`w-4 h-4 text-white/70 transition-transform duration-200
+              ${isOpen ? 'rotate-180' : ''}`} />
+          </button>
+
+          {isOpen && (
+            <>
+              <div className="fixed inset-0 z-30" onClick={() => setIsOpen(false)} />
+              <div className="absolute right-0 mt-2 w-40 rounded-xl bg-white dark:bg-gray-800 
+                shadow-lg ring-1 ring-black/5 z-40 py-1">
+                {years.map((year) => (
+                  <button
+                    key={year}
+                    onClick={() => {
+                      onYearChange(year);
+                      setIsOpen(false);
+                    }}
+                    className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 
+                      dark:hover:bg-gray-700 transition-colors duration-200
+                      ${year === selectedYear
+                        ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400'
+                        : 'text-gray-700 dark:text-gray-300'}`}
                   >
-                    <div className="flex justify-between items-start mb-2">
-                      <div>
-                        <span className="text-sm font-medium capitalize text-gray-700 dark:text-gray-300">
-                          {key}
-                        </span>
-                        <span
-                          className={`ml-2 text-xs font-medium px-2 py-1 rounded-full ${
-                            value > 0
-                              ? "text-emerald-700 bg-emerald-50 dark:text-emerald-400 dark:bg-emerald-900/20"
-                              : "text-rose-700 bg-rose-50 dark:text-rose-400 dark:bg-rose-900/20"
-                          }`}
-                        >
-                          {value > 0 ? "↑" : "↓"} {Math.abs(value).toFixed(1)}%
-                        </span>
-                      </div>
-                      <span className="text-xs text-gray-500 dark:text-gray-400">
-                        {value > 0 ? "Increased" : "Decreased"} from last year
-                      </span>
-                    </div>
-                    {/* Progress Bar with Animation */}
-                    <div className="relative h-2 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden mt-2">
-                      <div
-                        className={`absolute inset-y-0 left-0 rounded-full transition-all duration-1000
-                        ${
-                          value > 0
-                            ? "bg-gradient-to-r from-emerald-500 to-emerald-400 group-hover:from-emerald-600"
-                            : "bg-gradient-to-r from-rose-500 to-rose-400 group-hover:from-rose-600"
-                        }`}
-                        style={{
-                          width: `${Math.min(Math.abs(value), 100)}%`,
-                          opacity: Math.max(Math.abs(value) / 100, 0.3),
-                        }}
-                      />
-                    </div>
-                    {/* Additional Context */}
-                    <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">
-                      {key === "income" &&
-                        (value > 0
-                          ? "💡 Income growth shows strong financial progress"
-                          : "💭 Consider exploring additional income sources")}
-                      {key === "expense" &&
-                        (value < 0
-                          ? "✨ Great job controlling expenses!"
-                          : "💡 Look for opportunities to optimize spending")}
-                      {key === "savings" &&
-                        (value > 0
-                          ? "🎯 Excellent savings improvement!"
-                          : "💭 Consider reviewing budget allocations")}
-                    </div>
-                  </div>
-                )
-              )}
-            </div>
-          </div>
-
-          {/* Quarterly Overview - enhanced with visual indicators */}
-          <div
-            className="bg-gradient-to-br from-gray-50 to-white dark:from-gray-800/50 dark:to-gray-800 
-            rounded-xl p-5 border border-gray-100 dark:border-gray-700"
-          >
-            <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-4">
-              Quarterly Overview
-            </h3>
-            <div className="space-y-3">
-              {Object.entries(yearlyAnalysis.quarterlyData).map(
-                ([quarter, data]) => (
-                  <div
-                    key={quarter}
-                    className="group p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 
-                    transition-all duration-200"
-                  >
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                        Q{Number(quarter) + 1}
-                      </span>
-                      <span
-                        className={`text-sm font-medium ${
-                          data.savings >= 0
-                            ? "text-emerald-600 dark:text-emerald-400"
-                            : "text-rose-600 dark:text-rose-400"
-                        }`}
-                      >
-                        ${Math.abs(data.savings).toLocaleString()}
-                      </span>
-                    </div>
-                    <div className="h-1 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
-                      <div
-                        className={`h-full rounded-full transition-all duration-500 ${
-                          data.savings >= 0
-                            ? "bg-emerald-500/50 group-hover:bg-emerald-500/70"
-                            : "bg-rose-500/50 group-hover:bg-rose-500/70"
-                        }`}
-                        style={{
-                          width: `${
-                            (data.income / (data.income + data.expense)) * 100
-                          }%`,
-                        }}
-                      />
-                    </div>
-                  </div>
-                )
-              )}
-            </div>
-          </div>
-
-          {/* Annual Metrics - modernized layout */}
-          <div
-            className="bg-gradient-to-br from-gray-50 to-white dark:from-gray-800/50 dark:to-gray-800 
-            rounded-xl p-5 border border-gray-100 dark:border-gray-700"
-          >
-            <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-4">
-              Annual Summary
-            </h3>
-            <div className="space-y-2">
-              <div className="flex justify-between items-center">
-                <span className="text-sm">Savings Rate</span>
-                <span
-                  className={`text-sm font-medium ${
-                    yearlyAnalysis.annualMetrics.savingsRate >= 20
-                      ? "text-green-600"
-                      : "text-yellow-600"
-                  }`}
-                >
-                  {yearlyAnalysis.annualMetrics.savingsRate.toFixed(1)}%
-                </span>
+                    {year}
+                  </button>
+                ))}
               </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm">Expense Ratio</span>
-                <span className="text-sm font-medium">
-                  {yearlyAnalysis.annualMetrics.expenseToIncomeRatio.toFixed(1)}
-                  %
-                </span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm">Total Transactions</span>
-                <span className="text-sm font-medium">
-                  {yearlyAnalysis.annualMetrics.totalTransactions}
-                </span>
-              </div>
-            </div>
-          </div>
+            </>
+          )}
         </div>
       </div>
+    </div>
+  );
+};
 
-      {/* Income & Expense Analysis */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Top Income Sources Card - enhanced design */}
-        <div
-          className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl rounded-2xl p-6 
-          shadow-sm hover:shadow-lg transition-all duration-300 border border-gray-100 
-          dark:border-gray-700"
-        >
-          <div className="flex justify-between items-center mb-6">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-3">
-              <span
-                className="p-2 rounded-xl bg-gradient-to-r from-emerald-50 to-teal-50 
-                dark:from-emerald-900/30 dark:to-teal-900/30"
-              >
-                💰
-              </span>
-              Top Income Sources
-            </h3>
-            <span
-              className="px-3 py-1 text-sm text-gray-500 dark:text-gray-400 bg-gray-100 
-              dark:bg-gray-700 rounded-full"
-            >
-              {selectedYear}
-            </span>
-          </div>
-          <div className="space-y-4">
-            {Object.entries(
-              filteredTransactions
-                .filter((t) => t.type === "income")
-                .reduce((acc, t) => {
-                  const category = t.category || "Other";
-                  acc[category] = (acc[category] || 0) + (t.amount || 0);
-                  return acc;
-                }, {} as Record<string, number>)
-            )
-              .sort(([_, a], [__, b]) => b - a)
-              .slice(0, 5)
-              .map(([category, amount]) => {
-                const percentage = (amount / totals.income) * 100;
-                return (
-                  <div
-                    key={category}
-                    className="space-y-2 group hover:bg-gray-50 dark:hover:bg-gray-700/50 p-2 rounded-lg transition-colors"
-                  >
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                        {/* {category} */}
-                        {category.charAt(0).toUpperCase() +
-                          category.slice(1).toLowerCase()}
-                      </span>
-                      <div className="text-right">
-                        <span className="text-sm text-emerald-600 dark:text-emerald-400">
-                          ${amount.toLocaleString()}
-                        </span>
-                        <span className="block text-xs text-gray-500 dark:text-gray-400">
-                          {Math.round(percentage)}% of Incomes
-                        </span>
-                      </div>
-                    </div>
-                    <div className="relative h-2 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
-                      <div
-                        className="absolute inset-y-0 left-0 bg-gradient-to-r from-emerald-500 to-emerald-400 
-                          rounded-full transition-all duration-500 group-hover:from-emerald-600 group-hover:to-emerald-500"
-                        style={{ width: `${percentage}%` }}
-                      />
-                    </div>
-                  </div>
-                );
-              })}
-          </div>
-        </div>
+const YearSummary = ({ transactions, savings }: { 
+  transactions: Transaction[];
+  savings: SavingData[];
+}) => {
+  const totalIncome = transactions
+    .filter(t => t.type === 'income')
+    .reduce((sum, t) => sum + t.amount, 0);
 
-        {/* Top Expenses Card - enhanced design */}
-        <div
-          className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl rounded-2xl p-6 
-          shadow-sm hover:shadow-lg transition-all duration-300 border border-gray-100 
-          dark:border-gray-700"
-        >
-          <div className="flex justify-between items-center mb-6">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-3">
-              <span
-                className="p-2 rounded-xl bg-gradient-to-r from-rose-50 to-pink-50 
-                dark:from-rose-900/30 dark:to-pink-900/30"
-              >
-                💸
-              </span>
-              Top Expenses
-            </h3>
-            <span
-              className="px-3 py-1 text-sm text-gray-500 dark:text-gray-400 bg-gray-100 
-              dark:bg-gray-700 rounded-full"
-            >
-              {selectedYear}
-            </span>
+  const totalExpenses = transactions
+    .filter(t => t.type === 'expense')
+    .reduce((sum, t) => sum + Math.abs(t.amount), 0);
+
+  const totalSavings = savings.reduce((sum, s) => sum + s.amount, 0);
+  const savingsRate = totalIncome > 0 ? (totalSavings / totalIncome) * 100 : 0;
+
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-100 
+        dark:border-gray-700 hover:shadow-lg transition-shadow">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="p-3 rounded-lg bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400">
+            <BanknotesIcon className="w-6 h-6" />
           </div>
-          <div className="space-y-4">
-            {Object.entries(
-              filteredTransactions
-                .filter((t) => t.type === "expense")
-                .reduce((acc, t) => {
-                  const category = t.category || "Other";
-                  acc[category] =
-                    (acc[category] || 0) + Math.abs(t.amount || 0);
-                  return acc;
-                }, {} as Record<string, number>)
-            )
-              .sort(([_, a], [__, b]) => b - a)
-              .slice(0, 5)
-              .map(([category, amount]) => {
-                const percentage = (amount / Math.abs(totals.expense)) * 100;
-                return (
-                  <div
-                    key={category}
-                    className="space-y-2 group hover:bg-gray-50 dark:hover:bg-gray-700/50 p-2 rounded-lg transition-colors"
-                  >
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                        {/* {category} */}
-                        {category.charAt(0).toUpperCase() +
-                          category.slice(1).toLowerCase()}
-                      </span>
-                      <div className="text-right">
-                        <span className="text-sm text-rose-600 dark:text-rose-400">
-                          ${amount.toLocaleString()}
-                        </span>
-                        <span className="block text-xs text-gray-500 dark:text-gray-400">
-                          {Math.round(percentage)}% of Expenses
-                        </span>
-                      </div>
-                    </div>
-                    <div className="relative h-2 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
-                      <div
-                        className="absolute inset-y-0 left-0 bg-gradient-to-r from-rose-500 to-rose-400 
-                          rounded-full transition-all duration-500 group-hover:from-rose-600 group-hover:to-rose-500"
-                        style={{ width: `${percentage}%` }}
-                      />
-                    </div>
-                  </div>
-                );
-              })}
-          </div>
+          <h3 className="text-sm font-medium text-gray-600 dark:text-gray-300">Total Income</h3>
         </div>
+        <span className="text-2xl font-bold text-gray-900 dark:text-white">
+          {formatUSD(totalIncome)}
+        </span>
       </div>
 
-      {/* Trend Analysis */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div
-          className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl rounded-2xl p-6 
-          shadow-sm hover:shadow-lg transition-all duration-300 border border-gray-100 dark:border-gray-700"
-        >
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-3">
-              <span
-                className="p-2 rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50 
-                dark:from-blue-900/30 dark:to-indigo-900/30"
-              >
-                📊
-              </span>
-              Monthly Spending Trend
-            </h3>
-            <div className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-2">
-              <span className="inline-block w-3 h-3 rounded-full bg-emerald-400"></span>
-              Healthy
-              <span className="inline-block w-3 h-3 rounded-full bg-red-400 ml-2"></span>
-              Attention Needed
-            </div>
+      <div className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-100 
+        dark:border-gray-700 hover:shadow-lg transition-shadow">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="p-3 rounded-lg bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400">
+            <ArrowTrendingDownIcon className="w-6 h-6" />
           </div>
-          <div className="space-y-4">
-            {financialSummary.metrics.monthlyChanges.map(
-              ({ month, expenseChange, incomeChange }) => (
-                <div
-                  key={month}
-                  className="group bg-gray-50 dark:bg-gray-700/50 rounded-xl p-4 
-                  hover:shadow-md transition-all duration-300"
-                >
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-3">
-                      <span className="text-sm font-medium">{month}</span>
-                      <div className="flex gap-1">
-                        {/* Trend Indicators */}
-                        {expenseChange < 0 && (
-                          <span
-                            className="text-xs px-2 py-1 rounded-full bg-emerald-100 
-                          text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400"
-                          >
-                            Lower Spending
-                          </span>
-                        )}
-                        {incomeChange > 0 && (
-                          <span
-                            className="text-xs px-2 py-1 rounded-full bg-blue-100 
-                          text-blue-700 dark:bg-blue-900/20 dark:text-blue-400"
-                          >
-                            Higher Income
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                    <div className="text-xs font-medium">
-                      Net Change:
-                      <span
-                        className={`ml-1 ${
-                          incomeChange > expenseChange
-                            ? "text-emerald-600 dark:text-emerald-400"
-                            : "text-rose-600 dark:text-rose-400"
-                        }`}
-                      >
-                        {(incomeChange - expenseChange).toFixed(1)}%
-                      </span>
-                    </div>
-                  </div>
+          <h3 className="text-sm font-medium text-gray-600 dark:text-gray-300">Total Expenses</h3>
+        </div>
+        <span className="text-2xl font-bold text-gray-900 dark:text-white">
+          {formatUSD(totalExpenses)}
+        </span>
+      </div>
 
-                  <div className="grid grid-cols-2 gap-4">
-                    {/* Income Trend */}
-                    <div className="space-y-2">
-                      <div className="flex justify-between items-center">
-                        <span className="text-xs text-gray-500 dark:text-gray-400">
-                          Income
-                        </span>
-                        <span
-                          className={`text-xs font-medium ${
-                            incomeChange > 0
-                              ? "text-emerald-600 dark:text-emerald-400"
-                              : "text-rose-600 dark:text-rose-400"
-                          }`}
-                        >
-                          {incomeChange > 0 ? "↑" : "↓"}{" "}
-                          {Math.abs(incomeChange).toFixed(1)}%
-                        </span>
-                      </div>
-                      <div className="relative h-1.5 bg-gray-100 dark:bg-gray-600 rounded-full overflow-hidden">
-                        <div
-                          className={`absolute inset-y-0 left-0 transition-all duration-500
-                          ${
-                            incomeChange > 0
-                              ? "bg-gradient-to-r from-emerald-500 to-emerald-400"
-                              : "bg-gradient-to-r from-rose-500 to-rose-400"
-                          }`}
-                          style={{
-                            width: `${Math.min(Math.abs(incomeChange), 100)}%`,
-                          }}
-                        />
-                      </div>
-                    </div>
+      <div className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-100 
+        dark:border-gray-700 hover:shadow-lg transition-shadow">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="p-3 rounded-lg bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400">
+            <ArrowTrendingUpIcon className="w-6 h-6" />
+          </div>
+          <h3 className="text-sm font-medium text-gray-600 dark:text-gray-300">Total Savings</h3>
+        </div>
+        <span className="text-2xl font-bold text-gray-900 dark:text-white">
+          {formatUSD(totalSavings)}
+        </span>
+      </div>
 
-                    {/* Expense Trend */}
-                    <div className="space-y-2">
-                      <div className="flex justify-between items-center">
-                        <span className="text-xs text-gray-500 dark:text-gray-400">
-                          Expense
-                        </span>
-                        <span
-                          className={`text-xs font-medium ${
-                            expenseChange < 0
-                              ? "text-emerald-600 dark:text-emerald-400"
-                              : "text-rose-600 dark:text-rose-400"
-                          }`}
-                        >
-                          {expenseChange > 0 ? "↑" : "↓"}{" "}
-                          {Math.abs(expenseChange).toFixed(1)}%
-                        </span>
-                      </div>
-                      <div className="relative h-1.5 bg-gray-100 dark:bg-gray-600 rounded-full overflow-hidden">
-                        <div
-                          className={`absolute inset-y-0 left-0 transition-all duration-500
-                          ${
-                            expenseChange < 0
-                              ? "bg-gradient-to-r from-emerald-500 to-emerald-400"
-                              : "bg-gradient-to-r from-rose-500 to-rose-400"
-                          }`}
-                          style={{
-                            width: `${Math.min(Math.abs(expenseChange), 100)}%`,
-                          }}
-                        />
-                      </div>
-                    </div>
-                  </div>
+      <div className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-100 
+        dark:border-gray-700 hover:shadow-lg transition-shadow">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="p-3 rounded-lg bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400">
+            <ChartPieIcon className="w-6 h-6" />
+          </div>
+          <h3 className="text-sm font-medium text-gray-600 dark:text-gray-300">Savings Rate</h3>
+        </div>
+        <span className="text-2xl font-bold text-gray-900 dark:text-white">
+          {savingsRate.toFixed(1)}%
+        </span>
+      </div>
+    </div>
+  );
+};
+
+const MonthlyTrends = ({ transactions, savings }: {
+  transactions: Transaction[];
+  savings: SavingData[];
+}) => {
+  const monthlyData = useMemo(() => {
+    const months = Array.from({ length: 12 }, (_, i) => {
+      const date = new Date();
+      date.setMonth(i);
+      return date.toLocaleString('default', { month: 'short' });
+    });
+
+    const data = months.map((month, index) => {
+      const monthTransactions = transactions.filter(t => 
+        new Date(t.date).getMonth() === index
+      );
+
+      const monthSavings = savings.filter(s => 
+        new Date(s.date).getMonth() === index
+      );
+
+      return {
+        month,
+        income: monthTransactions
+          .filter(t => t.type === 'income')
+          .reduce((sum, t) => sum + t.amount, 0),
+        expenses: monthTransactions
+          .filter(t => t.type === 'expense')
+          .reduce((sum, t) => sum + Math.abs(t.amount), 0),
+        savings: monthSavings
+          .filter(s => s.type === 'credit')
+          .reduce((sum, s) => sum + s.amount, 0)
+      };
+    });
+
+    return data;
+  }, [transactions, savings]);
+
+  const maxValue = Math.max(
+    ...monthlyData.map(d => Math.max(d.income, d.expenses, d.savings))
+  );
+
+  return (
+    <div className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-100 dark:border-gray-700">
+      <div className="flex items-center gap-3 mb-6">
+        <ChartBarIcon className="w-6 h-6 text-indigo-500" />
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Monthly Trends</h3>
+      </div>
+
+      <div className="mt-6 space-y-8">
+        <div className="relative h-64">
+          {monthlyData.map((data, i) => (
+            <div key={data.month} className="absolute bottom-0" style={{ left: `${(i / 11) * 100}%` }}>
+              <div className="flex flex-col items-center gap-1">
+                <div className="relative w-12 flex flex-col items-center">
+                  <div 
+                    className="w-2 bg-green-500 rounded-t"
+                    style={{ height: `${(data.income / maxValue) * 200}px` }}
+                  />
+                  <div 
+                    className="w-2 bg-red-500 rounded-t mt-1"
+                    style={{ height: `${(data.expenses / maxValue) * 200}px` }}
+                  />
+                  <div 
+                    className="w-2 bg-indigo-500 rounded-t mt-1"
+                    style={{ height: `${(data.savings / maxValue) * 200}px` }}
+                  />
                 </div>
-              )
-            )}
-          </div>
-          {/* Monthly Summary */}
-          <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
-            <div className="text-sm text-gray-600 dark:text-gray-300">
-              Overall Trend:
-              <span
-                className={`ml-2 font-medium ${
-                  financialSummary.insights.isImproving
-                    ? "text-emerald-600 dark:text-emerald-400"
-                    : "text-rose-600 dark:text-rose-400"
-                }`}
-              >
-                {financialSummary.insights.isImproving
-                  ? "Improving"
-                  : "Needs Attention"}
-              </span>
+                <span className="text-xs text-gray-500 -rotate-45 origin-top-left mt-2">
+                  {data.month}
+                </span>
+              </div>
             </div>
-          </div>
+          ))}
         </div>
 
-        {/* Financial Recommendations */}
-        <div
-          className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl rounded-2xl p-6 
-          shadow-sm hover:shadow-lg transition-all duration-300 border border-gray-100 dark:border-gray-700"
-        >
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-3 mb-6">
-            <span
-              className="p-2 rounded-xl bg-gradient-to-r from-purple-50 to-pink-50 
-              dark:from-purple-900/30 dark:to-pink-900/30"
-            >
-              💡
-            </span>
-            Financial Recommendations
-          </h3>
-          <div className="space-y-4">
-            {[
-              {
-                title: "Savings Strategy",
-                status: financialSummary.insights.hasSufficientSavings
-                  ? "good"
-                  : "warning",
-                message: financialSummary.insights.hasSufficientSavings
-                  ? "Great job maintaining healthy savings!"
-                  : "Consider increasing your savings rate to at least 20%",
-                icon: "💰",
-              },
-              {
-                title: "Expense Management",
-                status: !financialSummary.insights.hasHighExpenses
-                  ? "good"
-                  : "warning",
-                message: !financialSummary.insights.hasHighExpenses
-                  ? "Expenses are well managed"
-                  : "Look for opportunities to reduce expenses",
-                icon: "📉",
-              },
-              {
-                title: "Monthly Progress",
-                status: financialSummary.insights.isImproving
-                  ? "good"
-                  : "warning",
-                message: financialSummary.insights.isImproving
-                  ? "Spending trend is improving"
-                  : "Monitor and adjust spending habits",
-                icon: "📈",
-              },
-            ].map(({ title, status, message, icon }) => (
-              <div
-                key={title}
-                className="flex gap-4 p-4 rounded-xl bg-gray-50 dark:bg-gray-700/50"
-              >
-                <span className="text-xl">{icon}</span>
-                <div>
-                  <h4 className="text-sm font-medium flex items-center gap-2">
-                    {title}
-                    <span
-                      className={`inline-block w-2 h-2 rounded-full ${
-                        status === "good" ? "bg-green-500" : "bg-yellow-500"
-                      }`}
-                    />
-                  </h4>
-                  <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
-                    {message}
-                  </p>
-                </div>
-              </div>
-            ))}
+        <div className="flex justify-center gap-6">
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 bg-green-500 rounded-full" />
+            <span className="text-sm text-gray-600 dark:text-gray-400">Income</span>
           </div>
-        </div>
-      </div>
-
-      {/* Financial Health Summary Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {/* Monthly Overview Card */}
-        <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-xl p-6">
-          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-            <span>📊</span> Monthly Overview
-          </h3>
-          <div className="space-y-3">
-            {Object.entries(financialSummary.monthly).map(([key, value]) => (
-              <div key={key} className="flex justify-between items-center">
-                <span className="text-sm capitalize">{key}</span>
-                <span
-                  className={`font-medium ${
-                    key === "savings"
-                      ? value >= 0
-                        ? "text-green-600"
-                        : "text-red-600"
-                      : ""
-                  }`}
-                >
-                  $
-                  {Math.abs(value).toLocaleString(undefined, {
-                    maximumFractionDigits: 0,
-                  })}
-                </span>
-              </div>
-            ))}
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 bg-red-500 rounded-full" />
+            <span className="text-sm text-gray-600 dark:text-gray-400">Expenses</span>
           </div>
-        </div>
-
-        {/* Financial Insights Card */}
-        <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-xl p-6">
-          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-            <span>🎯</span> Financial Insights
-          </h3>
-          <div className="space-y-3">
-            {[
-              {
-                label: "Savings Rate",
-                value: `${financialSummary.metrics.savingsRate.toFixed(1)}%`,
-                status: financialSummary.insights.hasSufficientSavings
-                  ? "good"
-                  : "warning",
-              },
-              {
-                label: "Monthly Trend",
-                value: financialSummary.insights.isImproving
-                  ? "Improving"
-                  : "Need Attention",
-                status: financialSummary.insights.isImproving
-                  ? "good"
-                  : "warning",
-              },
-              {
-                label: "Expense Ratio",
-                value: `${financialSummary.metrics.expenseRatio.toFixed(1)}%`,
-                status: !financialSummary.insights.hasHighExpenses
-                  ? "good"
-                  : "warning",
-              },
-            ].map(({ label, value, status }) => (
-              <div key={label} className="flex items-center justify-between">
-                <span className="text-sm">{label}</span>
-                <span
-                  className={`px-2 py-1 rounded-full text-xs ${
-                    status === "good"
-                      ? "bg-green-100 text-green-800"
-                      : "bg-yellow-100 text-yellow-800"
-                  }`}
-                >
-                  {value}
-                </span>
-              </div>
-            ))}
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 bg-indigo-500 rounded-full" />
+            <span className="text-sm text-gray-600 dark:text-gray-400">Savings</span>
           </div>
         </div>
       </div>
     </div>
   );
+};
+
+const CategoryBreakdown = ({ transactions, type }: {
+  transactions: Transaction[];
+  type: 'income' | 'expense';
+}) => {
+  const categories = useMemo(() => {
+    const categoryMap = transactions
+      .filter(t => t.type === type)
+      .reduce((acc, curr) => {
+        if (!curr.category) return acc;
+        if (!acc[curr.category]) {
+          acc[curr.category] = { amount: 0, count: 0 };
+        }
+        acc[curr.category].amount += Math.abs(curr.amount);
+        acc[curr.category].count += 1;
+        return acc;
+      }, {} as Record<string, { amount: number; count: number }>);
+
+    const totalAmount = Object.values(categoryMap)
+      .reduce((sum, { amount }) => sum + amount, 0);
+
+    return Object.entries(categoryMap)
+      .map(([id, data]) => ({
+        id: id as CategoryId,
+        label: (type === 'income' ? INCOME_CATEGORIES : EXPENSE_CATEGORIES)
+          .find(c => c.id === id)?.label || id,
+        amount: data.amount,
+        count: data.count,
+        percentage: (data.amount / totalAmount) * 100
+      }))
+      .sort((a, b) => b.amount - a.amount);
+  }, [transactions, type]);
 
   return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
-        {/* Header Card */}
-        <div className="relative bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl 
-          p-6 md:p-8 shadow-lg overflow-hidden group">
-          <div className="absolute inset-0 bg-white/5 backdrop-blur-sm opacity-0 
-            group-hover:opacity-100 transition-opacity duration-500"></div>
-          <div className="relative z-10">
-            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
-              <div className="flex-1">
-                <h1 className="text-2xl sm:text-3xl font-bold text-white">
-                  Financial Analytics
-                </h1>
-                <p className="text-sm text-indigo-100 mt-1">
-                  Comprehensive overview for {selectedYear}
-                </p>
-              </div>
+    <div className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-100 dark:border-gray-700">
+      <div className="flex items-center gap-3 mb-6">
+        <ChartPieIcon className="w-6 h-6 text-indigo-500" />
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+          {type === 'income' ? 'Income' : 'Expense'} Categories
+        </h3>
+      </div>
 
-              <div className="flex items-center gap-4 w-full lg:w-auto">
-                {/* Health Score Indicator */}
-                <div className="flex-1 lg:flex-none bg-white/10 rounded-xl p-3 backdrop-blur-sm">
-                  <div className="flex items-center gap-2">
-                    <div className="relative w-12 h-12">
-                      <svg className="w-12 h-12 transform -rotate-90">
-                        <circle
-                          className="text-gray-300/20"
-                          strokeWidth="4"
-                          stroke="currentColor"
-                          fill="transparent"
-                          r="20"
-                          cx="24"
-                          cy="24"
-                        />
-                        <circle
-                          className="text-white"
-                          strokeWidth="4"
-                          strokeLinecap="round"
-                          stroke="currentColor"
-                          fill="transparent"
-                          r="20"
-                          cx="24"
-                          cy="24"
-                          strokeDasharray={125.6}
-                          strokeDashoffset={
-                            125.6 *
-                            (1 - financialSummary.healthScore.score / 100)
-                          }
-                        />
-                      </svg>
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <span className="text-xs font-bold text-white">
-                          {Math.round(financialSummary.healthScore.score)}%
-                        </span>
-                      </div>
-                    </div>
-                    <div>
-                      <p className="text-xs text-white/60">Financial Health</p>
-                      <p className="text-sm font-medium text-white">
-                        {financialSummary.healthScore.status === "healthy"
-                          ? "Healthy"
-                          : "Needs Attention"}
-                      </p>
-                    </div>
+      <div className="space-y-4">
+        {categories.map(category => (
+          <div key={category.id} className="space-y-2">
+            <div className="flex justify-between items-center">
+              <div>
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  {category.label}
+                </span>
+                <span className="ml-2 text-xs text-gray-500">
+                  ({category.count} transactions)
+                </span>
+              </div>
+              <span className="text-sm font-semibold text-gray-900 dark:text-white">
+                {formatUSD(category.amount)}
+              </span>
+            </div>
+            <div className="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-2">
+              <div
+                className={`h-2 rounded-full ${
+                  type === 'income' ? 'bg-green-500' : 'bg-red-500'
+                }`}
+                style={{ width: `${category.percentage}%` }}
+              />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+const SavingsAnalysis = ({ savings, income }: {
+  savings: SavingData[];
+  income: number;
+}) => {
+  const savingsMetrics = useMemo(() => {
+    const totalSavings = savings
+      .filter(s => s.type === 'credit')
+      .reduce((sum, s) => sum + s.amount, 0);
+    
+    const savingsRate = income > 0 ? (totalSavings / income) * 100 : 0;
+    const averageSaving = savings.length > 0 ? totalSavings / savings.length : 0;
+    
+    // Calculate month-over-month growth
+    const sortedSavings = [...savings]
+      .filter(s => s.type === 'credit')
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    
+    const monthlyTotals = sortedSavings.reduce((acc, curr) => {
+      const month = new Date(curr.date).getMonth();
+      if (!acc[month]) {
+        acc[month] = {
+          credit: 0,
+          debit: 0,
+          count: 0
+        };
+      }
+      if (curr.type === 'credit') {
+        acc[month].credit += curr.amount;
+      } else {
+        acc[month].debit += curr.amount;
+      }
+      acc[month].count += 1;
+      return acc;
+    }, {} as Record<number, { credit: number; debit: number; count: number }>);
+
+    const monthlyGrowth = Object.entries(monthlyTotals)
+      .sort((a, b) => parseInt(a[0]) - parseInt(b[0]))
+      .map((entry, index, array) => {
+        if (index === 0) return 0;
+        const prevAmount = array[index - 1][1].credit - array[index - 1][1].debit;
+        const currentAmount = entry[1].credit - entry[1].debit;
+        return prevAmount === 0 ? 0 : ((currentAmount - prevAmount) / prevAmount) * 100;
+      })
+      .filter(growth => !isNaN(growth));
+
+    const averageGrowth = monthlyGrowth.length > 0
+      ? monthlyGrowth.reduce((sum, growth) => sum + growth, 0) / monthlyGrowth.length
+      : 0;
+
+    // Get all months of the year
+    const allMonths = Array.from({ length: 12 }, (_, i) => ({
+      month: new Date(2024, i).toLocaleString('default', { month: 'short' }),
+      credit: monthlyTotals[i]?.credit || 0,
+      debit: monthlyTotals[i]?.debit || 0,
+      count: monthlyTotals[i]?.count || 0,
+      net: (monthlyTotals[i]?.credit || 0) - (monthlyTotals[i]?.debit || 0)
+    }));
+
+    return {
+      totalSavings,
+      savingsRate,
+      averageSaving,
+      averageGrowth,
+      monthlyData: allMonths
+    };
+  }, [savings, income]);
+
+  const maxAmount = Math.max(
+    ...savingsMetrics.monthlyData.map(d => Math.max(d.credit, Math.abs(d.debit)))
+  );
+
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-100 
+          dark:border-gray-700 hover:shadow-lg transition-shadow">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-3 rounded-lg bg-purple-50 dark:bg-purple-900/20 
+              text-purple-600 dark:text-purple-400">
+              <WalletIcon className="w-6 h-6" />
+            </div>
+            <h3 className="text-sm font-medium text-gray-600 dark:text-gray-300">
+              Average Saving
+            </h3>
+          </div>
+          <span className="text-2xl font-bold text-gray-900 dark:text-white">
+            {formatUSD(savingsMetrics.averageSaving)}
+          </span>
+        </div>
+
+        <div className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-100 
+          dark:border-gray-700 hover:shadow-lg transition-shadow">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-3 rounded-lg bg-blue-50 dark:bg-blue-900/20 
+              text-blue-600 dark:text-blue-400">
+              <ScaleIcon className="w-6 h-6" />
+            </div>
+            <h3 className="text-sm font-medium text-gray-600 dark:text-gray-300">
+              Savings Rate
+            </h3>
+          </div>
+          <span className="text-2xl font-bold text-gray-900 dark:text-white">
+            {savingsMetrics.savingsRate.toFixed(1)}%
+          </span>
+        </div>
+
+        <div className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-100 
+          dark:border-gray-700 hover:shadow-lg transition-shadow">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-3 rounded-lg bg-green-50 dark:bg-green-900/20 
+              text-green-600 dark:text-green-400">
+              <ArrowTrendingUpIcon className="w-6 h-6" />
+            </div>
+            <h3 className="text-sm font-medium text-gray-600 dark:text-gray-300">
+              Average Growth
+            </h3>
+          </div>
+          <span className="text-2xl font-bold text-gray-900 dark:text-white">
+            {savingsMetrics.averageGrowth.toFixed(1)}%
+          </span>
+        </div>
+      </div>
+
+      <div className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-100 
+        dark:border-gray-700">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <ChartBarIcon className="w-6 h-6 text-indigo-500" />
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+              Monthly Savings Distribution
+            </h3>
+          </div>
+          <div className="flex gap-4">
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 bg-green-500 rounded-full" />
+              <span className="text-sm text-gray-600 dark:text-gray-400">Credits</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 bg-red-500 rounded-full" />
+              <span className="text-sm text-gray-600 dark:text-gray-400">Debits</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="relative h-64 mb-8">
+          {savingsMetrics.monthlyData.map((data, i) => (
+            <div 
+              key={data.month} 
+              className="absolute bottom-0 group"
+              style={{ left: `${(i / 11) * 100}%`, width: '8%' }}
+            >
+              {/* Tooltip */}
+              <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 
+                opacity-0 group-hover:opacity-100 transition-opacity duration-200
+                bg-gray-900 text-white text-xs rounded-lg py-2 px-3 z-10">
+                <div className="font-medium mb-1">{data.month}</div>
+                <div className="space-y-1">
+                  <div className="flex justify-between gap-4">
+                    <span>Credits:</span>
+                    <span className="text-green-400">{formatUSD(data.credit)}</span>
+                  </div>
+                  <div className="flex justify-between gap-4">
+                    <span>Debits:</span>
+                    <span className="text-red-400">{formatUSD(data.debit)}</span>
+                  </div>
+                  <div className="flex justify-between gap-4 border-t border-gray-700 pt-1 mt-1">
+                    <span>Net:</span>
+                    <span className={data.net >= 0 ? 'text-green-400' : 'text-red-400'}>
+                      {formatUSD(data.net)}
+                    </span>
                   </div>
                 </div>
+                <div className="text-gray-400 text-[10px] mt-1">
+                  {data.count} transactions
+                </div>
+              </div>
 
-                {/* Year Selector with Enhanced Styling */}
-                <select
-                  value={selectedYear}
-                  onChange={(e) => setSelectedYear(Number(e.target.value))}
-                  className="px-4 py-3 text-sm border-0 rounded-xl bg-white/10 text-white 
-                    backdrop-blur-sm hover:bg-white/20 focus:ring-2 focus:ring-white/50 
-                    transition-all duration-200"
-                >
-                  {availableYears.map((year) => (
-                    <option key={year} value={year} className="text-gray-900">
-                      {year}
-                    </option>
-                  ))}
-                </select>
+              {/* Bar Chart */}
+              <div className="flex flex-col items-center">
+                <div className="relative w-full">
+                  {/* Credits Bar */}
+                  <div 
+                    className="w-full bg-green-500 rounded-t transition-all duration-300"
+                    style={{ height: `${(data.credit / maxAmount) * 180}px` }}
+                  />
+                  {/* Debits Bar */}
+                  <div 
+                    className="w-full bg-red-500 rounded-b transition-all duration-300 mt-px"
+                    style={{ height: `${(data.debit / maxAmount) * 180}px` }}
+                  />
+                </div>
+                <span className="text-xs text-gray-500 mt-2 -rotate-45 origin-top-left">
+                  {data.month}
+                </span>
               </div>
             </div>
+          ))}
+        </div>
 
-            {/* Navigation Tabs */}
-            <div className="flex gap-2 border-b border-white/20">
-              {(["overview", "details"] as const).map((tab) => (
-                <button
-                  key={tab}
-                  onClick={() => setActiveTab(tab)}
-                  className={`px-4 py-2 text-sm font-medium transition-colors rounded-t-lg
-                    ${
-                      activeTab === tab
-                        ? "text-white border-b-2 border-white"
-                        : "text-white/60 hover:text-white/80"
-                    }`}
-                >
-                  {tab.charAt(0).toUpperCase() + tab.slice(1)}
-                </button>
+        {/* Net Savings Line */}
+        <div className="h-2 w-full bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
+          <div className="h-full bg-gradient-to-r from-green-500 to-indigo-500 rounded-full"
+            style={{ 
+              width: `${(savingsMetrics.totalSavings / (income || 1)) * 100}%`,
+              minWidth: '2%'
+            }}
+          />
+        </div>
+        <div className="flex justify-between mt-2">
+          <span className="text-xs text-gray-500">Net Savings Rate</span>
+          <span className="text-xs font-medium text-gray-700 dark:text-gray-300">
+            {((savingsMetrics.totalSavings / (income || 1)) * 100).toFixed(1)}%
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const SavingsCategoryBreakdown = ({ savings, type }: {
+  savings: SavingData[];
+  type: 'credit' | 'debit';
+}) => {
+  const categories = useMemo(() => {
+    const categoryMap = savings
+      .filter(s => s.type === type)
+      .reduce((acc, curr) => {
+        const categoryId = curr.categoryId || 'unallocated';
+        if (!acc[categoryId]) {
+          acc[categoryId] = { amount: 0, count: 0 };
+        }
+        acc[categoryId].amount += Math.abs(curr.amount);
+        acc[categoryId].count += 1;
+        return acc;
+      }, {} as Record<string, { amount: number; count: number }>);
+
+    const totalAmount = Object.values(categoryMap)
+      .reduce((sum, { amount }) => sum + amount, 0);
+
+    // Map unallocated savings to categories based on percentages
+    if (categoryMap['unallocated']) {
+      const unallocatedAmount = categoryMap['unallocated'].amount;
+      const unallocatedCount = categoryMap['unallocated'].count;
+      delete categoryMap['unallocated'];
+
+      SAVINGS_CATEGORIES.forEach(category => {
+        const allocatedAmount = (unallocatedAmount * category.percentage) / 100;
+        if (!categoryMap[category.id]) {
+          categoryMap[category.id] = { amount: 0, count: 0 };
+        }
+        categoryMap[category.id].amount += allocatedAmount;
+        // Distribute count proportionally
+        categoryMap[category.id].count += Math.round((unallocatedCount * category.percentage) / 100);
+      });
+    }
+
+    return SAVINGS_CATEGORIES.map(category => ({
+      id: category.id,
+      label: category.label,
+      amount: categoryMap[category.id]?.amount || 0,
+      count: categoryMap[category.id]?.count || 0,
+      percentage: ((categoryMap[category.id]?.amount || 0) / totalAmount) * 100,
+      color: category.color
+    })).sort((a, b) => b.amount - a.amount);
+  }, [savings, type]);
+
+  return (
+    <div className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-100 dark:border-gray-700">
+      <div className="flex items-center gap-3 mb-6">
+        <ChartPieIcon className="w-6 h-6 text-indigo-500" />
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+          {type === 'credit' ? 'Savings' : 'Withdrawals'} by Category
+        </h3>
+      </div>
+
+      <div className="space-y-4">
+        {categories.map(category => (
+          <div key={category.id} className="space-y-2">
+            <div className="flex justify-between items-center">
+              <div>
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  {category.label}
+                </span>
+                <span className="ml-2 text-xs text-gray-500">
+                  ({category.count} transactions)
+                </span>
+              </div>
+              <span className="text-sm font-semibold text-gray-900 dark:text-white">
+                {formatUSD(category.amount)}
+              </span>
+            </div>
+            <div className="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-2">
+              <div
+                className="h-2 rounded-full"
+                style={{ 
+                  width: `${category.percentage}%`,
+                  backgroundColor: category.color
+                }}
+              />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+const FloatingActionButton = ({ onAddTransaction, onAddSaving }: {
+  onAddTransaction: () => void;
+  onAddSaving: () => void;
+}) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const { t } = useTranslation();
+
+  return (
+    <>
+      {/* Backdrop */}
+      {isOpen && (
+        <div 
+          className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 transition-opacity duration-300"
+          onClick={() => setIsOpen(false)}
+        />
+      )}
+
+      {/* FAB Container */}
+      <div className="fixed lg:bottom-8 lg:right-20 md:bottom-2 md:right-6 bottom-4 right-4 
+        flex flex-col items-end space-y-4 z-50">
+        {/* FAB Menu Items */}
+        <div className={`flex flex-col items-end space-y-3 transition-all duration-300 ease-in-out
+          ${isOpen ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10 pointer-events-none'}`}
+        >
+          {/* Transaction Button */}
+          <button
+            onClick={() => {
+              setIsOpen(false);
+              onAddTransaction();
+            }}
+            className="group flex items-center gap-2 pl-4 pr-3 py-2 
+              bg-gradient-to-r from-indigo-500 to-indigo-600 
+              text-white rounded-full shadow-lg hover:shadow-indigo-500/25 
+              hover:translate-x-0 translate-x-12 transition-all duration-300
+              md:translate-x-12 sm:translate-x-16 xs:translate-x-8
+              md:hover:translate-x-0 sm:hover:translate-x-0"
+          >
+            <span className="text-xs sm:text-sm md:text-sm font-medium whitespace-nowrap
+              max-w-0 sm:max-w-none overflow-hidden transition-all duration-300">
+              {t('dashboard.add_transaction')}
+            </span>
+            <div className="w-7 h-7 sm:w-8 sm:h-8 md:w-9 md:h-9 rounded-full 
+              bg-indigo-500 flex items-center justify-center 
+              shadow-inner group-hover:scale-110 transition-transform">
+              <BanknotesIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4 md:w-5 md:h-5" />
+            </div>
+          </button>
+
+          {/* Saving Button */}
+          <button
+            onClick={() => {
+              setIsOpen(false);
+              onAddSaving();
+            }}
+            className="group flex items-center gap-2 pl-4 pr-3 py-2 
+              bg-gradient-to-r from-emerald-500 to-emerald-600 
+              text-white rounded-full shadow-lg hover:shadow-emerald-500/25 
+              hover:translate-x-0 translate-x-12 transition-all duration-300
+              md:translate-x-12 sm:translate-x-16 xs:translate-x-8
+              md:hover:translate-x-0 sm:hover:translate-x-0"
+          >
+            <span className="text-xs sm:text-sm md:text-sm font-medium whitespace-nowrap
+              max-w-0 sm:max-w-none overflow-hidden transition-all duration-300">
+              {t('dashboard.add_saving')}
+            </span>
+            <div className="w-7 h-7 sm:w-8 sm:h-8 md:w-9 md:h-9 rounded-full 
+              bg-emerald-500 flex items-center justify-center 
+              shadow-inner group-hover:scale-110 transition-transform">
+              <CurrencyDollarIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4 md:w-5 md:h-5" />
+            </div>
+          </button>
+        </div>
+        
+        {/* Main FAB Button */}
+        <button
+          onClick={() => setIsOpen(!isOpen)}
+          className={`group relative rounded-full shadow-lg 
+            transition-all duration-300 ease-in-out transform
+            w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16
+            ${isOpen 
+              ? 'bg-gray-700 hover:bg-gray-600 rotate-45 scale-110' 
+              : 'bg-gradient-to-r from-indigo-500 to-purple-600 hover:scale-110'
+            }`}
+        >
+          {/* Background Glow Effect */}
+          <div className={`absolute inset-0 rounded-full transition-opacity duration-300
+            bg-gradient-to-r from-indigo-500 to-purple-600 blur-lg -z-10 opacity-50
+            group-hover:opacity-75 hidden sm:block`} 
+          />
+
+          {/* Icon Container */}
+          <div className="absolute inset-0 flex items-center justify-center">
+            {isOpen ? (
+              <XMarkIcon className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 text-white 
+                transition-transform duration-300 group-hover:scale-110" />
+            ) : (
+              <PlusIcon className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 text-white 
+                transition-transform duration-300 group-hover:scale-110" />
+            )}
+          </div>
+        </button>
+      </div>
+    </>
+  );
+};
+
+export const AnalyticsScreen = () => {
+  const { transactions, isLoading: transactionsLoading } = useTransactions();
+  const { state: savingState, loadSavings } = useSaving();
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [showTransactionModal, setShowTransactionModal] = useState(false);
+  const [showSavingForm, setShowSavingForm] = useState(false);
+
+  const filteredData = useMemo(() => {
+    const yearStart = new Date(selectedYear, 0, 1);
+    const yearEnd = new Date(selectedYear, 11, 31);
+
+    const yearTransactions = transactions.filter(t => {
+      const date = new Date(t.date);
+      return date >= yearStart && date <= yearEnd;
+    });
+
+    const yearSavings = savingState.savings.filter(s => {
+      const date = new Date(s.date);
+      return date >= yearStart && date <= yearEnd;
+    });
+
+    return {
+      transactions: yearTransactions,
+      savings: yearSavings
+    };
+  }, [transactions, savingState.savings, selectedYear]);
+
+  const yearIncome = filteredData.transactions
+    .filter(t => t.type === 'income')
+    .reduce((sum, t) => sum + t.amount, 0);
+
+  const handleAddTransaction = () => {
+    setShowTransactionModal(true);
+  };
+
+  const handleAddSaving = () => {
+    setShowSavingForm(true);
+  };
+
+  if (transactionsLoading || savingState.isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <div className="animate-pulse space-y-6">
+            <div className="h-32 bg-white dark:bg-gray-800 rounded-xl" />
+            <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+              {[...Array(4)].map((_, i) => (
+                <div key={i} className="h-24 bg-white dark:bg-gray-800 rounded-xl" />
               ))}
             </div>
           </div>
-
-          {/* Animated Background Pattern */}
-          <div className="absolute inset-0 opacity-10 dark:opacity-20">
-            <div className="absolute inset-0 bg-[linear-gradient(45deg,transparent_25%,rgba(68,64,60,0.2)_50%,transparent_75%,transparent_100%)] 
-              bg-repeat pattern-bg animate-pattern-slide"></div>
-          </div>
-        </div>
-
-        {/* Content */}
-        <div className="relative">
-          {activeTab === "overview" ? (
-            <OverviewTab
-              monthlyData={monthlyData}
-              categoryTotals={categoryTotals}
-              totals={totals}
-            />
-          ) : (
-            <div className="animate-fadeIn">
-              {renderDetailsTab()}
-            </div>
-          )}
         </div>
       </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+        <AnalyticsHeader
+          selectedYear={selectedYear}
+          onYearChange={setSelectedYear}
+        />
+
+        <CardGroup 
+          title="Overview" 
+          icon={ChartBarIcon}
+          defaultExpanded={true}
+          accentColor="from-blue-500 to-blue-600"
+        >
+          <YearSummary
+            transactions={filteredData.transactions}
+            savings={filteredData.savings}
+          />
+        </CardGroup>
+
+        <CardGroup 
+          title="Monthly Analysis" 
+          icon={ChartPieIcon}
+          defaultExpanded={true}
+          accentColor="from-purple-500 to-purple-600"
+        >
+          <MonthlyTrends
+            transactions={filteredData.transactions}
+            savings={filteredData.savings}
+          />
+        </CardGroup>
+
+        <CardGroup 
+          title="Savings Analysis" 
+          icon={WalletIcon}
+          defaultExpanded={true}
+          accentColor="from-green-500 to-green-600"
+        >
+          <SavingsAnalysis
+            savings={filteredData.savings}
+            income={yearIncome}
+          />
+        </CardGroup>
+
+        <CardGroup 
+          title="Transaction Categories" 
+          icon={BanknotesIcon}
+          defaultExpanded={true}
+          accentColor="from-indigo-500 to-indigo-600"
+        >
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <CategoryBreakdown
+              transactions={filteredData.transactions}
+              type="expense"
+            />
+            <CategoryBreakdown
+              transactions={filteredData.transactions}
+              type="income"
+            />
+          </div>
+        </CardGroup>
+
+        <CardGroup 
+          title="Savings Categories" 
+          icon={ArrowTrendingUpIcon}
+          defaultExpanded={true}
+          accentColor="from-amber-500 to-amber-600"
+        >
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <SavingsCategoryBreakdown
+              savings={filteredData.savings}
+              type="credit"
+            />
+            <SavingsCategoryBreakdown
+              savings={filteredData.savings}
+              type="debit"
+            />
+          </div>
+        </CardGroup>
+
+        {/* Floating Action Button */}
+        <FloatingActionButton
+          onAddTransaction={handleAddTransaction}
+          onAddSaving={handleAddSaving}
+        />
+
+        {/* Transaction Modal */}
+        {showTransactionModal && (
+          <TransactionModal
+            onClose={() => setShowTransactionModal(false)}
+          />
+        )}
+
+        {/* Saving Form */}
+        {showSavingForm && (
+          <div className="fixed inset-0 bg-black/30 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-md w-full p-6">
+              <SavingForm
+                onSubmit={async () => {
+                  await loadSavings();
+                  setShowSavingForm(false);
+                }}
+                onCancel={() => setShowSavingForm(false)}
+              />
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
   );
 };

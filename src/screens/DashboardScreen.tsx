@@ -194,7 +194,7 @@ const SpendingAnalysis = ({
       .sort((a, b) => b.amount - a.amount);
   }, [transactions]);
 
-  return (
+    return (
     <div className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-100 dark:border-gray-700">
       <div className="flex items-center gap-3 mb-6">
         <ChartPieIcon className="w-6 h-6 text-indigo-500" />
@@ -233,7 +233,7 @@ const SpendingAnalysis = ({
 
 const SavingsProgress = ({
   savings,
-  income,
+    income,
   t
 }: {
   savings: Array<{ date: string; amount: number }>;
@@ -258,7 +258,7 @@ const SavingsProgress = ({
 
   const savingsRate = (savings.reduce((sum, s) => sum + s.amount, 0) / income) * 100;
   const targetRate = 20; // Example target savings rate
-
+  
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-100 dark:border-gray-700">
       <div className="flex items-center gap-3 mb-6">
@@ -267,7 +267,7 @@ const SavingsProgress = ({
           {t('dashboard.savings_progress')}
         </h3>
       </div>
-      
+
       <div className="space-y-6">
         <div>
           <div className="flex justify-between items-center mb-2">
@@ -284,7 +284,7 @@ const SavingsProgress = ({
               style={{ width: `${Math.min(100, (savingsRate / targetRate) * 100)}%` }}
             />
           </div>
-        </div>
+      </div>
 
         <div className="grid grid-cols-6 gap-2">
           {monthlySavings.map(data => (
@@ -294,10 +294,10 @@ const SavingsProgress = ({
                 style={{ height: `${(data.amount / Math.max(...monthlySavings.map(d => d.amount))) * 100}px` }}
               />
               <span className="text-xs text-gray-500 mt-1">{data.month}</span>
-            </div>
-          ))}
+              </div>
+            ))}
+          </div>
         </div>
-      </div>
     </div>
   );
 };
@@ -476,7 +476,7 @@ const FloatingActionButton = ({ onAddTransaction, onAddSaving }: {
               <BanknotesIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4 md:w-5 md:h-5" />
             </div>
           </button>
-
+          
           {/* Saving Button */}
           <button
             onClick={() => {
@@ -692,7 +692,7 @@ export const DashboardScreen = () => {
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-md w-full p-6">
               <SavingForm
                 onSubmit={async () => {
-                  await loadSavings();
+                    await loadSavings();
                   setShowSavingForm(false);
                 }}
                 onCancel={() => setShowSavingForm(false)}

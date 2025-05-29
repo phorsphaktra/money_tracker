@@ -2,7 +2,7 @@ import { createBrowserRouter, Navigate } from 'react-router-dom';
 import { DashboardLayout } from '../components/Layout';
 import { DashboardScreen } from '../screens/DashboardScreen';
 import { TransactionsScreen } from '../screens/TransactionScreen';
-import { AnalyticsView } from '../screens/AnalyticsScreen';
+import { AnalyticsScreen } from '../screens/AnalyticsScreen';
 import { SettingsScreen } from '../screens/SettingsScreen';
 import { LoginScreen } from '../screens/auth/LoginScreen';
 import { SignUpScreen } from '../screens/auth/SignUpScreen';
@@ -51,10 +51,9 @@ export const router = createBrowserRouter([
       { index: true, element: <DashboardScreen /> },
       { path: 'transactions', element: <TransactionsScreen /> },
       { path: 'saving', element: <SavingScreen /> },
-      { path: 'analytics', element: <AnalyticsView /> },
+      { path: 'analytics', element: <AnalyticsScreen /> },
       { path: 'settings', element: <SettingsScreen /> },
       { path: 'task', element: <TasksScreen /> }
-
     ]
   }
 ]);
