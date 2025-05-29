@@ -18,7 +18,8 @@ import {
   CurrencyDollarIcon,
   ArrowPathIcon,
   PlusIcon,
-  XMarkIcon
+  XMarkIcon,
+  ChevronDownIcon
 } from '@heroicons/react/24/outline';
 
 // Helper Functions
@@ -29,20 +30,86 @@ const calculateGrowthRate = (current: number, previous: number) => {
 };
 
 // Dashboard Components
-const DashboardHeader = ({ title, subtitle, period }: { title: string; subtitle: string; period: string }) => (
-  <div className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl p-6 md:p-8 shadow-lg">
-    <div className="flex justify-between items-start">
-      <div>
-        <h1 className="text-2xl sm:text-3xl font-bold text-white">{title}</h1>
-        <p className="text-sm text-indigo-100 mt-2">{subtitle}</p>
-      </div>
-      <div className="flex items-center gap-2 bg-white/10 px-4 py-2 rounded-lg">
-        <CalendarIcon className="w-5 h-5 text-white/70" />
-        <span className="text-sm text-white">{period}</span>
+const DashboardHeader = ({ 
+  title, 
+  subtitle, 
+  period,
+  selectedMonth,
+  onMonthChange 
+}: { 
+  title: string; 
+  subtitle: string; 
+  period: string;
+  selectedMonth: Date;
+  onMonthChange: (date: Date) => void;
+}) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const months = useMemo(() => {
+    const today = new Date();
+    return Array.from({ length: 12 }, (_, i) => {
+      const date = new Date(today.getFullYear(), today.getMonth() - i, 1);
+      return {
+        value: date,
+        label: date.toLocaleString('default', { month: 'long', year: 'numeric' })
+      };
+    });
+  }, []);
+
+  return (
+    <div className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl p-6 md:p-8 shadow-lg">
+      <div className="flex justify-between items-start">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-bold text-white">{title}</h1>
+          <p className="text-sm text-indigo-100 mt-2">{subtitle}</p>
+        </div>
+        <div className="relative">
+          <button
+            onClick={() => setIsOpen(!isOpen)}
+            className="flex items-center gap-2 bg-white/10 px-4 py-2 rounded-lg 
+              hover:bg-white/20 transition-colors duration-200"
+          >
+            <CalendarIcon className="w-5 h-5 text-white/70" />
+            <span className="text-sm text-white">
+              {selectedMonth.toLocaleString('default', { month: 'long', year: 'numeric' })}
+            </span>
+            <ChevronDownIcon className={`w-4 h-4 text-white/70 transition-transform duration-200
+              ${isOpen ? 'rotate-180' : ''}`} />
+          </button>
+
+          {/* Dropdown Menu */}
+          {isOpen && (
+            <>
+              <div 
+                className="fixed inset-0 z-30" 
+                onClick={() => setIsOpen(false)}
+              />
+              <div className="absolute right-0 mt-2 w-56 rounded-xl bg-white dark:bg-gray-800 
+                shadow-lg ring-1 ring-black/5 z-40 py-1 max-h-96 overflow-auto">
+                {months.map((month) => (
+                  <button
+                    key={month.value.toISOString()}
+                    onClick={() => {
+                      onMonthChange(month.value);
+                      setIsOpen(false);
+                    }}
+                    className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 
+                      dark:hover:bg-gray-700 transition-colors duration-200
+                      ${month.value.getMonth() === selectedMonth.getMonth() &&
+                      month.value.getFullYear() === selectedMonth.getFullYear()
+                        ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400'
+                        : 'text-gray-700 dark:text-gray-300'}`}
+                  >
+                    {month.label}
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
       </div>
     </div>
-  </div>
-);
+  );
+};
 
 const MetricCard = ({ 
   title, 
@@ -297,38 +364,32 @@ const TaskAnalytics = ({ stats }: { stats: any }) => (
 const FinancialOverview = ({ 
   transactions, 
   savings,
+  previousTransactions,
+  previousSavings,
   t 
 }: { 
   transactions: Transaction[];
   savings: any[];
+  previousTransactions: Transaction[];
+  previousSavings: any[];
   t: (key: string) => string;
 }) => {
-  const currentMonth = new Date().getMonth();
-  const currentMonthTransactions = transactions.filter(
-    t => new Date(t.date).getMonth() === currentMonth
-  );
-  const previousMonthTransactions = transactions.filter(
-    t => new Date(t.date).getMonth() === (currentMonth - 1 + 12) % 12
-  );
-
-  const currentIncome = currentMonthTransactions
+  const currentIncome = transactions
     .filter(t => t.type === 'income')
     .reduce((sum, t) => sum + t.amount, 0);
-  const previousIncome = previousMonthTransactions
+  const previousIncome = previousTransactions
     .filter(t => t.type === 'income')
     .reduce((sum, t) => sum + t.amount, 0);
 
-  const currentExpenses = currentMonthTransactions
+  const currentExpenses = transactions
     .filter(t => t.type === 'expense')
     .reduce((sum, t) => sum + Math.abs(t.amount), 0);
-  const previousExpenses = previousMonthTransactions
+  const previousExpenses = previousTransactions
     .filter(t => t.type === 'expense')
     .reduce((sum, t) => sum + Math.abs(t.amount), 0);
 
   const totalSavings = savings.reduce((sum, s) => sum + s.amount, 0);
-  const previousMonthSavings = savings
-    .filter(s => new Date(s.date).getMonth() === (currentMonth - 1 + 12) % 12)
-    .reduce((sum, s) => sum + s.amount, 0);
+  const previousTotalSavings = previousSavings.reduce((sum, s) => sum + s.amount, 0);
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -360,7 +421,7 @@ const FinancialOverview = ({
         icon={ArrowTrendingUpIcon}
         type="positive"
         trend={{
-          value: calculateGrowthRate(totalSavings, previousMonthSavings),
+          value: calculateGrowthRate(totalSavings, previousTotalSavings),
           label: `vs last month`
         }}
         subtitle={`Target: ${formatUSD(currentIncome * 0.2)}`}
@@ -490,6 +551,7 @@ export const DashboardScreen = () => {
   const { tasks, loading: tasksLoading } = useTaskContext();
   const [showTransactionModal, setShowTransactionModal] = useState(false);
   const [showSavingForm, setShowSavingForm] = useState(false);
+  const [selectedMonth, setSelectedMonth] = useState(new Date());
 
   useEffect(() => {
     loadSavings();
@@ -520,6 +582,48 @@ export const DashboardScreen = () => {
     return { total, completed, inProgress, blocked, completionRate };
   }, [tasks]);
 
+  // Filter transactions and savings based on selected month
+  const filteredData = useMemo(() => {
+    const startOfMonth = new Date(selectedMonth.getFullYear(), selectedMonth.getMonth(), 1);
+    const endOfMonth = new Date(selectedMonth.getFullYear(), selectedMonth.getMonth() + 1, 0);
+
+    const filteredTransactions = transactions.filter(t => {
+      const date = new Date(t.date);
+      return date >= startOfMonth && date <= endOfMonth;
+    });
+
+    const filteredSavings = savingState.savings.filter(s => {
+      const date = new Date(s.date);
+      return date >= startOfMonth && date <= endOfMonth;
+    });
+
+    // Calculate previous month data for comparison
+    const prevMonth = new Date(selectedMonth.getFullYear(), selectedMonth.getMonth() - 1);
+    const startOfPrevMonth = new Date(prevMonth.getFullYear(), prevMonth.getMonth(), 1);
+    const endOfPrevMonth = new Date(prevMonth.getFullYear(), prevMonth.getMonth() + 1, 0);
+
+    const prevMonthTransactions = transactions.filter(t => {
+      const date = new Date(t.date);
+      return date >= startOfPrevMonth && date <= endOfPrevMonth;
+    });
+
+    const prevMonthSavings = savingState.savings.filter(s => {
+      const date = new Date(s.date);
+      return date >= startOfPrevMonth && date <= endOfPrevMonth;
+    });
+
+    return {
+      current: {
+        transactions: filteredTransactions,
+        savings: filteredSavings
+      },
+      previous: {
+        transactions: prevMonthTransactions,
+        savings: prevMonthSavings
+      }
+    };
+  }, [transactions, savingState.savings, selectedMonth]);
+
   if (transactionsLoading || tasksLoading || savingState.isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -543,22 +647,26 @@ export const DashboardScreen = () => {
         <DashboardHeader
           title={t('dashboard.title')}
           subtitle={t('dashboard.subtitle')}
-          period={new Date().toLocaleString('default', { month: 'long', year: 'numeric' })}
+          period={selectedMonth.toLocaleString('default', { month: 'long', year: 'numeric' })}
+          selectedMonth={selectedMonth}
+          onMonthChange={setSelectedMonth}
         />
 
         <FinancialOverview
-          transactions={transactions}
-          savings={savingState.savings}
+          transactions={filteredData.current.transactions}
+          savings={filteredData.current.savings}
+          previousTransactions={filteredData.previous.transactions}
+          previousSavings={filteredData.previous.savings}
           t={t}
         />
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <SpendingAnalysis
-            transactions={transactions}
+            transactions={filteredData.current.transactions}
             t={t}
           />
           <SavingsProgress
-            savings={savingState.savings}
+            savings={filteredData.current.savings}
             income={currentMonthIncome}
             t={t}
           />
