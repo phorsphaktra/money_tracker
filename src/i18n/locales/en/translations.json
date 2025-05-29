@@ -53,8 +53,13 @@
   
   },
   "dashboard": {
+    "subtitle": "Track your finances and manage your savings",
     "monthly_expenses": "Monthly Expenses",
+    "monthly_income": "Monthly Income",
+    "add_transaction": "Add Transaction",
+    "add_saving": "Add Savings",
     "total_savings": "Total Savings",
+    "savings_rate": "Savings Rate",
     "savings_progress": "Saving Progress",
     "spending_analysis": "Spending Analysis",
     "title": "Dashboard",
