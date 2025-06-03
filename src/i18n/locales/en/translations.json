@@ -49,7 +49,12 @@
     "created": "Created at",
     "updated": "Updated at",
     "confirmDelete": "Delete Saving",
-    "no":"No"
+    "no":"No",
+    "search": "Search...",
+    "showing": "Showing",
+    "to": "to",
+    "of": "of",
+    "results": "results"
   
   },
   "dashboard": {
@@ -220,7 +225,10 @@
     "allCategories": "All Categories",
     "category": "Category",
     "noSavings": "No savings found",
-    "addSavingPrompt": "Add a new saving to track your progress"
-    
+    "addSavingPrompt": "Add a new saving to track your progress",
+    "netBalance": "Net Balance",
+    "allTransactions": "All Transactions",
+    "onlyCredits": "Only Credits",
+    "onlyDebits": "Only Debits"
   }
 }
