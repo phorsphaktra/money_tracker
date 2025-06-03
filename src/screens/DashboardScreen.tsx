@@ -166,40 +166,56 @@ const MetricCard = ({
   );
 };
 
-const SpendingAnalysis = ({ 
-  transactions,
-  t 
-}: { 
+type SpendingAnalysisProps = {
   transactions: Transaction[];
   t: (key: string) => string;
-}) => {
+  type: 'expense' | 'income';
+};
+
+const SpendingAnalysis = ({ 
+  transactions, 
+  t, 
+  type 
+}: SpendingAnalysisProps) => {
   const categories = useMemo(() => {
-    const categoryMap = transactions.reduce((acc, curr) => {
+    const filteredTransactions = transactions.filter(tx => tx.type === type);
+
+    const categoryMap = filteredTransactions.reduce((acc, curr) => {
       if (!curr.category) return acc;
       const category = curr.category.trim();
       if (!acc[category]) {
         acc[category] = { amount: 0, count: 0 };
-      }
+      } 
       acc[category].amount += Math.abs(curr.amount);
       acc[category].count += 1;
       return acc;
     }, {} as Record<string, { amount: number; count: number }>);
 
+    const totalAmount = filteredTransactions.reduce(
+      (sum, t) => sum + Math.abs(t.amount),
+      0
+    );
+
     return Object.entries(categoryMap)
       .map(([category, data]) => ({
         category,
         ...data,
-        percentage: (data.amount / transactions.reduce((sum, t) => sum + Math.abs(t.amount), 0)) * 100
+        percentage: totalAmount > 0 ? (data.amount / totalAmount) * 100 : 0
       }))
       .sort((a, b) => b.amount - a.amount);
-  }, [transactions]);
+  }, [transactions, type]);
 
+    const titleKey =
+    type === 'expense'
+      ? 'dashboard.monthly_expenses'
+      : 'dashboard.monthly_income';
+      
     return (
     <div className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-100 dark:border-gray-700">
       <div className="flex items-center gap-3 mb-6">
         <ChartPieIcon className="w-6 h-6 text-indigo-500" />
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-          {t('dashboard.spending_analysis')}
+          {t(titleKey)},
         </h3>
       </div>
       <div className="space-y-4">
@@ -227,77 +243,6 @@ const SpendingAnalysis = ({
           </div>
         ))}
       </div>
-    </div>
-  );
-};
-
-const SavingsProgress = ({
-  savings,
-    income,
-  t
-}: {
-  savings: Array<{ date: string; amount: number }>;
-  income: number;
-  t: (key: string) => string;
-}) => {
-  const monthlySavings = useMemo(() => {
-    const monthlyData = savings.reduce((acc, curr) => {
-      const month = new Date(curr.date).getMonth();
-      if (!acc[month]) acc[month] = 0;
-      acc[month] += curr.amount;
-      return acc;
-    }, {} as Record<number, number>);
-
-    return Object.entries(monthlyData)
-      .map(([month, amount]) => ({
-        month: new Date(2024, parseInt(month)).toLocaleString('default', { month: 'short' }),
-        amount: amount as number
-      }))
-      .sort((a, b) => a.month.localeCompare(b.month));
-  }, [savings]);
-
-  const savingsRate = (savings.reduce((sum, s) => sum + s.amount, 0) / income) * 100;
-  const targetRate = 20; // Example target savings rate
-  
-  return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-100 dark:border-gray-700">
-      <div className="flex items-center gap-3 mb-6">
-        <CurrencyDollarIcon className="w-6 h-6 text-green-500" />
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-          {t('dashboard.savings_progress')}
-        </h3>
-      </div>
-
-      <div className="space-y-6">
-        <div>
-          <div className="flex justify-between items-center mb-2">
-            <span className="text-sm text-gray-600 dark:text-gray-300">
-              {t('dashboard.savings_rate')}
-            </span>
-            <span className="text-sm font-medium text-gray-900 dark:text-white">
-              {savingsRate.toFixed(1)}% / {targetRate}%
-            </span>
-          </div>
-          <div className="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-3">
-            <div
-              className="bg-green-500 h-3 rounded-full transition-all duration-500"
-              style={{ width: `${Math.min(100, (savingsRate / targetRate) * 100)}%` }}
-            />
-          </div>
-      </div>
-
-        <div className="grid grid-cols-6 gap-2">
-          {monthlySavings.map(data => (
-            <div key={data.month} className="flex flex-col items-center">
-              <div 
-                className="bg-green-100 dark:bg-green-900/20 rounded w-full"
-                style={{ height: `${(data.amount / Math.max(...monthlySavings.map(d => d.amount))) * 100}px` }}
-              />
-              <span className="text-xs text-gray-500 mt-1">{data.month}</span>
-              </div>
-            ))}
-          </div>
-        </div>
     </div>
   );
 };
@@ -564,13 +509,6 @@ export const DashboardScreen = () => {
     setShowSavingForm(true);
   };
 
-  const currentMonthIncome = useMemo(() => {
-    const currentMonth = new Date().getMonth();
-    return transactions
-      .filter(t => new Date(t.date).getMonth() === currentMonth && t.type === 'income')
-      .reduce((sum, t) => sum + t.amount, 0);
-  }, [transactions]);
-
   const taskStats = useMemo(() => {
     const total = tasks.length;
     const completed = tasks.filter(t => t.status === 'completed').length;
@@ -663,11 +601,12 @@ export const DashboardScreen = () => {
           <SpendingAnalysis
             transactions={filteredData.current.transactions}
             t={t}
+            type="income"
           />
-          <SavingsProgress
-            savings={filteredData.current.savings}
-            income={currentMonthIncome}
+          <SpendingAnalysis
+            transactions={filteredData.current.transactions}
             t={t}
+            type="expense"
           />
         </div>
 
