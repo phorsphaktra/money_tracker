@@ -215,7 +215,7 @@ const SpendingAnalysis = ({
       <div className="flex items-center gap-3 mb-6">
         <ChartPieIcon className="w-6 h-6 text-indigo-500" />
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-          {t(titleKey)},
+          {t(titleKey)}
         </h3>
       </div>
       <div className="space-y-4">
