@@ -186,10 +186,32 @@ export const authService = {
   },
 
   async updateLastLogin(uid: string) {
-    const userRef = doc(db, "users", uid);
-    await updateDoc(userRef, {
-      lastLogin: serverTimestamp(),
-    });
+    try {
+      const userRef = doc(db, "users", uid);
+      const docSnap = await getDoc(userRef);
+
+      if (!docSnap.exists()) {
+        // If user document doesn't exist, create it with basic info
+        const user = auth.currentUser;
+        if (user) {
+          await this.createUserProfile({
+            uid: user.uid,
+            email: user.email ?? '',
+            displayName: user.displayName ?? 'User',
+            createdAt: new Date(),
+            defaultCurrency: "USD",
+          });
+          return;
+        }
+      }
+
+      await updateDoc(userRef, {
+        lastLogin: serverTimestamp(),
+      });
+    } catch (error) {
+      console.error('Failed to update last login:', error);
+      throw this.handleFirestoreError(error);
+    }
   },
 
   async getUserProfile(uid: string): Promise<UserProfile | null> {
