@@ -138,7 +138,7 @@ export const SavingCard = ({ saving, onEdit, onDelete }: SavingCardProps) => {
           </div>
 
           <div className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">
-            {saving.description || t('savings.noDescription')}
+            {saving.description}
           </div>
 
           <div className="flex items-center gap-2">
