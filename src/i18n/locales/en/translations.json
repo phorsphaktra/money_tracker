@@ -54,8 +54,9 @@
     "showing": "Showing",
     "to": "to",
     "of": "of",
-    "results": "results"
-  
+    "results": "results",
+    "prev": "Previous",
+    "next": "Next"  
   },
   "dashboard": {
     "subtitle": "Track your finances and manage your savings",
@@ -229,6 +230,7 @@
     "netBalance": "Net Balance",
     "allTransactions": "All Transactions",
     "onlyCredits": "Only Credits",
-    "onlyDebits": "Only Debits"
+    "onlyDebits": "Only Debits",
+    "auto_allocate_hint": "*Automatically allocate your savings into savings categories!"
   }
 }

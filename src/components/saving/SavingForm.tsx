@@ -203,7 +203,7 @@ export const SavingForm: React.FC<SavingFormProps> = ({
             ))}
           </select>
           {!selectedCategory && (
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+            <p className="text-sm text-red-500 dark:text-red-400 mt-1">
               {t('savings.auto_allocate_hint')}
             </p>
           )}
