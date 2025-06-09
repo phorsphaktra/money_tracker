@@ -11,7 +11,8 @@ import {
   CameraIcon,
   ClipboardDocumentCheckIcon,
   XMarkIcon,
-  WalletIcon
+  WalletIcon,
+  ArrowPathIcon
 } from '@heroicons/react/24/outline';
 
 interface SidebarProps {
@@ -63,6 +64,10 @@ export const Sidebar = ({ isOpen, setIsOpen, isCollapsed }: SidebarProps) => {
     }
   };
 
+  const handleRefresh = () => {
+    window.location.reload();
+  };
+
   return (
     <>
       {/* Mobile backdrop */}
@@ -83,8 +88,16 @@ export const Sidebar = ({ isOpen, setIsOpen, isCollapsed }: SidebarProps) => {
         flex flex-col overflow-hidden
         ${isCollapsed ? 'lg:w-20' : 'lg:w-72'} w-[280px]
       `}>
-        {/* Mobile close button */}
-        <div className="lg:hidden flex justify-end p-4">
+        {/* Mobile header with refresh and close buttons */}
+        <div className="lg:hidden flex items-center justify-between p-4">
+          <button
+            onClick={handleRefresh}
+            className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 
+              transition-all duration-200 active:rotate-180"
+            title={t('common.refresh')}
+          >
+            <ArrowPathIcon className="w-6 h-6 text-slate-500" />
+          </button>
           <button
             onClick={() => setIsOpen(false)}
             className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
