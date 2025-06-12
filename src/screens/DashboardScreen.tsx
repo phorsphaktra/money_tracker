@@ -21,6 +21,7 @@ import {
   XMarkIcon,
   ChevronDownIcon
 } from '@heroicons/react/24/outline';
+import { t } from 'i18next';
 
 // Helper Functions
 
@@ -28,6 +29,11 @@ const calculateGrowthRate = (current: number, previous: number) => {
   if (previous === 0) return 0;
   return ((current - previous) / previous) * 100;
 };
+
+  const monthKeys = [
+    'january', 'february', 'march', 'april', 'may', 'june',
+    'july', 'august', 'september', 'october', 'november', 'december'
+  ];
 
 // Dashboard Components
 const DashboardHeader = ({ 
@@ -47,9 +53,12 @@ const DashboardHeader = ({
     const today = new Date();
     return Array.from({ length: 12 }, (_, i) => {
       const date = new Date(today.getFullYear(), today.getMonth() - i, 1);
+    const month = monthKeys[date.getMonth()];
+    const year = date.getFullYear();
       return {
         value: date,
-        label: date.toLocaleString('default', { month: 'long', year: 'numeric' })
+        // label: date.toLocaleString('default', { month: 'long', year: 'numeric' })
+        label: `${t(`date.${month}`)} ${year}`
       };
     });
   }, []);
@@ -69,7 +78,8 @@ const DashboardHeader = ({
           >
             <CalendarIcon className="w-5 h-5 text-white/70" />
             <span className="text-sm text-white">
-              {selectedMonth.toLocaleString('default', { month: 'long', year: 'numeric' })}
+              {t(`date.${monthKeys[selectedMonth.getMonth()]}`)} {selectedMonth.getFullYear()}
+
             </span>
             <ChevronDownIcon className={`w-4 h-4 text-white/70 transition-transform duration-200
               ${isOpen ? 'rotate-180' : ''}`} />
@@ -227,7 +237,7 @@ const SpendingAnalysis = ({
                   {category.category}
                 </span>
                 <span className="ml-2 text-xs text-gray-500">
-                  ({category.count} transactions)
+                  ({category.count} {t('dashboard.transactions')})
                 </span>
               </div>
               <span className="text-sm font-semibold text-gray-900 dark:text-white">
@@ -336,7 +346,7 @@ const FinancialOverview = ({
   const previousTotalSavings = previousSavings.reduce((sum, s) => sum + s.amount, 0);
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
       <MetricCard
         title={t('dashboard.monthly_income')}
         value={formatUSD(currentIncome)}
@@ -346,7 +356,7 @@ const FinancialOverview = ({
           value: calculateGrowthRate(currentIncome, previousIncome),
           label: `vs last month`
         }}
-        subtitle={`Previous: ${formatUSD(previousIncome)}`}
+        subtitle={`${t('dashboard.previous_month')}: ${formatUSD(previousIncome)}`}
       />
       <MetricCard
         title={t('dashboard.monthly_expenses')}
@@ -357,10 +367,19 @@ const FinancialOverview = ({
           value: -calculateGrowthRate(currentExpenses, previousExpenses),
           label: `vs last month`
         }}
-        subtitle={`Previous: ${formatUSD(previousExpenses)}`}
+        subtitle={`${t('dashboard.previous_month')}: ${formatUSD(previousExpenses)}`}
       />
+
       <MetricCard
-        title={t('dashboard.total_savings')}
+        title={t('dashboard.net_balance')}
+        value={formatUSD(currentIncome - currentExpenses)}
+        icon={ArrowTrendingDownIcon}
+        type="negative"
+        subtitle={`${t('dashboard.previous_month')}: ${formatUSD(previousExpenses)}`}
+      />
+      
+      <MetricCard
+        title={t('dashboard.total_saings')}
         value={formatUSD(totalSavings)}
         icon={ArrowTrendingUpIcon}
         type="positive"
@@ -368,7 +387,7 @@ const FinancialOverview = ({
           value: calculateGrowthRate(totalSavings, previousTotalSavings),
           label: `vs last month`
         }}
-        subtitle={`Target: ${formatUSD(currentIncome * 0.2)}`}
+        subtitle={`${t('dashboard.target_savings')}: ${formatUSD(currentIncome * 0.2)} (20%)`}
       />
     </div>
   );

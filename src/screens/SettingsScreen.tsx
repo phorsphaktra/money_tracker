@@ -65,10 +65,10 @@ export const SettingsScreen = () => {
 
   const confirmUpdate = async () => {
     if (!pendingRate) return;
-    
+
     setIsUpdating(true);
     setError(null);
-    
+
     try {
       await updateExchangeRate(pendingRate);
       setShowConfirm(false);
@@ -99,7 +99,7 @@ export const SettingsScreen = () => {
             {t('settings.subtitle')}
           </p>
         </div>
-        
+
         <div className="space-y-6">
           <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
@@ -113,15 +113,13 @@ export const SettingsScreen = () => {
                 onClick={handleDarkModeToggle}
                 role="switch"
                 aria-checked={darkMode}
-                className={`${
-                  darkMode ? 'bg-indigo-600' : 'bg-gray-200'
-                } relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2`}
+                className={`${darkMode ? 'bg-indigo-600' : 'bg-gray-200'
+                  } relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2`}
               >
                 <span className="sr-only">Enable dark mode</span>
                 <span
-                  className={`${
-                    darkMode ? 'translate-x-6' : 'translate-x-1'
-                  } inline-block h-4 w-4 transform rounded-full bg-white transition-transform`}
+                  className={`${darkMode ? 'translate-x-6' : 'translate-x-1'
+                    } inline-block h-4 w-4 transform rounded-full bg-white transition-transform`}
                 />
               </button>
             </div>
@@ -145,7 +143,7 @@ export const SettingsScreen = () => {
                   <option value="KHR">KHR (៛)</option>
                 </select>
               </div>
-              
+
               <div className="flex items-center justify-between">
                 <span className="text-gray-700 dark:text-gray-300">
                   {t('settings.preferences.language')}
@@ -165,13 +163,13 @@ export const SettingsScreen = () => {
           <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                Exchange Rates
+                {t('settings.exchangeRate.title')}
               </h2>
               {/* <span className="px-3 py-1 text-sm bg-green-100 text-green-800 rounded-full">
                 Auto-updates daily
               </span> */}
             </div>
-            
+
             {error && (
               <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-500/30 rounded-lg text-red-700 dark:text-red-400">
                 <div className="flex items-center gap-2">
@@ -188,7 +186,7 @@ export const SettingsScreen = () => {
                 <div className="flex items-center gap-4">
                   <div className="flex-1">
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                      KHR to USD Rate
+                      {t('settings.exchangeRate.subtitle')}
                     </label>
                     <div className="flex gap-2">
                       <div className="relative flex-1">
@@ -199,7 +197,7 @@ export const SettingsScreen = () => {
                           className="block w-full pl-12 pr-4 py-2 rounded-md border border-gray-300 dark:border-gray-600 
                             bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm 
                             focus:border-indigo-500 focus:ring-indigo-500"
-                  
+
                         />
                         <div className="absolute inset-y-0 left-0 flex items-center pl-3">
                           <span className="text-gray-500 dark:text-gray-400">KHR</span>
@@ -218,7 +216,7 @@ export const SettingsScreen = () => {
                             <span>Updating...</span>
                           </div>
                         ) : (
-                          'Update Rate'
+                          <span>{t('settings.exchangeRate.update_button')}</span>
                         )}
                       </button>
                     </div>
@@ -227,10 +225,10 @@ export const SettingsScreen = () => {
 
                 <div className="mt-4 flex items-center justify-between text-sm">
                   <span className="text-gray-600 dark:text-gray-400">
-                    Current rate: 1 USD = {exchangeRates.KHR_USD.toLocaleString()} KHR
+                    {t('settings.exchangeRate.current_rate')} : 1 USD = {exchangeRates.KHR_USD.toLocaleString()} KHR
                   </span>
                   <span className="text-gray-500 dark:text-gray-400">
-                    Last updated: {new Date().toLocaleDateString()}
+                    {t('settings.exchangeRate.last_updated')} : {new Date().toLocaleDateString()}
                   </span>
                 </div>
               </div>
@@ -242,17 +240,17 @@ export const SettingsScreen = () => {
                 >
                   <div className="flex items-center gap-2">
                     <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Rate History
+                      {t('settings.exchangeRate.rate_history')}
                     </h3>
                     <span className="text-xs text-gray-500">
                       ({exchangeRates.history?.length || 0} changes)
                     </span>
                   </div>
-                  <svg 
+                  <svg
                     className={`w-5 h-5 text-gray-500 transition-transform duration-200 
-                      group-hover:text-gray-700 ${isHistoryExpanded ? 'rotate-180' : ''}`} 
-                    fill="none" 
-                    viewBox="0 0 24 24" 
+                      group-hover:text-gray-700 ${isHistoryExpanded ? 'rotate-180' : ''}`}
+                    fill="none"
+                    viewBox="0 0 24 24"
                     stroke="currentColor"
                   >
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -266,13 +264,12 @@ export const SettingsScreen = () => {
                     {exchangeRates.history?.map((history, index, array) => {
                       const previousRate = array[index + 1]?.rate;
                       const rateChange = previousRate ? getRateChange(history.rate, previousRate) : null;
-                      
+
                       return (
-                        <div 
+                        <div
                           key={history.date}
-                          className={`py-3 flex items-center justify-between ${
-                            index === 0 ? 'bg-green-50 dark:bg-green-900/10 -mx-2 px-2 rounded-lg' : ''
-                          }`}
+                          className={`py-3 flex items-center justify-between ${index === 0 ? 'bg-green-50 dark:bg-green-900/10 -mx-2 px-2 rounded-lg' : ''
+                            }`}
                         >
                           <div className="flex flex-col">
                             <div className="flex items-center gap-2">
@@ -280,13 +277,12 @@ export const SettingsScreen = () => {
                                 1 USD = {history.rate.toLocaleString()} KHR
                               </span>
                               {rateChange && (
-                                <span className={`text-xs font-medium px-1.5 py-0.5 rounded-full ${
-                                  rateChange.isIncrease 
+                                <span className={`text-xs font-medium px-1.5 py-0.5 rounded-full ${rateChange.isIncrease
                                     ? 'text-red-600 bg-red-100 dark:text-red-400 dark:bg-red-900/30'
                                     : rateChange.isDecrease
                                       ? 'text-green-600 bg-green-100 dark:text-green-400 dark:bg-green-900/30'
                                       : 'text-gray-600 bg-gray-100 dark:text-gray-400 dark:bg-gray-900/30'
-                                }`}>
+                                  }`}>
                                   {rateChange.isIncrease ? '↑' : rateChange.isDecrease ? '↓' : '–'}
                                   {Math.abs(parseFloat(rateChange.value))}%
                                 </span>
@@ -340,9 +336,9 @@ export const SettingsScreen = () => {
         isOpen={showConfirm}
         onClose={() => setShowConfirm(false)}
         onConfirm={confirmUpdate}
-        title="Update Exchange Rate"
-        message={`Are you sure you want to update the exchange rate to 1 USD = ${pendingRate?.toLocaleString()} KHR?`}
-        confirmLabel="Update"
+        title={t('settings.exchangeRate.update_exchange_rate_title')}
+        message={`${t('settings.exchangeRate.update_exchange_rate_desc')} = ${pendingRate?.toLocaleString()} ${t('currencies.KHR')}?`}
+        confirmLabel={t('common.update')}
         confirmButtonClass="bg-indigo-600 hover:bg-indigo-700"
         loading={isUpdating}
       />

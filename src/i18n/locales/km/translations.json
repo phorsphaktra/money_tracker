@@ -30,6 +30,16 @@
       "title": "ចំណូលចិត្ត",
       "language": "ភាសា",
       "currency": "រូបិយប័ណ្ណ"
+    },
+    "exchangeRate":{
+      "title":"អត្រាប្ដូរប្រាក់",
+      "subtitle": "រៀល (KHR) ទៅ ដុល្លារ (USD)",
+      "update_button": "ធ្វើបច្ចុប្បន្នភាពអត្រាប្ដូរ",
+      "current_rate": "អត្រាប្ដូរបច្ចុប្បន្ន",
+      "last_updated": "បានធ្វើបច្ចុប្បន្នភាពចុងក្រោយ",
+      "rate_history": "ប្រវត្តិអត្រាប្ដូរ",
+      "update_exchange_rate_title":"ធ្វើបច្ចុប្បន្នភាពអត្រាប្ដូរ",
+      "update_exchange_rate_desc":"តើអ្នកប្រាកដថាចង់ធ្វើបច្ចុប្បន្នភាពអត្រាប្ដូរប្រាក់ទៅ ១ ដុល្លារ "
     }
   },
   "common": {
@@ -46,6 +56,9 @@
     "settings": "ការកំណត់"
   },
   "dashboard": {
+    "total_saings" : "ការសន្សំសរុប",
+    "target_savings": "គោលដៅសន្សំ",
+    "transactions": "ប្រតិបត្តិការ",
     "title": "ផ្ទាំងគ្រប់គ្រង",
     "navigation": {
       "dashboard": "ផ្ទាំងគ្រប់គ្រង",
@@ -88,8 +101,9 @@
     "last_6_months": "៦ ខែចុងក្រោយ",
     "last_3_months": "៣ ខែចុងក្រោយ",
     "this_year": "ឆ្នាំនេះ",
-    "monthly_spending": "ការចំណាយប្រចាំខែ",
+    "monthly_expenses": "ការចំណាយប្រចាំខែ",
     "monthly_income": "ចំណូលប្រចាំខែ",
+    "previous_month": "ខែមុន",
     "savings_rate": "អត្រាសន្សំ",
     "net_balance": "សមតុល្យសុទ្ធ",
     "loading": "កំពុងផ្ទុក...",
@@ -105,10 +119,7 @@
       "1year": "១ ឆ្នាំចុងក្រោយ",
       "ytd": "ឆ្នាំនេះដល់ថ្ងៃនេះ"
     },
-    "currencies": {
-      "KHR": "រៀល",
-      "USD": "ដុល្លារ"
-    },
+
     "financial_summary": "សេចក្តីសង្ខេបហិរញ្ញវត្ថុ",
     "monthly_average": "ការចំណាយជាមធ្យមប្រចាំខែ",
     "financial_health": "សុខភាពហិរញ្ញវត្ថុ",
@@ -138,6 +149,12 @@
     "monthly_savings": "ការសន្សំប្រចាំខែ",
     "savings_goal_achieved": "សម្រេចគោលដៅសន្សំ!"
   },
+
+     "currencies": {
+      "KHR": "រៀល",
+      "USD": "ដុល្លារ"
+    },
+
   "transactions": {
     "title": "ប្រតិបត្តិការ",
     "subtitle": "គ្រប់គ្រង និងតាមដានប្រតិបត្តិការរបស់អ្នក",
@@ -176,7 +193,8 @@
       "shopping": "ការទិញទំនិញ",
       "healthcare": "សុខភាព",
       "education": "ការអប់រំ",
-      "others": "ផ្សេងៗ"
+      "others": "ផ្សេងៗ",
+      "salary": "ប្រាក់ខែ"
     },
     "type": {
       "income": "ចំណូល",
@@ -241,6 +259,7 @@
       "other": "ចំណាយផ្សេងៗ"
     }
   },
+
   "task":{
     "title": "ការងារ",
     "addNew": "បន្ថែមការងារថ្មី",
@@ -267,7 +286,18 @@
       "completed": "បានបញ្ចប់"
     }
   },
-  "savings": {
-    "no_description": "គ្មានការពិពណ៌នា"
+  "date":{
+    "january": "មករា",
+    "february": "កុម្ភៈ",
+    "march": "មីនា",
+    "april": "មេសា",
+    "may": "ឧសភា",
+    "june": "មិថុនា",
+    "july": "កក្កដា",
+    "august": "សីហា",
+    "september": "កញ្ញា",
+    "october": "តុលា",
+    "november": "វិច្ឆិកា",
+    "december": "ធ្នូ"
   }
 }

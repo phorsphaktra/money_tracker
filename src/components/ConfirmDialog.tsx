@@ -1,3 +1,4 @@
+import { t } from 'i18next';
 import React from 'react';
 
 interface ConfirmDialogProps {
@@ -32,9 +33,9 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
           <button
             onClick={onClose}
             disabled={loading}
-            className="px-4 py-2 text-gray-600 hover:text-gray-800 disabled:opacity-50"
+            className="px-4 py-2 text-gray-600 hover:text-gray-800 hover:bg-red disabled:opacity-50"
           >
-            Cancel
+            {t('common.cancel')}
           </button>
           <button
             onClick={onConfirm}
