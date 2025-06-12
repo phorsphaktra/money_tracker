@@ -299,5 +299,16 @@
     "october": "តុលា",
     "november": "វិច្ឆិកា",
     "december": "ធ្នូ"
+  },
+  "analytics":{
+    "title": "វិភាគ",
+    "subtitle": "វិភាគទិន្នន័យហិរញ្ញវត្ថុរបស់អ្នក",
+    "spendingByCategory": "ការចំណាយតាមប្រភេទ",
+    "monthlySummary": "សង្ខេបប្រចាំខែ",
+    "balanceTrend": "ការប្រែប្រួលសមតុល្យ",
+    "spendingTrend": "ការប្រែប្រួលចំណាយ",
+    "incomeTrend": "ការប្រែប្រួលចំណូល",
+    "savingsTrend": "ការប្រែប្រួលការសន្សំ",
+    "noData": "មិនមានទិន្នន័យសម្រាប់វិភាគនេះទេ"
   }
 }

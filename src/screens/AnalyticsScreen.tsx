@@ -381,68 +381,68 @@ const SavingsAnalysis = ({ savings, income }: {
   savings: SavingData[];
   income: number;
 }) => {
+  const { state: savingState } = useSaving();
+
   const savingsMetrics = useMemo(() => {
-    const totalSavings = savings
-      .filter(s => s.type === 'credit')
-      .reduce((sum, s) => sum + s.amount, 0);
+    const { summary } = savingState;
+    const totalSavings = summary.credits;
+    const totalWithdrawals = summary.debits;
     
+    // Calculate Savings Rate
     const savingsRate = income > 0 ? (totalSavings / income) * 100 : 0;
     const averageSaving = savings.length > 0 ? totalSavings / savings.length : 0;
     
-    // Calculate month-over-month growth
-    const sortedSavings = [...savings]
-      .filter(s => s.type === 'credit')
-      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-    
-    const monthlyTotals = sortedSavings.reduce((acc, curr) => {
-      const month = new Date(curr.date).getMonth();
-      if (!acc[month]) {
-        acc[month] = {
-          credit: 0,
-          debit: 0,
-          count: 0
-        };
-      }
-      if (curr.type === 'credit') {
-        acc[month].credit += curr.amount;
-      } else {
-        acc[month].debit += curr.amount;
-      }
-      acc[month].count += 1;
-      return acc;
-    }, {} as Record<number, { credit: number; debit: number; count: number }>);
+    // Calculate breakdown by month
+    const monthlyData = Array.from({ length: 12 }, (_, monthIndex) => {
+      const monthStart = new Date(new Date().getFullYear(), monthIndex, 1);
+      const monthEnd = new Date(new Date().getFullYear(), monthIndex + 1, 0);
 
-    const monthlyGrowth = Object.entries(monthlyTotals)
-      .sort((a, b) => parseInt(a[0]) - parseInt(b[0]))
-      .map((entry, index, array) => {
-        if (index === 0) return 0;
-        const prevAmount = array[index - 1][1].credit - array[index - 1][1].debit;
-        const currentAmount = entry[1].credit - entry[1].debit;
-        return prevAmount === 0 ? 0 : ((currentAmount - prevAmount) / prevAmount) * 100;
-      })
-      .filter(growth => !isNaN(growth));
+      const monthSavings = savings.filter(s => {
+        const date = new Date(s.date);
+        return date >= monthStart && date <= monthEnd;
+      });
+
+      return {
+        month: monthStart.toLocaleString('default', { month: 'short' }),
+        credit: monthSavings
+          .filter(s => s.type === 'credit')
+          .reduce((sum, s) => sum + s.amount, 0),
+        debit: monthSavings
+          .filter(s => s.type === 'debit')
+          .reduce((sum, s) => sum + Math.abs(s.amount), 0),
+        count: monthSavings.length,
+        net: monthSavings.reduce((sum, s) => 
+          sum + (s.type === 'credit' ? s.amount : -s.amount), 0)
+      };
+    });
+
+    // Calculate growth rates
+    const monthlyGrowth = monthlyData.map((data, index, array) => {
+      if (index === 0) return 0;
+      const prevNet = array[index - 1].net;
+      const currentNet = data.net;
+      return prevNet === 0 ? 0 : ((currentNet - prevNet) / Math.abs(prevNet)) * 100;
+    });
 
     const averageGrowth = monthlyGrowth.length > 0
       ? monthlyGrowth.reduce((sum, growth) => sum + growth, 0) / monthlyGrowth.length
       : 0;
 
-    // Get all months of the year
-    const allMonths = Array.from({ length: 12 }, (_, i) => ({
-      month: new Date(2024, i).toLocaleString('default', { month: 'short' }),
-      credit: monthlyTotals[i]?.credit || 0,
-      debit: monthlyTotals[i]?.debit || 0,
-      count: monthlyTotals[i]?.count || 0,
-      net: (monthlyTotals[i]?.credit || 0) - (monthlyTotals[i]?.debit || 0)
-    }));
-
     return {
       totalSavings,
+      totalWithdrawals,
+      netSavings: totalSavings - totalWithdrawals,
       savingsRate,
       averageSaving,
       averageGrowth,
-      monthlyData: allMonths
+      monthlyData,
+      transactionCounts: {
+        credits: summary.creditCount,
+        debits: summary.debitCount,
+        total: summary.creditCount + summary.debitCount
+      }
     };
-  }, [savings, income]);
+  }, [savings, income, savingState.summary]);
 
   const maxAmount = Math.max(
     ...savingsMetrics.monthlyData.map(d => Math.max(d.credit, Math.abs(d.debit)))
