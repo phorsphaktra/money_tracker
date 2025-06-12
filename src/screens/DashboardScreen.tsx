@@ -228,10 +228,7 @@ const SpendingAnalysis = ({
       : 'dashboard.monthly_income';
       
     return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl p-6 
-      border border-gray-100 dark:border-gray-700 
-      hover:shadow-lg transition-all duration-300 
-      hover:border-indigo-100 dark:hover:border-indigo-900/30">
+    <div className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-100 dark:border-gray-700 hover:shadow-lg transition-all duration-300 hover:border-indigo-100 dark:hover:border-indigo-900/30">
       <div className="flex items-center gap-3 mb-6">
         <ChartPieIcon className="w-6 h-6 text-indigo-500" />
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
@@ -270,8 +267,7 @@ const SpendingAnalysis = ({
 };
 
 const TaskAnalytics = ({ stats }: { stats: any }) => (
-  <div className="bg-white dark:bg-gray-800 rounded-xl p-6 
-    border border-gray-100 dark:border-gray-700">
+  <div className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-100 dark:border-gray-700">
     <div className="flex items-center gap-3 mb-6">
       <ArrowPathIcon className="w-6 h-6 text-indigo-500" />
       <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
@@ -357,52 +353,60 @@ const FinancialOverview = ({
 
   const totalSavings = savings.reduce((sum, s) => sum + s.amount, 0);
   const previousTotalSavings = previousSavings.reduce((sum, s) => sum + s.amount, 0);
-
+const netBalance = currentIncome - currentExpenses;
+const targetSavings = currentIncome * 0.2;
+const netBalanceType = netBalance >= 0 ? 'positive' : 'negative';
+const netBalanceIcon = netBalance >= 0 ? ArrowTrendingUpIcon : ArrowTrendingDownIcon;
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-      <MetricCard
-        title={t('dashboard.monthly_income')}
-        value={formatUSD(currentIncome)}
-        icon={BanknotesIcon}
-        type="positive"
-        trend={{
-          value: calculateGrowthRate(currentIncome, previousIncome),
-          label: `vs last month`
-        }}
-        subtitle={`${t('dashboard.previous_month')}: ${formatUSD(previousIncome)}`}
-      />
-      <MetricCard
-        title={t('dashboard.monthly_expenses')}
-        value={formatUSD(currentExpenses)}
-        icon={ArrowTrendingDownIcon}
-        type="negative"
-        trend={{
-          value: -calculateGrowthRate(currentExpenses, previousExpenses),
-          label: `vs last month`
-        }}
-        subtitle={`${t('dashboard.previous_month')}: ${formatUSD(previousExpenses)}`}
-      />
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+  <MetricCard
+    title={t('dashboard.monthly_income')}
+    value={formatUSD(currentIncome)}
+    icon={BanknotesIcon}
+    type="positive"
+    trend={{
+      value: calculateGrowthRate(currentIncome, previousIncome),
+      label: t('dashboard.vs_last_month')
+    }}
+    subtitle={`${t('dashboard.previous_month')}: ${formatUSD(previousIncome)}`}
+  />
 
-      <MetricCard
-        title={t('dashboard.net_balance')}
-        value={formatUSD(currentIncome - currentExpenses)}
-        icon={ArrowTrendingDownIcon}
-        type="negative"
-        subtitle={`${t('dashboard.previous_month')}: ${formatUSD(previousExpenses)}`}
-      />
-      
-      <MetricCard
-        title={t('dashboard.total_saings')}
-        value={formatUSD(totalSavings)}
-        icon={ArrowTrendingUpIcon}
-        type="positive"
-        trend={{
-          value: calculateGrowthRate(totalSavings, previousTotalSavings),
-          label: `vs last month`
-        }}
-        subtitle={`${t('dashboard.target_savings')}: ${formatUSD(currentIncome * 0.2)} (20%)`}
-      />
-    </div>
+  <MetricCard
+    title={t('dashboard.monthly_expenses')}
+    value={formatUSD(currentExpenses)}
+    icon={ArrowTrendingDownIcon}
+    type="negative"
+    trend={{
+      value: -calculateGrowthRate(currentExpenses, previousExpenses),
+      label: t('dashboard.vs_last_month')
+    }}
+    subtitle={`${t('dashboard.previous_month')}: ${formatUSD(previousExpenses)}`}
+  />
+
+  <MetricCard
+    title={t('dashboard.net_balance')}
+    value={formatUSD(netBalance)}
+    icon={netBalanceIcon}
+    type={netBalanceType}
+    trend={{
+      value: calculateGrowthRate(netBalance, previousIncome - previousExpenses),
+      label: t('dashboard.vs_last_month')
+    }}
+    subtitle={`${t('dashboard.previous_month')}: ${formatUSD(previousIncome - previousExpenses)}`}
+  />
+
+  <MetricCard
+    title={t('dashboard.total_savings')}
+    value={formatUSD(totalSavings)}
+    icon={ArrowTrendingUpIcon}
+    type="positive"
+    trend={{
+      value: calculateGrowthRate(totalSavings, previousTotalSavings),
+      label: t('dashboard.vs_last_month')
+    }}
+    subtitle={`${t('dashboard.target_savings')}: ${formatUSD(targetSavings)} (20%)`}
+  />
+</div>
   );
 };
 

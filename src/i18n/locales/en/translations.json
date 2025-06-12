@@ -81,8 +81,10 @@
   "dashboard": {
     "title": "Dashboard",
     "subtitle": "Track your finances and manage your savings",
-    "monthly_expenses": "Monthly Expenses",
     "monthly_income": "Monthly Income",
+    "monthly_expenses": "Monthly Expenses",
+    "total_savings": "Total Savings",
+    "vs_last_month": "vs last month",
     "net_balance": "Net Balance",
     "total_saings": "Total Savings",
     "target_savings": "Target",
