@@ -65,7 +65,10 @@ const DashboardHeader = ({
   }, []);
     
   return (
-    <div className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl p-6 md:p-8 shadow-lg">
+    <div className="bg-gradient-to-br from-indigo-600 via-indigo-500 to-purple-600 
+      rounded-2xl p-6 md:p-8 shadow-lg 
+      hover:shadow-xl hover:from-indigo-500 hover:to-purple-500 
+      transition-all duration-300">
       <div className="flex justify-between items-start">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold text-white">{title}</h1>
@@ -153,7 +156,10 @@ const MetricCard = ({
   }
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-100 dark:border-gray-700 hover:shadow-lg transition-shadow">
+    <div className="bg-white dark:bg-gray-800 rounded-xl p-6 
+      border border-gray-100 dark:border-gray-700 
+      hover:shadow-lg hover:-translate-y-1 
+      transition-all duration-300 ease-out">
       <div className="flex items-center gap-3 mb-4">
         <div className={`p-3 rounded-lg ${colors[type]}`}>
           <Icon className="w-6 h-6" />
@@ -222,7 +228,10 @@ const SpendingAnalysis = ({
       : 'dashboard.monthly_income';
       
     return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-100 dark:border-gray-700">
+    <div className="bg-white dark:bg-gray-800 rounded-xl p-6 
+      border border-gray-100 dark:border-gray-700 
+      hover:shadow-lg transition-all duration-300 
+      hover:border-indigo-100 dark:hover:border-indigo-900/30">
       <div className="flex items-center gap-3 mb-6">
         <ChartPieIcon className="w-6 h-6 text-indigo-500" />
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
@@ -231,7 +240,9 @@ const SpendingAnalysis = ({
       </div>
       <div className="space-y-4">
         {categories.slice(0, 5).map(category => (
-          <div key={category.category} className="space-y-2">
+          <div key={category.category} 
+            className="space-y-2 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/30 
+              transition-colors duration-200">
             <div className="flex justify-between items-center">
               <div>
                 <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -259,7 +270,8 @@ const SpendingAnalysis = ({
 };
 
 const TaskAnalytics = ({ stats }: { stats: any }) => (
-  <div className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-100 dark:border-gray-700">
+  <div className="bg-white dark:bg-gray-800 rounded-xl p-6 
+    border border-gray-100 dark:border-gray-700">
     <div className="flex items-center gap-3 mb-6">
       <ArrowPathIcon className="w-6 h-6 text-indigo-500" />
       <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
@@ -584,8 +596,11 @@ export const DashboardScreen = () => {
   if (transactionsLoading || tasksLoading || savingState.isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-        <div className="flex items-center justify-center min-h-screen">
+        <div className="flex flex-col items-center justify-center min-h-screen">
           <LoadingSpinner size="large" className="text-indigo-600" />
+          <p className="mt-4 text-sm text-gray-500 dark:text-gray-400 animate-pulse">
+            {t('common.loading')}
+          </p>
         </div>
       </div>
     );

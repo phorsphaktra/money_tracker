@@ -22,6 +22,7 @@ import { Saving } from '../services/savingService';
 import { SAVINGS_CATEGORIES } from '../utils/savings';
 import { TransactionModal } from '../components/transaction/TransactionModal';
 import { SavingForm } from '../components/saving/SavingForm';
+import { LoadingSpinner } from '../components/shared/LoadingSpinner';
 
 interface SavingData extends Saving {}
 
@@ -790,7 +791,7 @@ const FloatingActionButton = ({ onAddTransaction, onAddSaving }: {
 };
 
 export const AnalyticsScreen = () => {
-  const { transactions, isLoading: transactionsLoading } = useTransactions();
+  const { transactions, isLoading: transactionsLoading, error } = useTransactions();
   const { state: savingState, loadSavings } = useSaving();
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [showTransactionModal, setShowTransactionModal] = useState(false);
@@ -828,18 +829,29 @@ export const AnalyticsScreen = () => {
     setShowSavingForm(true);
   };
 
-  if (transactionsLoading || savingState.isLoading) {
+  if (error) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="animate-pulse space-y-6">
-            <div className="h-32 bg-white dark:bg-gray-800 rounded-xl" />
-            <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-              {[...Array(4)].map((_, i) => (
-                <div key={i} className="h-24 bg-white dark:bg-gray-800 rounded-xl" />
-              ))}
-            </div>
+        <div className="flex flex-col items-center justify-center min-h-screen">
+          <div className="text-center">
+            <p className="text-red-500 font-medium mb-2">{error.message}</p>
+            <button 
+              onClick={() => window.location.reload()}
+              className="text-sm text-indigo-600 hover:text-indigo-500"
+            >
+              Try again
+            </button>
           </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!transactions || transactionsLoading || savingState.isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+        <div className="flex flex-col items-center justify-center min-h-screen">
+          <LoadingSpinner size="large" className="text-indigo-600" />
         </div>
       </div>
     );

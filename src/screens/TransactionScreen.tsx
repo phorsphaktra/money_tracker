@@ -33,7 +33,25 @@ export const TransactionsScreen = () => {
     return matchesFilter && matchesSearch && matchesDateRange;
   });
 
-  if (isLoading) {
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+        <div className="flex flex-col items-center justify-center min-h-screen">
+          <div className="text-center">
+            <p className="text-red-500 font-medium mb-2">{error.message}</p>
+            <button 
+              onClick={() => window.location.reload()}
+              className="text-sm text-indigo-600 hover:text-indigo-500"
+            >
+              Try again
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!transactions || isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
         <div className="flex flex-col items-center justify-center min-h-screen">
@@ -41,16 +59,6 @@ export const TransactionsScreen = () => {
           <p className="mt-4 text-sm text-gray-500 dark:text-gray-400 animate-pulse">
             {t('common.loading')}
           </p>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-        <div className="flex flex-col items-center justify-center min-h-screen">
-          <p className="text-red-500 font-medium">{error.message}</p>
         </div>
       </div>
     );

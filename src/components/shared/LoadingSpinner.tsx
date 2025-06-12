@@ -11,7 +11,15 @@ export const LoadingSpinner = ({ size = 'medium', className = '' }: LoadingSpinn
   };
 
   return (
-    <div className={`inline-block animate-spin rounded-full border-4 border-solid border-current border-r-transparent motion-reduce:animate-[spin_1.5s_linear_infinite] ${sizeClasses[size]} ${className}`} role="status">
+    <div className={`relative inline-block ${sizeClasses[size]} ${className}`}>
+      {/* Primary spinner */}
+      <div className="absolute inset-0 animate-spin rounded-full 
+        border-[3px] border-current border-t-transparent 
+        opacity-80" />
+      {/* Secondary spinner */}
+      <div className="absolute inset-0 animate-[spin_3s_linear_infinite] rounded-full 
+        border-[3px] border-current border-l-transparent border-r-transparent 
+        opacity-40" />
       <span className="sr-only">Loading...</span>
     </div>
   );
