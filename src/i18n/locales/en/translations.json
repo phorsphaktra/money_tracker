@@ -30,6 +30,26 @@
       "title": "Preferences",
       "language": "Language",
       "currency": "Currency"
+    },
+    "exchangeRate": {
+      "title": "Exchange Rate",
+      "subtitle": "Update KHR to USD Rate",
+      "current_rate": "Current Rate",
+      "last_updated": "Last Updated",
+      "rate_history": "Rate History",
+      "update_button": "Update Rate",
+      "update_exchange_rate_title": "Update Exchange Rate",
+      "update_exchange_rate_desc": "Are you sure you want to update the exchange rate to 1 USD",
+      "errors": {
+        "invalid_rate": "Please enter a valid exchange rate",
+        "unusual_rate": "Exchange rate seems unusual. Please verify the rate.",
+        "update_failed": "Failed to update exchange rate"
+      }
+    },
+    "status": {
+      "updating": "Updating...",
+      "no_history": "No rate history available",
+      "current": "Current"
     }
   },
   "common": {
@@ -294,5 +314,9 @@
     "onlyCredits": "Only Credits",
     "onlyDebits": "Only Debits",
     "auto_allocate_hint": "*Automatically allocate your savings into savings categories!"
+  },
+  "currencies": {
+    "USD": "USD",
+    "KHR": "KHR"
   }
 }

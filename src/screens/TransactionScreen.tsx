@@ -33,18 +33,25 @@ export const TransactionsScreen = () => {
     return matchesFilter && matchesSearch && matchesDateRange;
   });
 
-  if (error) {
+  if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-full">
-        <p className="text-red-500">{error.message}</p>
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+        <div className="flex flex-col items-center justify-center min-h-screen">
+          <LoadingSpinner size="large" className="text-indigo-600" />
+          <p className="mt-4 text-sm text-gray-500 dark:text-gray-400 animate-pulse">
+            {t('common.loading')}
+          </p>
+        </div>
       </div>
     );
   }
 
-  if (isLoading) {
+  if (error) {
     return (
-      <div className="flex items-center justify-center h-full">
-        <LoadingSpinner size="large" className="text-indigo-600" />
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+        <div className="flex flex-col items-center justify-center min-h-screen">
+          <p className="text-red-500 font-medium">{error.message}</p>
+        </div>
       </div>
     );
   }

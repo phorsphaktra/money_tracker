@@ -4,6 +4,7 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { useSettings } from '../contexts/SettingsContext';
 import { useState, useEffect } from 'react';
 import { ConfirmDialog } from '../components/ConfirmDialog';
+import { LoadingSpinner } from '../components/shared/LoadingSpinner';
 
 const getRateChange = (currentRate: number, previousRate: number) => {
   const change = ((currentRate - previousRate) / previousRate) * 100;
@@ -49,13 +50,12 @@ export const SettingsScreen = () => {
   const handleUpdateRate = async () => {
     const rate = parseFloat(khrRate);
     if (isNaN(rate) || rate <= 0) {
-      setError('Please enter a valid exchange rate');
+      setError(t('settings.exchangeRate.errors.invalid_rate'));
       return;
     }
 
-    // Validate reasonable rate range (e.g., between 3000 and 5000 KHR)
     if (rate < 3000 || rate > 5000) {
-      setError('Exchange rate seems unusual. Please verify the rate.');
+      setError(t('settings.exchangeRate.errors.unusual_rate'));
       return;
     }
 
@@ -82,8 +82,13 @@ export const SettingsScreen = () => {
 
   if (isLoading) {
     return (
-      <div className="flex h-screen items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-indigo-600 border-t-transparent"></div>
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+        <div className="flex flex-col items-center justify-center min-h-screen">
+          <LoadingSpinner size="large" className="text-indigo-600" />
+          <p className="mt-4 text-sm text-gray-500 dark:text-gray-400 animate-pulse">
+            {t('common.loading')}
+          </p>
+        </div>
       </div>
     );
   }
@@ -225,7 +230,7 @@ export const SettingsScreen = () => {
 
                 <div className="mt-4 flex items-center justify-between text-sm">
                   <span className="text-gray-600 dark:text-gray-400">
-                    {t('settings.exchangeRate.current_rate')} : 1 USD = {exchangeRates.KHR_USD.toLocaleString()} KHR
+                    {t('settings.exchangeRate.current_rate')} : 1 {t('currencies.USD')} = {exchangeRates.KHR_USD.toLocaleString()} {t('currencies.KHR')}
                   </span>
                   <span className="text-gray-500 dark:text-gray-400">
                     {t('settings.exchangeRate.last_updated')} : {new Date().toLocaleDateString()}

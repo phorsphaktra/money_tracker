@@ -22,6 +22,7 @@ import {
   ChevronDownIcon
 } from '@heroicons/react/24/outline';
 import { t } from 'i18next';
+import { LoadingSpinner } from '../components/shared/LoadingSpinner';
 
 // Helper Functions
 
@@ -62,7 +63,7 @@ const DashboardHeader = ({
       };
     });
   }, []);
-
+    
   return (
     <div className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl p-6 md:p-8 shadow-lg">
       <div className="flex justify-between items-start">
@@ -583,15 +584,8 @@ export const DashboardScreen = () => {
   if (transactionsLoading || tasksLoading || savingState.isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="animate-pulse space-y-6">
-            <div className="h-32 bg-white dark:bg-gray-800 rounded-xl" />
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              {[...Array(3)].map((_, i) => (
-                <div key={i} className="h-24 bg-white dark:bg-gray-800 rounded-xl" />
-              ))}
-            </div>
-          </div>
+        <div className="flex items-center justify-center min-h-screen">
+          <LoadingSpinner size="large" className="text-indigo-600" />
         </div>
       </div>
     );
