@@ -234,7 +234,7 @@ const SpendingAnalysis = ({
             <div className="flex justify-between items-center">
               <div>
                 <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                  {category.category}
+                  {category.category.charAt(0).toUpperCase() + category.category.slice(1).toLowerCase()}
                 </span>
                 <span className="ml-2 text-xs text-gray-500">
                   ({category.count} {t('dashboard.transactions')})

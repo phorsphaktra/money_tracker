@@ -59,29 +59,91 @@
     "next": "Next"  
   },
   "dashboard": {
+    "title": "Dashboard",
     "subtitle": "Track your finances and manage your savings",
     "monthly_expenses": "Monthly Expenses",
     "monthly_income": "Monthly Income",
-    "add_transaction": "Add Transaction",
-    "add_saving": "Add Savings",
-    "total_savings": "Total Savings",
-    "savings_rate": "Savings Rate",
-    "savings_progress": "Saving Progress",
-    "spending_analysis": "Spending Analysis",
-    "title": "Dashboard",
-    "monthly_metrics": "Monthly Metrics",
+    "net_balance": "Net Balance",
+    "total_saings": "Total Savings",
+    "target_savings": "Target",
+    "previous_month": "Previous",
+    "add_transaction": "New Transaction",
+    "add_saving": "New Saving",
+    "transactions": "transactions",
+    "metrics": {
+      "income": {
+        "title": "Monthly Income",
+        "subtitle": "Total income this month",
+        "trend": "vs last month"
+      },
+      "expenses": {
+        "title": "Monthly Expenses",
+        "subtitle": "Total expenses this month",
+        "trend": "vs last month"
+      },
+      "balance": {
+        "title": "Net Balance",
+        "subtitle": "Income minus expenses",
+        "trend": "vs last month"
+      },
+      "savings": {
+        "title": "Total Savings",
+        "subtitle": "Accumulated savings",
+        "trend": "vs last month"
+      }
+    },
+    "task_analytics": {
+      "title": "Task Analytics",
+      "completed": {
+        "title": "Completed Tasks",
+        "subtitle": "Overall completion rate"
+      },
+      "in_progress": {
+        "title": "In Progress",
+        "subtitle": "Tasks being worked on"
+      },
+      "blocked": {
+        "title": "Blocked Tasks",
+        "subtitle": "Requires attention"
+      },
+      "progress": {
+        "complete": "Complete",
+        "in_progress": "In Progress",
+        "blocked": "Blocked"
+      }
+    },
+    "date": {
+      "january": "January",
+      "february": "February",
+      "march": "March",
+      "april": "April",
+      "may": "May",
+      "june": "June",
+      "july": "July",
+      "august": "August",
+      "september": "September",
+      "october": "October",
+      "november": "November",
+      "december": "December"
+    },
     "navigation": {
       "dashboard": "Dashboard",
       "transactions": "Transactions",
       "analytics": "Analytics",
       "settings": "Settings",
-      "saving": "Saving"
+      "saving": "Savings",
+      "task": "Tasks"
     },
     "header": {
       "welcome": "Welcome back",
-      "signOut": "Sign out"
-    },
-    "version": "Version"
+      "signOut": "Sign Out",
+      "profile": {
+        "title": "Profile",
+        "changePhoto": "Change photo",
+        "photoSize": "Image size should be less than 5MB",
+        "uploadError": "Failed to upload image"
+      }
+    }
   },
   "transactions": {
     "title": "Transactions",

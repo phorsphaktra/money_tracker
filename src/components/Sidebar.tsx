@@ -26,7 +26,7 @@ const navItems = [
   { path: '/transactions', label: 'dashboard.navigation.transactions', icon: CurrencyDollarIcon },
   { path: '/saving', label: 'dashboard.navigation.saving', icon: WalletIcon },
   { path: '/analytics', label: 'dashboard.navigation.analytics', icon: ChartBarIcon },
-  { path: '/task', label: 'task.title', icon: ClipboardDocumentCheckIcon },
+  { path: '/task', label: 'dashboard.navigation.task', icon: ClipboardDocumentCheckIcon },
   { path: '/settings', label: 'dashboard.navigation.settings', icon: Cog6ToothIcon },
 ];
 
@@ -43,7 +43,7 @@ export const Sidebar = ({ isOpen, setIsOpen, isCollapsed }: SidebarProps) => {
     if (!file) return;
 
     if (file.size > 5 * 1024 * 1024) {
-      alert('Image size should be less than 5MB');
+      alert(t('dashboard.header.profile.photoSize'));
       return;
     }
 
@@ -70,133 +70,129 @@ export const Sidebar = ({ isOpen, setIsOpen, isCollapsed }: SidebarProps) => {
 
   return (
     <>
-      {/* Mobile backdrop */}
+      {/* Mobile backdrop with improved blur and animation */}
       {isOpen && (
         <div
-          className="lg:hidden fixed inset-0 bg-black/40 backdrop-blur-sm z-30 
-          animate-in fade-in duration-300"
+          className="lg:hidden fixed inset-0 bg-black/30 backdrop-blur-sm z-30 
+          animate-in fade-in duration-200"
           onClick={() => setIsOpen(false)}
         />
       )}
 
       <aside className={`
         fixed lg:sticky top-0 lg:top-16 left-0 h-screen lg:h-[calc(100vh-64px)]
-        bg-white dark:bg-slate-900
-        border-r border-slate-200/50 dark:border-slate-700/50
+        bg-white dark:bg-gray-900
+        border-r border-gray-200 dark:border-gray-800
         transform ${isOpen ? 'translate-x-0' : '-translate-x-full'} 
-        lg:translate-x-0 transition-all duration-300 ease-out z-40
-        flex flex-col overflow-hidden
+        lg:translate-x-0 transition-all duration-200 ease-in-out
+        flex flex-col
         ${isCollapsed ? 'lg:w-20' : 'lg:w-72'} w-[280px]
+        shadow-xl lg:shadow-none z-40
       `}>
-        {/* Mobile header with refresh and close buttons */}
-        <div className="lg:hidden flex items-center justify-between p-4">
+        {/* Mobile header */}
+        <div className="lg:hidden flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-800">
           <button
             onClick={handleRefresh}
-            className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 
-              transition-all duration-200 active:rotate-180"
-            title={t('common.refresh')}
+            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 
+              transition-all duration-200 active:scale-95"
           >
-            <ArrowPathIcon className="w-6 h-6 text-slate-500" />
+            <ArrowPathIcon className="w-5 h-5 text-gray-500" />
           </button>
           <button
             onClick={() => setIsOpen(false)}
-            className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
+            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800
+              transition-all duration-200 active:scale-95"
           >
-            <XMarkIcon className="w-6 h-6 text-slate-500" />
+            <XMarkIcon className="w-5 h-5 text-gray-500" />
           </button>
         </div>
 
-        <div className="flex-1 flex flex-col overflow-y-auto">
-          {/* Profile section */}
-          <div className={`px-4 pb-4 lg:py-4 border-b border-slate-200/50 dark:border-slate-700/50
-            ${isCollapsed ? 'items-center' : ''}`}>
-            <div className="flex flex-col items-center">
-              <div className="relative group cursor-pointer"
-                onClick={() => fileInputRef.current?.click()}>
-                <div className={`${isCollapsed ? 'w-10 h-10' : 'w-16 h-16'} rounded-full 
-                  ring-2 ring-indigo-500/20 dark:ring-indigo-400/20
-                  overflow-hidden transition-all duration-300`}>
-                  {(user?.photoURL || localPhotoURL) ? (
-                    <img
-                      src={localPhotoURL || user?.photoURL || ''}
-                      alt="Profile"
-                      className="w-full h-full object-cover"
-                      onError={() => setLocalPhotoURL('')}
-                    />
-                  ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-indigo-500 to-violet-500
-                      flex items-center justify-center">
-                      <span className="text-2xl text-white font-medium">
-                        {user?.displayName?.[0].toUpperCase() || '?'}
-                      </span>
-                    </div>
-                  )}
-                </div>
-                <div className="absolute inset-0 rounded-full flex items-center justify-center
-                  bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <CameraIcon className="w-6 h-6 text-white" />
-                </div>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={handleImageUpload}
-                />
+        {/* Profile section with improved animations */}
+        <div className="px-4 py-6 border-b border-gray-200 dark:border-gray-800">
+          <div className="flex flex-col items-center">
+            <div className="relative group cursor-pointer transform transition-transform duration-200 hover:scale-105"
+              onClick={() => fileInputRef.current?.click()}>
+              <div className={`${isCollapsed ? 'w-10 h-10' : 'w-16 h-16'} rounded-full 
+                ring-2 ring-indigo-500/20 dark:ring-indigo-400/20
+                overflow-hidden transition-all duration-300`}>
+                {(user?.photoURL || localPhotoURL) ? (
+                  <img
+                    src={localPhotoURL || user?.photoURL || ''}
+                    alt="Profile"
+                    className="w-full h-full object-cover"
+                    onError={() => setLocalPhotoURL('')}
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-br from-indigo-500 to-violet-500
+                    flex items-center justify-center">
+                    <span className="text-2xl text-white font-medium">
+                      {user?.displayName?.[0].toUpperCase() || '?'}
+                    </span>
+                  </div>
+                )}
               </div>
-              {!isCollapsed && (
-                <div className="mt-3 text-center">
-                  <p className="font-medium text-slate-900 dark:text-slate-100">
-                    {user?.displayName || 'User'}
-                  </p>
-                  <p className="text-sm text-slate-500 dark:text-slate-400 truncate max-w-[200px]">
-                    {user?.email}
-                  </p>
-                </div>
-              )}
+              <div className="absolute inset-0 rounded-full flex items-center justify-center
+                bg-black/50 opacity-0 group-hover:opacity-100 transition-all duration-200">
+                <CameraIcon className="w-5 h-5 text-white transform scale-0 group-hover:scale-100 transition-transform duration-200" />
+              </div>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleImageUpload}
+              />
             </div>
+            {!isCollapsed && (
+              <div className="mt-3 text-center">
+                <p className="font-medium text-slate-900 dark:text-slate-100">
+                  {user?.displayName || 'User'}
+                </p>
+                <p className="text-sm text-slate-500 dark:text-slate-400 truncate max-w-[200px]">
+                  {user?.email}
+                </p>
+              </div>
+            )}
           </div>
-
-          {/* Navigation */}
-          <nav className="flex-1 p-2">
-            {navItems.map(({ path, label, icon: Icon }) => (
-              <NavLink
-                key={path}
-                to={path}
-                end={path === '/'}
-                title={isCollapsed ? t(label) : undefined}
-                onClick={handleMobileNavClick}
-                className={({ isActive }) =>
-                  `flex items-center ${isCollapsed ? 'justify-center' : ''} 
-                  px-4 py-3 my-1 text-sm font-medium rounded-xl
-                  transition-all duration-200 group
-                  ${isActive
-                    ? 'bg-gradient-to-r from-indigo-50 to-violet-50/50 dark:from-indigo-500/10 dark:to-violet-500/10 text-indigo-600 dark:text-indigo-400'
-                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'}`
-                }
-              >
-                <Icon className={`w-5 h-5 transition-transform group-hover:scale-110
-                  ${isCollapsed ? '' : 'mr-3'}`} />
-                {!isCollapsed && <span className="font-medium">{t(label)}</span>}
-              </NavLink>
-            ))}
-          </nav>
         </div>
 
-        {/* Footer */}
-        <div className="flex-shrink-0 p-2 border-t border-slate-200/50 dark:border-slate-700/50">
+        {/* Navigation with improved hover effects */}
+        <nav className="flex-1 p-2 overflow-y-auto">
+          {navItems.map(({ path, label, icon: Icon }) => (
+            <NavLink
+              key={path}
+              to={path}
+              end={path === '/'}
+              onClick={handleMobileNavClick}
+              className={({ isActive }) =>
+                `flex items-center ${isCollapsed ? 'justify-center' : ''} 
+                px-4 py-3 my-1 rounded-xl text-sm font-medium
+                transition-all duration-200 transform hover:scale-[1.02]
+                ${isActive
+                  ? 'bg-gradient-to-r from-indigo-50 to-indigo-100 dark:from-indigo-900/40 dark:to-indigo-800/40 text-indigo-600 dark:text-indigo-400'
+                  : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800/50'}`
+              }
+            >
+              <Icon className={`w-5 h-5 transition-transform duration-200 group-hover:scale-110
+                ${isCollapsed ? '' : 'mr-3'}`} />
+              {!isCollapsed && <span>{t(label)}</span>}
+            </NavLink>
+          ))}
+        </nav>
+
+        {/* Footer with improved styling */}
+        <div className="p-2 border-t border-gray-200 dark:border-gray-800">
           <button
             onClick={logout}
-            title={isCollapsed ? t('dashboard.header.signOut') : undefined}
-            className={`w-full rounded-xl text-sm font-medium
-              text-slate-600 dark:text-slate-400 
-              hover:bg-red-50 dark:hover:bg-red-500/10
+            className={`w-full flex items-center ${isCollapsed ? 'justify-center' : ''} 
+              px-4 py-3 rounded-xl text-sm font-medium
+              text-gray-600 dark:text-gray-400 
+              hover:bg-red-50 dark:hover:bg-red-900/20
               hover:text-red-600 dark:hover:text-red-400
-              flex items-center ${isCollapsed ? 'justify-center p-3' : 'px-4 py-3'}
-              transition-all duration-200 group`}
+              transition-all duration-200 transform hover:scale-[1.02]`}
           >
-            <ArrowRightOnRectangleIcon className="w-5 h-5 group-hover:translate-x-0.5" />
-            {!isCollapsed && <span className="ml-2">{t('dashboard.header.signOut')}</span>}
+            <ArrowRightOnRectangleIcon className="w-5 h-5" />
+            {!isCollapsed && <span className="ml-3">{t('dashboard.header.signOut')}</span>}
           </button>
           {!isCollapsed && (
             <div className="mt-4 text-xs text-center text-slate-400 dark:text-slate-500">
