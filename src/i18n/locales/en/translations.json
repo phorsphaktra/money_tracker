@@ -168,6 +168,8 @@
     }
   },
   "transactions": {
+    "total_income": "Total Income",
+    "total_expenses": "Total Expense",
     "title": "Transactions",
     "subtitle": "Manage and track your transactions",
     "filters": {
@@ -301,8 +303,8 @@
     "description_placeholder": "Enter a description for this saving (optional)",
     "confirmDeleteMessage": "Are you sure you want to delete this saving?",
     "no_description": "No description",
-    "credit": "Credit",
-    "debit": "Debit",
+    "credits": "Credit",
+    "debits": "Debit",
     "auto_allocate": "Auto Allocate",
     "totalSavings": "Total Savings",
     "totalCredits": "Total Credits",
@@ -315,7 +317,19 @@
     "allTransactions": "All Transactions",
     "onlyCredits": "Only Credits",
     "onlyDebits": "Only Debits",
-    "auto_allocate_hint": "*Automatically allocate your savings into savings categories!"
+    "auto_allocate_hint": "*Automatically allocate your savings into savings categories!",
+    "total_credits": "Total Credits",
+    "total_debits": "Total Debits",
+    "net_savings": "Net Savings",
+    "transactions": "Transactions",
+    "total_transactions": "Total Transactions",
+    "savings_rate": "Savings Rate",
+    "percentage_credits": "Percentage of Credits",
+    "type_metrics": "Type Matrics",
+    "average":"Average",
+    "largest": "Largest",
+    "category_breakdown": "Category"
+   
   },
   "currencies": {
     "USD": "USD",
@@ -344,6 +358,9 @@
     "spendingTrend": "Spending Trend",
     "incomeTrend": "Income Trend",
     "savingsTrend": "Savings Trend",
-    "noData": "No data available for this analysis"
+    "noData": "No data available for this analysis",
+    "overview": "Overview",
+    "transactions": "Transaction",
+    "savings": "Saving"
   }
 }
