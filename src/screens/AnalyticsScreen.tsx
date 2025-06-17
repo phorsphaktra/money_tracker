@@ -144,6 +144,7 @@ export const AnalyticsScreen: React.FC = () => {
     yearExpenses,
     yearSavings,
     netBalance,
+    netSavings,
     monthlyBurnRate,
     monthlyData,
     expenseCategories,
@@ -199,12 +200,13 @@ export const AnalyticsScreen: React.FC = () => {
   }
 
   const renderOverviewTab = () => (
-    <div className="space-y-6 animate-fadeIn">
+    <div className="space-y-8">
       <SummaryCards
         yearIncome={yearIncome}
         yearExpenses={yearExpenses}
         yearSavings={yearSavings}
         netBalance={netBalance}
+        netSavings={netSavings}
         monthlyBurnRate={monthlyBurnRate}
       />
 

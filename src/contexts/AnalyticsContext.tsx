@@ -42,6 +42,7 @@ interface AnalyticsState {
   yearExpenses: number;
   yearSavings: number;
   netBalance: number;
+  netSavings: number;
   monthlyBurnRate: number;
   monthlyData: MonthlyData[];
   expenseCategories: CategoryBreakdown[];
@@ -133,11 +134,6 @@ export const AnalyticsProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     [yearIncome, yearExpenses]
   );
 
-  const monthlyBurnRate = useMemo(() => 
-    yearExpenses / 12,
-    [yearExpenses]
-  );
-
   const savingsSummary = useMemo(() => {
     const credits = filteredData.savings
       .filter(s => s.type === 'credit')
@@ -162,6 +158,16 @@ export const AnalyticsProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       debitCount
     };
   }, [filteredData.savings]);
+
+  const netSavings = useMemo(() => 
+    savingsSummary.credits - savingsSummary.debits,
+    [savingsSummary]
+  );
+
+  const monthlyBurnRate = useMemo(() => 
+    yearExpenses / 12,
+    [yearExpenses]
+  );
 
   const monthlyData = useMemo(() => {
     const months = Array.from({ length: 12 }, (_, i) => {
@@ -304,6 +310,7 @@ export const AnalyticsProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     yearExpenses,
     yearSavings,
     netBalance,
+    netSavings,
     monthlyBurnRate,
     monthlyData,
     expenseCategories,
