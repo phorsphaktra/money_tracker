@@ -10,6 +10,7 @@ import { NotificationProvider } from './contexts/NotificationContext';
 import { SettingsProvider } from './contexts/SettingsContext';
 import { router } from './routes';
 import { SavingProvider } from './contexts/SavingContext';
+import { AnalyticsProvider } from './contexts/AnalyticsContext';
 
 export default function App() {
   return (
@@ -18,15 +19,17 @@ export default function App() {
         <LoadingProvider>
           <TransactionProvider>
             <SavingProvider>
-              <LanguageProvider>
-                <DarkModeProvider>
-                  <TaskProvider>
-                    <NotificationProvider>
-                      <RouterProvider router={router} />
-                    </NotificationProvider>
-                  </TaskProvider>
-                </DarkModeProvider>
-              </LanguageProvider>
+              <AnalyticsProvider>
+                <LanguageProvider>
+                  <DarkModeProvider>
+                    <TaskProvider>
+                      <NotificationProvider>
+                        <RouterProvider router={router} />
+                      </NotificationProvider>
+                    </TaskProvider>
+                  </DarkModeProvider>
+                </LanguageProvider>
+              </AnalyticsProvider>
             </SavingProvider>
           </TransactionProvider>
         </LoadingProvider>

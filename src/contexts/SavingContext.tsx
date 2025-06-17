@@ -204,3 +204,5 @@ export const useSaving = () => {
   }
   return context;
 };
+export type { Saving };
+
