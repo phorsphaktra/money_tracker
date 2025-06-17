@@ -79,6 +79,7 @@
     "next": "Next"  
   },
   "dashboard": {
+    "version":"Version: ",
     "title": "Dashboard",
     "subtitle": "Track your finances and manage your savings",
     "monthly_income": "Monthly Income",
