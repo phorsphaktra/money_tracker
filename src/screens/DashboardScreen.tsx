@@ -23,6 +23,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { t } from 'i18next';
 import { LoadingSpinner } from '../components/shared/LoadingSpinner';
+import { useAnalytics } from '../contexts/AnalyticsContext';
 
 // Helper Functions
 
@@ -325,88 +326,76 @@ const TaskAnalytics = ({ stats }: { stats: any }) => (
 );
 
 const FinancialOverview = ({ 
-  transactions, 
-  savings,
-  previousTransactions,
-  previousSavings,
+  yearIncome,
+  yearExpenses,
+  netBalance,
+  netSavings,
+  previousIncome,
+  previousExpenses,
+  previousNetBalance,
+  previousNetSavings,
   t 
 }: { 
-  transactions: Transaction[];
-  savings: any[];
-  previousTransactions: Transaction[];
-  previousSavings: any[];
+  yearIncome: number;
+  yearExpenses: number;
+  netBalance: number;
+  netSavings: number;
+  previousIncome: number;
+  previousExpenses: number;
+  previousNetBalance: number;
+  previousNetSavings: number;
   t: (key: string) => string;
 }) => {
-  const currentIncome = transactions
-    .filter(t => t.type === 'income')
-    .reduce((sum, t) => sum + t.amount, 0);
-  const previousIncome = previousTransactions
-    .filter(t => t.type === 'income')
-    .reduce((sum, t) => sum + t.amount, 0);
-
-  const currentExpenses = transactions
-    .filter(t => t.type === 'expense')
-    .reduce((sum, t) => sum + Math.abs(t.amount), 0);
-  const previousExpenses = previousTransactions
-    .filter(t => t.type === 'expense')
-    .reduce((sum, t) => sum + Math.abs(t.amount), 0);
-
-  const totalSavings = savings.reduce((sum, s) => sum + s.amount, 0);
-  const previousTotalSavings = previousSavings.reduce((sum, s) => sum + s.amount, 0);
-const netBalance = currentIncome - currentExpenses;
-const targetSavings = currentIncome * 0.2;
-const netBalanceType = netBalance >= 0 ? 'positive' : 'negative';
-const netBalanceIcon = netBalance >= 0 ? ArrowTrendingUpIcon : ArrowTrendingDownIcon;
+  const targetSavings = yearIncome * 0.2;
+  const netBalanceType = netBalance >= 0 ? 'positive' : 'negative';
+  const netBalanceIcon = netBalance >= 0 ? ArrowTrendingUpIcon : ArrowTrendingDownIcon;
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-  <MetricCard
-    title={t('dashboard.monthly_income')}
-    value={formatUSD(currentIncome)}
-    icon={BanknotesIcon}
-    type="positive"
-    trend={{
-      value: calculateGrowthRate(currentIncome, previousIncome),
-      label: t('dashboard.vs_last_month')
-    }}
-    subtitle={`${t('dashboard.previous_month')}: ${formatUSD(previousIncome)}`}
-  />
-
-  <MetricCard
-    title={t('dashboard.monthly_expenses')}
-    value={formatUSD(currentExpenses)}
-    icon={ArrowTrendingDownIcon}
-    type="negative"
-    trend={{
-      value: -calculateGrowthRate(currentExpenses, previousExpenses),
-      label: t('dashboard.vs_last_month')
-    }}
-    subtitle={`${t('dashboard.previous_month')}: ${formatUSD(previousExpenses)}`}
-  />
-
-  <MetricCard
-    title={t('dashboard.net_balance')}
-    value={formatUSD(netBalance)}
-    icon={netBalanceIcon}
-    type={netBalanceType}
-    trend={{
-      value: calculateGrowthRate(netBalance, previousIncome - previousExpenses),
-      label: t('dashboard.vs_last_month')
-    }}
-    subtitle={`${t('dashboard.previous_month')}: ${formatUSD(previousIncome - previousExpenses)}`}
-  />
-
-  <MetricCard
-    title={t('dashboard.total_savings')}
-    value={formatUSD(totalSavings)}
-    icon={ArrowTrendingUpIcon}
-    type="positive"
-    trend={{
-      value: calculateGrowthRate(totalSavings, previousTotalSavings),
-      label: t('dashboard.vs_last_month')
-    }}
-    subtitle={`${t('dashboard.target_savings')}: ${formatUSD(targetSavings)} (20%)`}
-  />
-</div>
+      <MetricCard
+        title={t('dashboard.monthly_income')}
+        value={formatUSD(yearIncome)}
+        icon={BanknotesIcon}
+        type="positive"
+        trend={{
+          value: calculateGrowthRate(yearIncome, previousIncome),
+          label: t('dashboard.vs_last_month')
+        }}
+        subtitle={`${t('dashboard.previous_month')}: ${formatUSD(previousIncome)}`}
+      />
+      <MetricCard
+        title={t('dashboard.monthly_expenses')}
+        value={formatUSD(yearExpenses)}
+        icon={ArrowTrendingDownIcon}
+        type="negative"
+        trend={{
+          value: -calculateGrowthRate(yearExpenses, previousExpenses),
+          label: t('dashboard.vs_last_month')
+        }}
+        subtitle={`${t('dashboard.previous_month')}: ${formatUSD(previousExpenses)}`}
+      />
+      <MetricCard
+        title={t('dashboard.net_balance')}
+        value={formatUSD(netBalance)}
+        icon={netBalanceIcon}
+        type={netBalanceType}
+        trend={{
+          value: calculateGrowthRate(netBalance, previousNetBalance),
+          label: t('dashboard.vs_last_month')
+        }}
+        subtitle={`${t('dashboard.previous_month')}: ${formatUSD(previousNetBalance)}`}
+      />
+      <MetricCard
+        title={t('dashboard.net_saving')}
+        value={formatUSD(netSavings)}
+        icon={ArrowTrendingUpIcon}
+        type="positive"
+        trend={{
+          value: calculateGrowthRate(netSavings, previousNetSavings),
+          label: t('dashboard.vs_last_month')
+        }}
+        subtitle={`${t('dashboard.target_savings')}: ${formatUSD(targetSavings)} (20%)`}
+      />
+    </div>
   );
 };
 
@@ -526,12 +515,17 @@ const FloatingActionButton = ({ onAddTransaction, onAddSaving }: {
 
 export const DashboardScreen = () => {
   const { t } = useTranslation();
-  const { transactions, isLoading: transactionsLoading } = useTransactions();
+  const { transactions } = useTransactions();
   const { state: savingState, loadSavings } = useSaving();
   const { tasks, loading: tasksLoading } = useTaskContext();
   const [showTransactionModal, setShowTransactionModal] = useState(false);
   const [showSavingForm, setShowSavingForm] = useState(false);
   const [selectedMonth, setSelectedMonth] = useState(new Date());
+  const {
+    netSavings,
+    monthlyData,
+    isLoading: analyticsLoading
+  } = useAnalytics();
 
   useEffect(() => {
     loadSavings();
@@ -597,7 +591,13 @@ export const DashboardScreen = () => {
     };
   }, [transactions, savingState.savings, selectedMonth]);
 
-  if (transactionsLoading || tasksLoading || savingState.isLoading) {
+  // Get previous month analytics for trends
+  const currentMonthIndex = selectedMonth.getMonth();
+  const previousMonthIndex = currentMonthIndex === 0 ? 11 : currentMonthIndex - 1;
+  const currentMonthData = monthlyData[currentMonthIndex] || {};
+  const previousMonthData = monthlyData[previousMonthIndex] || {};
+
+  if (analyticsLoading || tasksLoading || savingState.isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
         <div className="flex flex-col items-center justify-center min-h-screen">
@@ -622,10 +622,14 @@ export const DashboardScreen = () => {
         />
 
         <FinancialOverview
-          transactions={filteredData.current.transactions}
-          savings={filteredData.current.savings}
-          previousTransactions={filteredData.previous.transactions}
-          previousSavings={filteredData.previous.savings}
+          yearIncome={currentMonthData.income || 0}
+          yearExpenses={currentMonthData.expenses || 0}
+          netBalance={currentMonthData.netBalance || 0}
+          netSavings={netSavings}
+          previousIncome={previousMonthData.income || 0}
+          previousExpenses={previousMonthData.expenses || 0}
+          previousNetBalance={previousMonthData.netBalance || 0}
+          previousNetSavings={netSavings} // Optionally, you can calculate previous net savings if available
           t={t}
         />
 

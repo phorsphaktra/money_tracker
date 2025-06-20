@@ -93,6 +93,7 @@
     "add_transaction": "New Transaction",
     "add_saving": "New Saving",
     "transactions": "transactions",
+    "net_saving":"Net Savings",
     "metrics": {
       "income": {
         "title": "Monthly Income",
