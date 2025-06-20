@@ -19,11 +19,14 @@ import {
   ArrowPathIcon,
   PlusIcon,
   XMarkIcon,
-  ChevronDownIcon
-} from '@heroicons/react/24/outline';
+  ChevronDownIcon,
+  ArrowUpIcon,
+  ArrowDownIcon,
+  ScaleIcon} from '@heroicons/react/24/outline';
 import { t } from 'i18next';
 import { LoadingSpinner } from '../components/shared/LoadingSpinner';
 import { useAnalytics } from '../contexts/AnalyticsContext';
+import { CardGroup } from '../components/analytics/CardGroup';
 
 // Helper Functions
 
@@ -513,6 +516,94 @@ const FloatingActionButton = ({ onAddTransaction, onAddSaving }: {
   );
 };
 
+// SavingsSummary card for the selected month (copied and adapted from AnalyticsScreen)
+const SavingsSummary: React.FC<{
+  credits: number;
+  debits: number;
+  creditCount: number;
+  debitCount: number;
+}> = ({ credits, debits, creditCount, debitCount }) => {
+  const { t } = useTranslation();
+  const netSavings = credits - debits;
+
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('savings.total_credits')}</p>
+              <p className="text-2xl font-semibold text-green-600 dark:text-green-400">
+                {credits.toLocaleString(undefined, { style: 'currency', currency: 'USD' })}
+              </p>
+            </div>
+            <div className="bg-green-100 dark:bg-green-900/30 p-2 rounded-full">
+              <ArrowUpIcon className="h-6 w-6 text-green-600 dark:text-green-400" />
+            </div>
+          </div>
+          <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+            {creditCount} {t('savings.transactions')}
+          </p>
+        </div>
+
+        <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('savings.total_debits')}</p>
+              <p className="text-2xl font-semibold text-red-600 dark:text-red-400">
+                {debits.toLocaleString(undefined, { style: 'currency', currency: 'USD' })}
+              </p>
+            </div>
+            <div className="bg-red-100 dark:bg-red-900/30 p-2 rounded-full">
+              <ArrowDownIcon className="h-6 w-6 text-red-600 dark:text-red-400" />
+            </div>
+          </div>
+          <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+            {debitCount} {t('savings.transactions')}
+          </p>
+        </div>
+
+        <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('savings.net_savings')}</p>
+              <p className={`text-2xl font-semibold ${netSavings >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>{netSavings.toLocaleString(undefined, { style: 'currency', currency: 'USD' })}</p>
+            </div>
+            <div className={`p-2 rounded-full ${netSavings >= 0 ? 'bg-green-100 dark:bg-green-900/30' : 'bg-red-100 dark:bg-red-900/30'}`}>
+              {netSavings >= 0 ? (
+                <ArrowUpIcon className="h-6 w-6 text-green-600 dark:text-green-400" />
+              ) : (
+                <ArrowDownIcon className="h-6 w-6 text-red-600 dark:text-red-400" />
+              )}
+            </div>
+          </div>
+          <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+            {creditCount + debitCount} {t('savings.total_transactions')}
+          </p>
+        </div>
+      </div>
+
+      <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm">
+        <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">{t('savings.savings_rate')}</h4>
+        <div className="flex items-center space-x-2">
+          <div className="flex-1 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-green-600 dark:bg-green-400 rounded-full"
+              style={{ width: `${credits + debits > 0 ? (credits / (credits + debits)) * 100 : 0}%` }}
+            />
+          </div>
+          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            {credits + debits > 0 ? ((credits / (credits + debits)) * 100).toFixed(1) : '0.0'}%
+          </span>
+        </div>
+        <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+          {t('savings.percentage_credits')}
+        </p>
+      </div>
+    </div>
+  );
+};
+
 export const DashboardScreen = () => {
   const { t } = useTranslation();
   const { transactions } = useTransactions();
@@ -597,6 +688,21 @@ export const DashboardScreen = () => {
   const currentMonthData = monthlyData[currentMonthIndex] || {};
   const previousMonthData = monthlyData[previousMonthIndex] || {};
 
+  // Calculate savings summary for the selected month
+  const savingsSummary = useMemo(() => {
+    let credits = 0, debits = 0, creditCount = 0, debitCount = 0;
+    for (const s of filteredData.current.savings) {
+      if (s.type === 'credit') {
+        credits += s.amount;
+        creditCount++;
+      } else if (s.type === 'debit') {
+        debits += s.amount;
+        debitCount++;
+      }
+    }
+    return { credits, debits, creditCount, debitCount };
+  }, [filteredData.current.savings]);
+
   if (analyticsLoading || tasksLoading || savingState.isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -632,6 +738,21 @@ export const DashboardScreen = () => {
           previousNetSavings={netSavings} // Optionally, you can calculate previous net savings if available
           t={t}
         />
+
+        {/* Savings Analysis Card */}
+        <CardGroup
+          title={t('savings.analysis')}
+          icon={ScaleIcon}
+          defaultExpanded={true}
+          accentColor="from-green-500 to-emerald-500"
+        >
+          <SavingsSummary
+            credits={savingsSummary.credits}
+            debits={savingsSummary.debits}
+            creditCount={savingsSummary.creditCount}
+            debitCount={savingsSummary.debitCount}
+          />
+        </CardGroup>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <SpendingAnalysis
