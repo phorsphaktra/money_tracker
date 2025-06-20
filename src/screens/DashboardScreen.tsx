@@ -7,8 +7,6 @@ import { formatUSD } from '../utils/currencyUtils';
 import { TransactionModal } from '../components/transaction/TransactionModal';
 import { SavingForm } from '../components/saving/SavingForm';
 import {
-  ArrowTrendingUpIcon,
-  ArrowTrendingDownIcon,
   BanknotesIcon,
   CheckCircleIcon,
   ClockIcon,
@@ -20,20 +18,19 @@ import {
   PlusIcon,
   XMarkIcon,
   ChevronDownIcon,
-  ArrowUpIcon,
-  ArrowDownIcon,
-  ScaleIcon} from '@heroicons/react/24/outline';
+  ScaleIcon,
+  WalletIcon} from '@heroicons/react/24/outline';
 import { t } from 'i18next';
 import { LoadingSpinner } from '../components/shared/LoadingSpinner';
 import { useAnalytics } from '../contexts/AnalyticsContext';
 import { CardGroup } from '../components/analytics/CardGroup';
+import { SummaryCards } from '../components/analytics/SummaryCards';
+import { MonthlyTrendsChart } from '../components/analytics/MonthlyTrendsChart';
+import { CategoryBreakdownChart } from '../components/analytics/CategoryBreakdownChart';
+import { SavingsTypeMetricsCard } from '../components/analytics/SavingsTypeMetricsCard';
 
 // Helper Functions
 
-const calculateGrowthRate = (current: number, previous: number) => {
-  if (previous === 0) return 0;
-  return ((current - previous) / previous) * 100;
-};
 
   const monthKeys = [
     'january', 'february', 'march', 'april', 'may', 'june',
@@ -328,79 +325,6 @@ const TaskAnalytics = ({ stats }: { stats: any }) => (
   </div>
 );
 
-const FinancialOverview = ({ 
-  yearIncome,
-  yearExpenses,
-  netBalance,
-  netSavings,
-  previousIncome,
-  previousExpenses,
-  previousNetBalance,
-  previousNetSavings,
-  t 
-}: { 
-  yearIncome: number;
-  yearExpenses: number;
-  netBalance: number;
-  netSavings: number;
-  previousIncome: number;
-  previousExpenses: number;
-  previousNetBalance: number;
-  previousNetSavings: number;
-  t: (key: string) => string;
-}) => {
-  const targetSavings = yearIncome * 0.2;
-  const netBalanceType = netBalance >= 0 ? 'positive' : 'negative';
-  const netBalanceIcon = netBalance >= 0 ? ArrowTrendingUpIcon : ArrowTrendingDownIcon;
-  return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-      <MetricCard
-        title={t('dashboard.monthly_income')}
-        value={formatUSD(yearIncome)}
-        icon={BanknotesIcon}
-        type="positive"
-        trend={{
-          value: calculateGrowthRate(yearIncome, previousIncome),
-          label: t('dashboard.vs_last_month')
-        }}
-        subtitle={`${t('dashboard.previous_month')}: ${formatUSD(previousIncome)}`}
-      />
-      <MetricCard
-        title={t('dashboard.monthly_expenses')}
-        value={formatUSD(yearExpenses)}
-        icon={ArrowTrendingDownIcon}
-        type="negative"
-        trend={{
-          value: -calculateGrowthRate(yearExpenses, previousExpenses),
-          label: t('dashboard.vs_last_month')
-        }}
-        subtitle={`${t('dashboard.previous_month')}: ${formatUSD(previousExpenses)}`}
-      />
-      <MetricCard
-        title={t('dashboard.net_balance')}
-        value={formatUSD(netBalance)}
-        icon={netBalanceIcon}
-        type={netBalanceType}
-        trend={{
-          value: calculateGrowthRate(netBalance, previousNetBalance),
-          label: t('dashboard.vs_last_month')
-        }}
-        subtitle={`${t('dashboard.previous_month')}: ${formatUSD(previousNetBalance)}`}
-      />
-      <MetricCard
-        title={t('dashboard.net_saving')}
-        value={formatUSD(netSavings)}
-        icon={ArrowTrendingUpIcon}
-        type="positive"
-        trend={{
-          value: calculateGrowthRate(netSavings, previousNetSavings),
-          label: t('dashboard.vs_last_month')
-        }}
-        subtitle={`${t('dashboard.target_savings')}: ${formatUSD(targetSavings)} (20%)`}
-      />
-    </div>
-  );
-};
 
 const FloatingActionButton = ({ onAddTransaction, onAddSaving }: {
   onAddTransaction: () => void;
@@ -517,101 +441,16 @@ const FloatingActionButton = ({ onAddTransaction, onAddSaving }: {
 };
 
 // SavingsSummary card for the selected month (copied and adapted from AnalyticsScreen)
-const SavingsSummary: React.FC<{
-  credits: number;
-  debits: number;
-  creditCount: number;
-  debitCount: number;
-}> = ({ credits, debits, creditCount, debitCount }) => {
-  const { t } = useTranslation();
-  const netSavings = credits - debits;
-
-  return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('savings.total_credits')}</p>
-              <p className="text-2xl font-semibold text-green-600 dark:text-green-400">
-                {credits.toLocaleString(undefined, { style: 'currency', currency: 'USD' })}
-              </p>
-            </div>
-            <div className="bg-green-100 dark:bg-green-900/30 p-2 rounded-full">
-              <ArrowUpIcon className="h-6 w-6 text-green-600 dark:text-green-400" />
-            </div>
-          </div>
-          <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-            {creditCount} {t('savings.transactions')}
-          </p>
-        </div>
-
-        <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('savings.total_debits')}</p>
-              <p className="text-2xl font-semibold text-red-600 dark:text-red-400">
-                {debits.toLocaleString(undefined, { style: 'currency', currency: 'USD' })}
-              </p>
-            </div>
-            <div className="bg-red-100 dark:bg-red-900/30 p-2 rounded-full">
-              <ArrowDownIcon className="h-6 w-6 text-red-600 dark:text-red-400" />
-            </div>
-          </div>
-          <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-            {debitCount} {t('savings.transactions')}
-          </p>
-        </div>
-
-        <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('savings.net_savings')}</p>
-              <p className={`text-2xl font-semibold ${netSavings >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>{netSavings.toLocaleString(undefined, { style: 'currency', currency: 'USD' })}</p>
-            </div>
-            <div className={`p-2 rounded-full ${netSavings >= 0 ? 'bg-green-100 dark:bg-green-900/30' : 'bg-red-100 dark:bg-red-900/30'}`}>
-              {netSavings >= 0 ? (
-                <ArrowUpIcon className="h-6 w-6 text-green-600 dark:text-green-400" />
-              ) : (
-                <ArrowDownIcon className="h-6 w-6 text-red-600 dark:text-red-400" />
-              )}
-            </div>
-          </div>
-          <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-            {creditCount + debitCount} {t('savings.total_transactions')}
-          </p>
-        </div>
-      </div>
-
-      <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm">
-        <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">{t('savings.savings_rate')}</h4>
-        <div className="flex items-center space-x-2">
-          <div className="flex-1 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-            <div
-              className="h-full bg-green-600 dark:bg-green-400 rounded-full"
-              style={{ width: `${credits + debits > 0 ? (credits / (credits + debits)) * 100 : 0}%` }}
-            />
-          </div>
-          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-            {credits + debits > 0 ? ((credits / (credits + debits)) * 100).toFixed(1) : '0.0'}%
-          </span>
-        </div>
-        <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-          {t('savings.percentage_credits')}
-        </p>
-      </div>
-    </div>
-  );
-};
 
 export const DashboardScreen = () => {
   const { t } = useTranslation();
-  const { transactions } = useTransactions();
+  const { transactions, loadTransactions } = useTransactions();
   const { state: savingState, loadSavings } = useSaving();
   const { tasks, loading: tasksLoading } = useTaskContext();
   const [showTransactionModal, setShowTransactionModal] = useState(false);
   const [showSavingForm, setShowSavingForm] = useState(false);
   const [selectedMonth, setSelectedMonth] = useState(new Date());
+  const [isRefetching, setIsRefetching] = useState(false);
   const {
     netSavings,
     monthlyData,
@@ -621,6 +460,18 @@ export const DashboardScreen = () => {
   useEffect(() => {
     loadSavings();
   }, [loadSavings]);
+
+  // Improved: refetch data when month changes
+  const handleMonthChange = async (date: Date) => {
+    setIsRefetching(true);
+    setSelectedMonth(date);
+    try {
+      await loadSavings();
+      await loadTransactions();
+    } finally {
+      setIsRefetching(false);
+    }
+  };
 
   const handleAddTransaction = () => {
     setShowTransactionModal(true);
@@ -684,26 +535,34 @@ export const DashboardScreen = () => {
 
   // Get previous month analytics for trends
   const currentMonthIndex = selectedMonth.getMonth();
-  const previousMonthIndex = currentMonthIndex === 0 ? 11 : currentMonthIndex - 1;
   const currentMonthData = monthlyData[currentMonthIndex] || {};
-  const previousMonthData = monthlyData[previousMonthIndex] || {};
 
   // Calculate savings summary for the selected month
-  const savingsSummary = useMemo(() => {
-    let credits = 0, debits = 0, creditCount = 0, debitCount = 0;
-    for (const s of filteredData.current.savings) {
-      if (s.type === 'credit') {
-        credits += s.amount;
-        creditCount++;
-      } else if (s.type === 'debit') {
-        debits += s.amount;
-        debitCount++;
-      }
-    }
-    return { credits, debits, creditCount, debitCount };
-  }, [filteredData.current.savings]);
 
-  if (analyticsLoading || tasksLoading || savingState.isLoading) {
+  const getCategoryBreakdown = (type: 'expense' | 'income') => {
+    const txs = filteredData.current.transactions.filter(t => t.type === type);
+    const categoryMap = txs.reduce((acc, curr) => {
+      if (!curr.category) return acc;
+      if (!acc[curr.category]) {
+        acc[curr.category] = { amount: 0, count: 0, label: curr.category };
+      }
+      acc[curr.category].amount += Math.abs(curr.amount);
+      acc[curr.category].count += 1;
+      return acc;
+    }, {} as Record<string, { amount: number; count: number; label: string }>);
+    const totalAmount = Object.values(categoryMap).reduce((sum, { amount }) => sum + amount, 0);
+    return Object.entries(categoryMap).map(([category, data]) => ({
+      category,
+      label: category,
+      amount: data.amount,
+      percentage: totalAmount > 0 ? (data.amount / totalAmount) * 100 : 0,
+      count: data.count,
+    })).sort((a, b) => b.amount - a.amount);
+  };
+  const monthExpenseCategories = useMemo(() => getCategoryBreakdown('expense'), [filteredData.current.transactions]);
+  const monthIncomeCategories = useMemo(() => getCategoryBreakdown('income'), [filteredData.current.transactions]);
+
+  if (analyticsLoading || tasksLoading || savingState.isLoading || isRefetching) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
         <div className="flex flex-col items-center justify-center min-h-screen">
@@ -718,74 +577,124 @@ export const DashboardScreen = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+      <div className="max-w-7xl mx-auto px-2 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 space-y-4 sm:space-y-6">
+        {/* Month Selector and KPI Cards */}
         <DashboardHeader
           title={t('dashboard.title')}
           subtitle={t('dashboard.subtitle')}
           period={selectedMonth.toLocaleString('default', { month: 'long', year: 'numeric' })}
           selectedMonth={selectedMonth}
-          onMonthChange={setSelectedMonth}
+          onMonthChange={handleMonthChange}
         />
+        <CardGroup
+          title={t('dashboard.summary')}
+          icon={BanknotesIcon}
+          defaultExpanded={true}
+          accentColor="from-blue-500 to-indigo-500"
+        >
+          <div className="overflow-x-auto">
+            <SummaryCards
+              yearIncome={currentMonthData.income || 0}
+              yearExpenses={currentMonthData.expenses || 0}
+              yearSavings={currentMonthData.savings || 0}
+              netBalance={currentMonthData.netBalance || 0}
+              netSavings={netSavings}
+              monthlyBurnRate={currentMonthData.expenses || 0}
+            />
+          </div>
+        </CardGroup>
 
-        <FinancialOverview
-          yearIncome={currentMonthData.income || 0}
-          yearExpenses={currentMonthData.expenses || 0}
-          netBalance={currentMonthData.netBalance || 0}
-          netSavings={netSavings}
-          previousIncome={previousMonthData.income || 0}
-          previousExpenses={previousMonthData.expenses || 0}
-          previousNetBalance={previousMonthData.netBalance || 0}
-          previousNetSavings={netSavings} // Optionally, you can calculate previous net savings if available
-          t={t}
-        />
+        {/* Monthly Trends Chart */}
+        <CardGroup
+          title={t('dashboard.monthly_trends')}
+          icon={ChartPieIcon}
+          defaultExpanded={true}
+          accentColor="from-purple-500 to-purple-600"
+        >
+          <div className="overflow-x-auto min-w-[320px]">
+            <MonthlyTrendsChart data={monthlyData} />
+          </div>
+        </CardGroup>
 
-        {/* Savings Analysis Card */}
+        {/* Category Breakdown Charts */}
+        <CardGroup
+          title={t('dashboard.category_breakdown')}
+          icon={WalletIcon}
+          defaultExpanded={true}
+          accentColor="from-green-500 to-green-600"
+        >
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+            <div className="overflow-x-auto min-w-[280px]">
+              <CategoryBreakdownChart
+                data={monthExpenseCategories}
+                title={t('dashboard.expense_categories')}
+              />
+            </div>
+            <div className="overflow-x-auto min-w-[280px]">
+              <CategoryBreakdownChart
+                data={monthIncomeCategories}
+                title={t('dashboard.income_categories')}
+              />
+            </div>
+          </div>
+        </CardGroup>
+
+        {/* Savings Chart (Bar/Donut) */}
         <CardGroup
           title={t('savings.analysis')}
           icon={ScaleIcon}
           defaultExpanded={true}
           accentColor="from-green-500 to-emerald-500"
         >
-          <SavingsSummary
-            credits={savingsSummary.credits}
-            debits={savingsSummary.debits}
-            creditCount={savingsSummary.creditCount}
-            debitCount={savingsSummary.debitCount}
-          />
+          <div className="overflow-x-auto min-w-[320px]">
+            <SavingsTypeMetricsCard savings={filteredData.current.savings} />
+          </div>
         </CardGroup>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <SpendingAnalysis
-            transactions={filteredData.current.transactions}
-            t={t}
-            type="income"
-          />
-          <SpendingAnalysis
-            transactions={filteredData.current.transactions}
-            t={t}
-            type="expense"
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+          <div className="overflow-x-auto min-w-[280px]">
+            <SpendingAnalysis
+              transactions={filteredData.current.transactions}
+              t={t}
+              type="income"
+            />
+          </div>
+          <div className="overflow-x-auto min-w-[280px]">
+            <SpendingAnalysis
+              transactions={filteredData.current.transactions}
+              t={t}
+              type="expense"
+            />
+          </div>
+        </div>
+
+        <div className="overflow-x-auto min-w-[320px]">
+          <TaskAnalytics stats={taskStats} />
+        </div>
+
+        {/* Floating Action Button */}
+        <div className="pb-[env(safe-area-inset-bottom)] md:pb-0">
+          <FloatingActionButton
+            onAddTransaction={handleAddTransaction}
+            onAddSaving={handleAddSaving}
           />
         </div>
 
-        <TaskAnalytics stats={taskStats} />
-
-        {/* Floating Action Button */}
-        <FloatingActionButton
-          onAddTransaction={handleAddTransaction}
-          onAddSaving={handleAddSaving}
-        />
-
         {/* Transaction Modal */}
         {showTransactionModal && (
-          <TransactionModal
-            onClose={() => setShowTransactionModal(false)}
-          />
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm p-2 sm:p-4 overflow-y-auto">
+            <div className="w-full max-w-lg mx-auto">
+              <TransactionModal
+                onClose={() => setShowTransactionModal(false)}
+              />
+            </div>
+          </div>
         )}
 
         {/* Saving Form */}
         {showSavingForm && (
-          <div className="fixed inset-0 bg-black/30 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-md w-full p-6">
+          <div className="fixed inset-0 bg-black/30 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-md w-full p-4 sm:p-6 mx-auto">
               <SavingForm
                 onSubmit={async () => {
                     await loadSavings();

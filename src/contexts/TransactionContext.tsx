@@ -44,6 +44,7 @@ interface TransactionContextType {
   deleteTransactionWithConfirmation: (transaction: Transaction) => void;
   transactionToDelete: Transaction | null;
   setTransactionToDelete: (transaction: Transaction | null) => void;
+  loadTransactions: () => Promise<void>;
 }
 
 const TransactionContext = createContext<TransactionContextType | undefined>(undefined);
@@ -183,6 +184,7 @@ export const TransactionProvider: React.FC<{ children: React.ReactNode }> = ({ c
         deleteTransactionWithConfirmation,
         transactionToDelete,
         setTransactionToDelete,
+        loadTransactions,
       }}
     >
       {children}

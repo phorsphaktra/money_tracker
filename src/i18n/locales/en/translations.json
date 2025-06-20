@@ -94,6 +94,11 @@
     "add_saving": "New Saving",
     "transactions": "transactions",
     "net_saving":"Net Savings",
+    "summary":"Monthly Summary",
+    "monthly_trends":"Monthly Trends",
+    "category_breakdown":"Category Breakdown",
+    "expense_categories":"Expense Categories",
+    "income_categories":"Income Categories",
     "metrics": {
       "income": {
         "title": "Monthly Income",
@@ -291,6 +296,7 @@
     }
   },
   "savings": {
+    "analysis":"Saving Summary",
     "title": "Savings",
     "subtitle": "Track your savings goals and progress",
     "search": "Search savings...",
