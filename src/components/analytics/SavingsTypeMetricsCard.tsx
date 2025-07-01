@@ -114,7 +114,7 @@ export const SavingsTypeMetricsCard: React.FC<SavingsTypeMetricsCardProps> = ({ 
                 <Icon className={`h-5 w-5 ${colorClass}`}/>
               </div>
               <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                {isCredit ? t('savings.credits') : t('savings.debits')}
+                {isCredit ? t('savings.credit') : t('savings.debit')}
               </h3>
             </div>
             <div className="text-right">
