@@ -577,7 +577,7 @@ export const DashboardScreen = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <div className="max-w-7xl mx-auto px-2 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 space-y-4 sm:space-y-6">
+      <div className="max-w-7xl mx-auto px-2 sm:px-4 md:px-6 lg:px-8 py-2 sm:py-4 md:py-6 space-y-2 sm:space-y-4 md:space-y-6">
         {/* Month Selector and KPI Cards */}
         <DashboardHeader
           title={t('dashboard.title')}
@@ -592,7 +592,7 @@ export const DashboardScreen = () => {
           defaultExpanded={true}
           accentColor="from-blue-500 to-indigo-500"
         >
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto min-w-[320px]">
             <SummaryCards
               yearIncome={currentMonthData.income || 0}
               yearExpenses={currentMonthData.expenses || 0}
@@ -623,14 +623,14 @@ export const DashboardScreen = () => {
           defaultExpanded={true}
           accentColor="from-green-500 to-green-600"
         >
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-            <div className="overflow-x-auto min-w-[280px]">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 sm:gap-4 md:gap-6">
+            <div className="overflow-x-auto min-w-[240px] sm:min-w-[280px]">
               <CategoryBreakdownChart
                 data={monthExpenseCategories}
                 title={t('dashboard.expense_categories')}
               />
             </div>
-            <div className="overflow-x-auto min-w-[280px]">
+            <div className="overflow-x-auto min-w-[240px] sm:min-w-[280px]">
               <CategoryBreakdownChart
                 data={monthIncomeCategories}
                 title={t('dashboard.income_categories')}
@@ -646,20 +646,20 @@ export const DashboardScreen = () => {
           defaultExpanded={true}
           accentColor="from-green-500 to-emerald-500"
         >
-          <div className="overflow-x-auto min-w-[320px]">
+          <div className="overflow-x-auto min-w-[240px] sm:min-w-[320px]">
             <SavingsTypeMetricsCard savings={filteredData.current.savings} />
           </div>
         </CardGroup>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-          <div className="overflow-x-auto min-w-[280px]">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 sm:gap-4 md:gap-6">
+          <div className="overflow-x-auto min-w-[240px] sm:min-w-[280px]">
             <SpendingAnalysis
               transactions={filteredData.current.transactions}
               t={t}
               type="income"
             />
           </div>
-          <div className="overflow-x-auto min-w-[280px]">
+          <div className="overflow-x-auto min-w-[240px] sm:min-w-[280px]">
             <SpendingAnalysis
               transactions={filteredData.current.transactions}
               t={t}
@@ -668,7 +668,7 @@ export const DashboardScreen = () => {
           </div>
         </div>
 
-        <div className="overflow-x-auto min-w-[320px]">
+        <div className="overflow-x-auto min-w-[240px] sm:min-w-[320px]">
           <TaskAnalytics stats={taskStats} />
         </div>
 
@@ -683,7 +683,7 @@ export const DashboardScreen = () => {
         {/* Transaction Modal */}
         {showTransactionModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm p-2 sm:p-4 overflow-y-auto">
-            <div className="w-full max-w-lg mx-auto">
+            <div className="w-full max-w-xs sm:max-w-lg mx-auto">
               <TransactionModal
                 onClose={() => setShowTransactionModal(false)}
               />
@@ -694,7 +694,7 @@ export const DashboardScreen = () => {
         {/* Saving Form */}
         {showSavingForm && (
           <div className="fixed inset-0 bg-black/30 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-md w-full p-4 sm:p-6 mx-auto">
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-xs sm:max-w-md w-full p-2 sm:p-6 mx-auto">
               <SavingForm
                 onSubmit={async () => {
                     await loadSavings();
