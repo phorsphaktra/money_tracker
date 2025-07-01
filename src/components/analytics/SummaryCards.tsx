@@ -2,7 +2,6 @@ import {
   BanknotesIcon,
   ArrowTrendingDownIcon,
   ArrowTrendingUpIcon,
-  ChartPieIcon,
   WalletIcon,
 } from '@heroicons/react/24/outline';
 import { formatUSD } from '../../utils/currencyUtils';
@@ -20,9 +19,7 @@ export const SummaryCards = ({
   yearIncome,
   yearExpenses,
   netBalance,
-  netSavings,
-  monthlyBurnRate
-}: SummaryCardsProps) => {
+  netSavings}: SummaryCardsProps) => {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
       <div className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-100 
