@@ -170,26 +170,32 @@ export const TransactionModal = ({ transaction, onClose, type = 'expense' }: Tra
 
   return (
     <div className="fixed inset-0 bg-gray-600 bg-opacity-50 backdrop-blur-sm z-50 
-      flex items-center justify-center animate-fadeIn">
-      <div className="bg-white rounded-xl shadow-2xl max-w-md w-full mx-4 p-6 
-        animate-slideUp">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-gray-900">
+      flex items-center justify-center animate-fadeIn safe-area-inset-top safe-area-inset-bottom">
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-[95vw] sm:max-w-md w-full mx-3 sm:mx-4 p-4 sm:p-6 
+        animate-slideUp max-h-[90vh] overflow-y-auto">
+        <div className="flex justify-between items-center mb-4 sm:mb-6">
+          <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 dark:text-white">
             {transaction ? 'Edit' : 'Add'} Transaction
           </h2>
-          <Button variant="outline" onClick={onClose}>×</Button>
+          <Button 
+            variant="outline" 
+            onClick={onClose}
+            className="p-2 sm:p-3 min-h-[44px] min-w-[44px] touch-manipulation"
+          >
+            ×
+          </Button>
         </div>
 
         {errors.submit && (
-          <div className="mb-4 p-3 bg-red-50 border-l-4 border-red-500 text-red-700">
+          <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 text-red-700 dark:text-red-400 text-sm">
             {errors.submit}
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
           {/* Transaction Type */}
           {!transaction && (
-            <div className="flex space-x-4 p-1 bg-gray-100 rounded-lg">
+            <div className="flex space-x-2 sm:space-x-4 p-1 bg-gray-100 dark:bg-gray-700 rounded-lg">
               {['income', 'expense'].map((t) => (
                 <button
                   key={t}
@@ -197,10 +203,10 @@ export const TransactionModal = ({ transaction, onClose, type = 'expense' }: Tra
                   onClick={() => handleChange('type')({ 
                     target: { value: t } 
                   } as React.ChangeEvent<HTMLInputElement>)}
-                  className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors
+                  className={`flex-1 py-2 px-3 sm:px-4 rounded-md text-sm font-medium transition-colors min-h-[44px] touch-manipulation
                     ${formData.type === t 
-                      ? 'bg-white text-indigo-600 shadow-sm' 
-                      : 'text-gray-500 hover:text-gray-700'}`}
+                      ? 'bg-white dark:bg-gray-600 text-indigo-600 dark:text-indigo-400 shadow-sm' 
+                      : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'}`}
                 >
                   {t.charAt(0).toUpperCase() + t.slice(1)}
                 </button>
@@ -209,7 +215,7 @@ export const TransactionModal = ({ transaction, onClose, type = 'expense' }: Tra
           )}
 
           {/* Form Fields */}
-          <div className="space-y-4">
+          <div className="space-y-3 sm:space-y-4">
             {[
               { id: 'description' as const, label: 'Description', type: 'text' },
               { 
@@ -225,13 +231,13 @@ export const TransactionModal = ({ transaction, onClose, type = 'expense' }: Tra
               // Separate DOM props from custom props
               const { showConverted, prefix, label, ...inputProps } = field;
               return (
-                <div key={field.id} className="space-y-1">
-                  <label className="block text-sm font-medium text-gray-700">
+                <div key={field.id} className="space-y-1 sm:space-y-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                     {label}
                   </label>
                   <div className="relative">
                     {prefix && (
-                      <span className="absolute left-3 top-2 text-gray-500">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400">
                         {prefix}
                       </span>
                     )}
@@ -239,19 +245,20 @@ export const TransactionModal = ({ transaction, onClose, type = 'expense' }: Tra
                       {...inputProps}
                       value={formData[field.id]}
                       onChange={handleChange(field.id)}
-                      className={`block w-full px-3 py-2 rounded-md border 
-                        ${errors[field.id] ? 'border-red-500' : 'border-gray-300'}
-                        ${prefix ? 'pl-7' : ''}
-                        focus:ring-indigo-500 focus:border-indigo-500 shadow-sm`}
+                      className={`block w-full px-3 py-2.5 sm:py-3 rounded-md border min-h-[44px] touch-manipulation
+                        ${errors[field.id] ? 'border-red-500 dark:border-red-400' : 'border-gray-300 dark:border-gray-600'}
+                        ${prefix ? 'pl-8 sm:pl-10' : ''}
+                        focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm
+                        dark:bg-gray-700 dark:text-white`}
                     />
                   </div>
                   {showConverted && userCurrency === 'KHR' && formData.amount && (
-                    <div className="text-sm text-gray-500 mt-1">
+                    <div className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-1">
                       Amount in USD: {convertedAmount}
                     </div>
                   )}
                   {errors[field.id] && (
-                    <p className="text-sm text-red-600 mt-1">{errors[field.id]}</p>
+                    <p className="text-xs sm:text-sm text-red-600 dark:text-red-400 mt-1">{errors[field.id]}</p>
                   )}
                 </div>
               );
@@ -269,14 +276,19 @@ export const TransactionModal = ({ transaction, onClose, type = 'expense' }: Tra
           />
 
           {/* Action Buttons */}
-          <div className="flex justify-end space-x-3 pt-4">
-            <Button variant="outline" onClick={onClose}>
+          <div className="flex justify-end space-x-2 sm:space-x-3 pt-4">
+            <Button 
+              variant="outline" 
+              onClick={onClose}
+              className="min-h-[44px] touch-manipulation"
+            >
               Cancel
             </Button>
             <Button
               variant="primary"
               type="submit"
               isLoading={isSubmitting}
+              className="min-h-[44px] touch-manipulation"
             >
               {transaction ? 'Update' : 'Add'} Transaction
             </Button>

@@ -39,14 +39,14 @@ interface TransactionsListProps {
 const TransactionSkeleton = () => (
   <>
     {/* Mobile Skeleton */}
-    <div className="lg:hidden space-y-3 px-4">
-      <div className="flex justify-center py-8">
+    <div className="lg:hidden space-y-3 px-3 sm:px-4">
+      <div className="flex justify-center py-6 sm:py-8">
         <LoadingSpinner size="large" className="text-primary" />
       </div>
     </div>
 
     {/* Desktop Skeleton */}
-    <div className="hidden lg:flex justify-center py-12">
+    <div className="hidden lg:flex justify-center py-8 sm:py-12">
       <LoadingSpinner size="large" className="text-primary" />
     </div>
   </>
@@ -56,8 +56,16 @@ const TransactionSkeleton = () => (
  * Empty state component shown when no transactions are available
  */
 const EmptyState = () => (
-  <div className="text-center py-8 text-gray-500 bg-white dark:bg-gray-900 rounded-lg">
-    No transactions found
+  <div className="text-center py-6 sm:py-8 text-gray-500 bg-white dark:bg-gray-900 rounded-lg px-4">
+    <div className="max-w-sm mx-auto">
+      <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center">
+        <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+      </div>
+      <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">No transactions found</h3>
+      <p className="text-sm text-gray-500 dark:text-gray-400">Try adjusting your filters or add a new transaction.</p>
+    </div>
   </div>
 );
 
@@ -98,36 +106,36 @@ const TransactionItem = ({
 
   return (
     <tr className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors duration-200">
-      <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+      <td className="px-2 sm:px-3 md:px-6 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-500 dark:text-gray-400">
         {index}
       </td>
-      <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
-        <div className="flex items-center gap-2 sm:gap-3">
+      <td className="px-2 sm:px-3 md:px-6 py-3 sm:py-4 whitespace-nowrap">
+        <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3">
           <CategoryIcon category={category} />
-          <div className="sm:hidden flex flex-col">
-            <span className="text-sm font-medium text-gray-900 dark:text-gray-200">
+          <div className="sm:hidden flex flex-col min-w-0 flex-1">
+            <span className="text-xs sm:text-sm font-medium text-gray-900 dark:text-gray-200 truncate">
               {transaction.description || category.label}
             </span>
             <span className="text-xs text-gray-500">
               {new Date(transaction.date).toLocaleDateString()}
             </span>
           </div>
-          <span className="hidden sm:block text-sm text-gray-900 dark:text-gray-200">
+          <span className="hidden sm:block text-sm text-gray-900 dark:text-gray-200 truncate">
             {category.label}
           </span>
         </div>
       </td>
-      <td className="hidden sm:table-cell px-6 py-4 whitespace-nowrap">
-        <span className="text-sm text-gray-900 dark:text-gray-200">
+      <td className="hidden sm:table-cell px-3 md:px-6 py-3 sm:py-4 whitespace-nowrap">
+        <span className="text-sm text-gray-900 dark:text-gray-200 truncate max-w-[200px] block">
           {transaction.description || category.label}
         </span>
       </td>
-      <td className="hidden md:table-cell px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+      <td className="hidden md:table-cell px-6 py-3 sm:py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
         {new Date(transaction.date).toLocaleDateString()}
       </td>
-      <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-right">
+      <td className="px-2 sm:px-3 md:px-6 py-3 sm:py-4 whitespace-nowrap text-right">
         <div className="flex flex-col items-end">
-          <span className={`text-sm font-medium ${
+          <span className={`text-xs sm:text-sm font-medium ${
             transaction.type === 'income' 
               ? 'text-green-600 dark:text-green-400' 
               : 'text-red-600 dark:text-red-400'
@@ -148,7 +156,7 @@ const TransactionItem = ({
           )}
         </div>
       </td>
-      <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-right">
+      <td className="px-2 sm:px-3 md:px-6 py-3 sm:py-4 whitespace-nowrap text-right">
         <TransactionActions
           transaction={transaction}
           onDelete={() => deleteTransaction(transaction.id)}
@@ -252,12 +260,12 @@ export const TransactionsList = ({
     <div className="w-full mx-auto mb-auto">
       {/* Mobile View */}
       <div className="lg:hidden space-y-2">
-        <div className="bg-gray-50 dark:bg-gray-800/50 backdrop-blur-sm sticky top-0 z-10 p-3 -mx-4">
-          <h2 className="text-sm font-medium text-gray-600 dark:text-gray-300">
+        <div className="bg-gray-50 dark:bg-gray-800/50 backdrop-blur-sm sticky top-0 z-10 p-3 -mx-3 sm:-mx-4">
+          <h2 className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-300">
             Recent Transactions
           </h2>
         </div>
-        <div className="space-y-2 px-4">
+        <div className="space-y-2 px-3 sm:px-4">
           {paginatedTransactions.map((transaction, index) => (
             <TransactionCard
               key={transaction.id}
@@ -284,12 +292,12 @@ export const TransactionsList = ({
           <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
             <thead className="bg-gray-50 dark:bg-gray-800">
               <tr>
-                <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-16">No.</th>
-                <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Category</th>
-                <th className="hidden sm:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Description</th>
+                <th className="px-2 sm:px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-16">No.</th>
+                <th className="px-2 sm:px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Category</th>
+                <th className="hidden sm:table-cell px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Description</th>
                 <th className="hidden md:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Date</th>
-                <th className="px-3 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Amount</th>
-                <th className="px-3 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
+                <th className="px-2 sm:px-3 md:px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Amount</th>
+                <th className="px-2 sm:px-3 md:px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
             <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
@@ -305,9 +313,9 @@ export const TransactionsList = ({
           
           {/* Pagination Controls - Update display text to show filtered counts */}
           {!limit && totalPages > 1 && (
-            <div className="flex items-center justify-between px-4 py-3 border-t border-gray-200 dark:border-gray-700">
+            <div className="flex items-center justify-between px-3 sm:px-4 py-3 border-t border-gray-200 dark:border-gray-700">
               <div className="flex items-center">
-                <p className="text-sm text-gray-700 dark:text-gray-300">
+                <p className="text-xs sm:text-sm text-gray-700 dark:text-gray-300">
                   Showing{' '}
                   <span className="font-medium">
                     {Math.min(((currentPage - 1) * itemsPerPage) + 1, transactions.length)}
@@ -325,16 +333,18 @@ export const TransactionsList = ({
                 <button
                   onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                   disabled={currentPage === 1}
-                  className="px-3 py-1 text-sm rounded-md border border-gray-300 dark:border-gray-600 
-                    disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-gray-800"
+                  className="px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm rounded-md border border-gray-300 dark:border-gray-600 
+                    disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-gray-800
+                    touch-manipulation min-h-[32px] sm:min-h-[36px]"
                 >
                   Previous
                 </button>
                 <button
                   onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                   disabled={currentPage === totalPages}
-                  className="px-3 py-1 text-sm rounded-md border border-gray-300 dark:border-gray-600 
-                    disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-gray-800"
+                  className="px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm rounded-md border border-gray-300 dark:border-gray-600 
+                    disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-gray-800
+                    touch-manipulation min-h-[32px] sm:min-h-[36px]"
                 >
                   Next
                 </button>

@@ -35,7 +35,9 @@ export const TransactionActions: React.FC<TransactionActionsProps> = ({
         {onEdit && (
           <button
             onClick={() => onEdit(transaction)}
-            className="p-2 text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
+            className="p-1.5 sm:p-2 text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 
+              rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors
+              touch-manipulation min-h-[32px] min-w-[32px] sm:min-h-[36px] sm:min-w-[36px]"
             title="Edit transaction"
           >
             <PencilIcon className="h-4 w-4" />
@@ -44,7 +46,9 @@ export const TransactionActions: React.FC<TransactionActionsProps> = ({
         )}
         <button
           onClick={() => setShowDeleteModal(true)}
-          className="p-2 text-gray-400 hover:text-red-600 dark:hover:text-red-400 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+          className="p-1.5 sm:p-2 text-gray-400 hover:text-red-600 dark:hover:text-red-400 
+            rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors
+            touch-manipulation min-h-[32px] min-w-[32px] sm:min-h-[36px] sm:min-w-[36px]"
           title="Delete transaction"
         >
           <TrashIcon className="h-4 w-4" />

@@ -15,24 +15,24 @@ export const FloatingActionButton = ({
   icon
 }: FloatingActionButtonProps) => {
   const positionClasses = {
-    'bottom-right': 'bottom-6 right-6',
-    'bottom-left': 'bottom-6 left-6',
-    'top-right': 'top-6 right-6',
-    'top-left': 'top-6 left-6'
+    'bottom-right': 'bottom-4 right-4 sm:bottom-6 sm:right-6',
+    'bottom-left': 'bottom-4 left-4 sm:bottom-6 sm:left-6',
+    'top-right': 'top-4 right-4 sm:top-6 sm:right-6',
+    'top-left': 'top-4 left-4 sm:top-6 sm:left-6'
   };
 
   return (
     <button
       onClick={onClick}
-      className={`fixed ${positionClasses[position]} w-16 h-16 flex items-center justify-center
+      className={`fixed ${positionClasses[position]} w-14 h-14 sm:w-16 sm:h-16 flex items-center justify-center
         bg-gradient-to-r from-indigo-600 to-indigo-700 rounded-full
         shadow-lg hover:shadow-2xl transform hover:scale-110
         transition-all duration-200 ease-in-out
-        text-white z-40 group
+        text-white z-40 group mobile-button mobile-active
         before:content-[''] before:absolute before:inset-0
         before:rounded-full before:bg-indigo-600 before:animate-pulse
         before:opacity-40 before:z-[-1]
-        sm:w-14 sm:h-14`}
+        min-h-[56px] touch-manipulation`}
       aria-label={label}
     >
       <div className="relative flex items-center justify-center">
@@ -43,7 +43,7 @@ export const FloatingActionButton = ({
         ) : (
           <svg 
             xmlns="http://www.w3.org/2000/svg" 
-            className="h-8 w-8 sm:h-6 sm:w-6 transform transition-transform duration-200 group-hover:rotate-90" 
+            className="h-6 w-6 sm:h-8 sm:w-8 transform transition-transform duration-200 group-hover:rotate-90" 
             fill="none" 
             viewBox="0 0 24 24" 
             stroke="currentColor"
@@ -63,7 +63,7 @@ export const FloatingActionButton = ({
           transition-opacity duration-200 pointer-events-none
           before:content-[''] before:absolute before:left-full before:top-1/2
           before:-translate-y-1/2 before:border-8 before:border-transparent
-          before:border-l-gray-900">
+          before:border-l-gray-900 hidden sm:block">
           {label}
         </span>
       </div>
@@ -79,7 +79,11 @@ export const FloatingActionButtonWrapper = () => {
       <FloatingActionButton onClick={() => setIsModalOpen(true)} />
       
       {isModalOpen && (
-        <TransactionModal onClose={() => setIsModalOpen(false)} />
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 mobile-modal-backdrop p-3 sm:p-4 overflow-y-auto safe-area-inset-top safe-area-inset-bottom">
+          <div className="w-full max-w-[95vw] sm:max-w-lg mx-auto">
+            <TransactionModal onClose={() => setIsModalOpen(false)} />
+          </div>
+        </div>
       )}
     </>
   );

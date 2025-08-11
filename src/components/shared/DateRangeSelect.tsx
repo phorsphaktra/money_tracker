@@ -45,10 +45,10 @@ export const DateRangeSelect = ({
         <Menu as="div" className="relative inline-block text-left w-full">
           {({ open }) => (
             <>
-              <Menu.Button className="w-full flex items-center justify-between gap-2 px-4 py-2.5 text-sm 
+              <Menu.Button className="w-full flex items-center justify-between gap-2 px-3 sm:px-4 py-2.5 text-sm 
                 rounded-lg border border-gray-300 dark:border-gray-700 hover:bg-gray-50 
                 dark:hover:bg-gray-800 focus:ring-2 focus:ring-indigo-500 focus:border-transparent
-                transition-colors duration-150">
+                transition-colors duration-150 min-h-[44px] touch-manipulation">
                 <span className="flex items-center gap-2">
                   <CalendarIcon className={`h-4 w-4 ${open ? 'text-indigo-500' : 'text-gray-500'}`} />
                   <span className="truncate font-medium">{currentLabel}</span>
@@ -79,7 +79,7 @@ export const DateRangeSelect = ({
                                 'text-gray-700 dark:text-gray-300'
                             } w-full text-left px-3 py-2 text-sm rounded-md transition-colors duration-150
                             hover:bg-indigo-50 dark:hover:bg-indigo-900/20 hover:text-indigo-600 
-                            dark:hover:text-indigo-400`}
+                            dark:hover:text-indigo-400 min-h-[44px] touch-manipulation`}
                             onClick={() => {
                               if (range.label === t('dateRange.custom')) {
                                 setShowCustom(true);
@@ -112,21 +112,21 @@ export const DateRangeSelect = ({
           leaveTo="opacity-0 translate-y-1"
         >
           <div className="absolute top-full mt-2 w-full bg-white dark:bg-gray-800 rounded-lg 
-            shadow-lg border border-gray-200 dark:border-gray-700 p-4 z-20">
-            <div className="space-y-4">
+            shadow-lg border border-gray-200 dark:border-gray-700 p-3 sm:p-4 z-20">
+            <div className="space-y-3 sm:space-y-4">
               <div className="flex justify-between items-center border-b border-gray-200 
-                dark:border-gray-700 pb-3">
+                dark:border-gray-700 pb-2 sm:pb-3">
                 <h3 className="text-sm font-medium">{t('dateRange.custom')}</h3>
                 <button
                   onClick={() => setShowCustom(false)}
-                  className="text-gray-400 hover:text-gray-500 transition-colors duration-150"
+                  className="text-gray-400 hover:text-gray-500 transition-colors duration-150 p-1 touch-manipulation min-h-[32px] min-w-[32px]"
                 >
                   <XMarkIcon className="h-4 w-4" />
                 </button>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-3 sm:gap-4">
                 <div>
-                  <label className="block text-sm font-medium mb-1.5 text-gray-700 
+                  <label className="block text-xs sm:text-sm font-medium mb-1.5 text-gray-700 
                     dark:text-gray-300">{t('dateRange.startDate')}</label>
                   <DatePicker
                     selected={startDate}
@@ -134,13 +134,13 @@ export const DateRangeSelect = ({
                     maxDate={endDate || undefined}
                     className="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 
                       dark:border-gray-700 dark:bg-gray-900 focus:ring-2 focus:ring-indigo-500 
-                      focus:border-transparent"
+                      focus:border-transparent min-h-[44px] touch-manipulation"
                     dateFormat="MMM d, yyyy"
                     placeholderText="Select date"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1.5 text-gray-700 
+                  <label className="block text-xs sm:text-sm font-medium mb-1.5 text-gray-700 
                     dark:text-gray-300">{t('dateRange.endDate')}</label>
                   <DatePicker
                     selected={endDate}
@@ -148,7 +148,7 @@ export const DateRangeSelect = ({
                     minDate={startDate || undefined}
                     className="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 
                       dark:border-gray-700 dark:bg-gray-900 focus:ring-2 focus:ring-indigo-500 
-                      focus:border-transparent"
+                      focus:border-transparent min-h-[44px] touch-manipulation"
                     dateFormat="MMM d, yyyy"
                     placeholderText="Select date"
                   />
@@ -162,9 +162,9 @@ export const DateRangeSelect = ({
       {/* Mobile Button */}
       <button
         onClick={() => setIsMobileOpen(true)}
-        className={`sm:hidden flex items-center justify-between w-full px-4 py-3 
+        className={`sm:hidden flex items-center justify-between w-full px-3 sm:px-4 py-2.5 sm:py-3 
           text-sm rounded-lg border border-gray-300 dark:border-gray-700 
-          hover:bg-gray-50 dark:hover:bg-gray-800 ${className}`}
+          hover:bg-gray-50 dark:hover:bg-gray-800 min-h-[44px] touch-manipulation ${className}`}
       >
         <span className="flex items-center gap-2">
           <CalendarIcon className="h-4 w-4 text-gray-500" />
@@ -180,22 +180,22 @@ export const DateRangeSelect = ({
         onClose={() => setIsMobileOpen(false)}
         className="relative z-50 sm:hidden"
       >
-        <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
+        <div className="fixed inset-0 bg-black/30 mobile-modal-backdrop" aria-hidden="true" />
 
-        <div className="fixed inset-0 flex items-end">
+        <div className="fixed inset-0 flex items-end safe-area-inset-bottom">
           <Dialog.Panel className="w-full transform rounded-t-xl bg-white 
-            dark:bg-gray-800 p-4 transition-all">
+            dark:bg-gray-800 p-4 transition-all max-h-[80vh] overflow-y-auto">
             <div className="space-y-4">
               {/* Header */}
               <div className="flex items-center justify-between pb-2 
                 border-b border-gray-200 dark:border-gray-700">
-                <Dialog.Title className="text-base font-semibold">
+                <Dialog.Title className="text-base font-semibold text-gray-900 dark:text-white">
                   {t('transactions.dateRange.selectDate')}
                 </Dialog.Title>
                 <button
                   onClick={() => setIsMobileOpen(false)}
-                  className="p-1 rounded-full hover:bg-gray-100 
-                    dark:hover:bg-gray-700"
+                  className="p-2 rounded-full hover:bg-gray-100 
+                    dark:hover:bg-gray-700 touch-manipulation min-h-[44px] min-w-[44px]"
                 >
                   <XMarkIcon className="h-5 w-5" />
                 </button>
@@ -210,8 +210,9 @@ export const DateRangeSelect = ({
                       onDateChange(range.start, range.end);
                       setIsMobileOpen(false);
                     }}
-                    className="px-4 py-3 text-sm rounded-lg border border-gray-200 
-                      dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50"
+                    className="px-3 sm:px-4 py-2.5 sm:py-3 text-sm rounded-lg border border-gray-200 
+                      dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50
+                      min-h-[44px] touch-manipulation"
                   >
                     {range.label}
                   </button>
@@ -221,18 +222,19 @@ export const DateRangeSelect = ({
               {/* Custom Range Inputs */}
               <div className="space-y-3 pt-2 border-t border-gray-200 
                 dark:border-gray-700">
-                <h3 className="text-sm font-medium">
+                <h3 className="text-sm font-medium text-gray-900 dark:text-white">
                   {t('transactions.dateRange.custom')}
                 </h3>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="text-xs text-gray-500 mb-1 block">
+                    <label className="text-xs text-gray-500 dark:text-gray-400 mb-1 block">
                       {t('transactions.dateRange.startDate')}
                     </label>
                     <input
                       type="date"
                       className="w-full px-3 py-2 text-sm rounded-lg border 
-                        border-gray-300 dark:border-gray-700 dark:bg-gray-900"
+                        border-gray-300 dark:border-gray-700 dark:bg-gray-900
+                        min-h-[44px] touch-manipulation"
                       value={startDate?.toISOString().split('T')[0] || ''}
                       onChange={(e) => {
                         const date = e.target.value ? new Date(e.target.value) : null;
@@ -241,13 +243,14 @@ export const DateRangeSelect = ({
                     />
                   </div>
                   <div>
-                    <label className="text-xs text-gray-500 mb-1 block">
+                    <label className="text-xs text-gray-500 dark:text-gray-400 mb-1 block">
                       {t('transactions.dateRange.endDate')}
                     </label>
                     <input
                       type="date"
                       className="w-full px-3 py-2 text-sm rounded-lg border 
-                        border-gray-300 dark:border-gray-700 dark:bg-gray-900"
+                        border-gray-300 dark:border-gray-700 dark:bg-gray-900
+                        min-h-[44px] touch-manipulation"
                       value={endDate?.toISOString().split('T')[0] || ''}
                       onChange={(e) => {
                         const date = e.target.value ? new Date(e.target.value) : null;
@@ -265,15 +268,16 @@ export const DateRangeSelect = ({
                     onDateChange(null, null);
                     setIsMobileOpen(false);
                   }}
-                  className="flex-1 px-4 py-2 text-sm rounded-lg border 
-                    border-gray-300 dark:border-gray-600"
+                  className="flex-1 px-3 sm:px-4 py-2.5 sm:py-3 text-sm rounded-lg border 
+                    border-gray-300 dark:border-gray-600 min-h-[44px] touch-manipulation
+                    hover:bg-gray-50 dark:hover:bg-gray-700"
                 >
                   {t('common.clear')}
                 </button>
                 <button
                   onClick={() => setIsMobileOpen(false)}
-                  className="flex-1 px-4 py-2 text-sm rounded-lg bg-indigo-600 
-                    text-white hover:bg-indigo-700"
+                  className="flex-1 px-3 sm:px-4 py-2.5 sm:py-3 text-sm rounded-lg bg-indigo-600 
+                    text-white hover:bg-indigo-700 min-h-[44px] touch-manipulation"
                 >
                   {t('common.done')}
                 </button>
