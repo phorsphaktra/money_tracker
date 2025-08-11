@@ -74,7 +74,7 @@ export const SavingCard = ({ saving, onEdit, onDelete }: SavingCardProps) => {
     <div className="relative overflow-hidden rounded-lg mb-2 group">
       {/* Action Buttons */}
       <div 
-        className="absolute right-0 top-0 h-full flex items-center gap-2 pr-3 z-0"
+        className="absolute right-0 top-0 h-full flex items-center gap-2 pr-2 sm:pr-3 z-0"
         style={{
           opacity: Math.min(Math.abs(swipeOffset) / 75, 1),
           transform: `translateX(${Math.abs(swipeOffset) * 0.1}px)`,
@@ -84,23 +84,23 @@ export const SavingCard = ({ saving, onEdit, onDelete }: SavingCardProps) => {
         <button
           onClick={handleEdit}
           disabled={isDeleting}
-          className="p-3 bg-blue-500 text-white rounded-full shadow-lg transform transition-all duration-200 
-            hover:scale-105 hover:bg-blue-600 active:scale-95 disabled:opacity-50"
+          className="p-2.5 sm:p-3 bg-blue-500 text-white rounded-full shadow-lg transform transition-all duration-200 
+            hover:scale-105 hover:bg-blue-600 active:scale-95 disabled:opacity-50 touch-manipulation min-h-[44px] min-w-[44px]"
           style={{ transform: `scale(${Math.min(Math.abs(swipeOffset) / 150, 1)})` }}
         >
-          <PencilIcon className="w-5 h-5" />
+          <PencilIcon className="w-4 h-4 sm:w-5 sm:h-5" />
         </button>
         <button
           onClick={handleDelete}
           disabled={isDeleting}
-          className="p-3 bg-red-500 text-white rounded-full shadow-lg transform transition-all duration-200 
-            hover:scale-105 hover:bg-red-600 active:scale-95 disabled:opacity-50"
+          className="p-2.5 sm:p-3 bg-red-500 text-white rounded-full shadow-lg transform transition-all duration-200 
+            hover:scale-105 hover:bg-red-600 active:scale-95 disabled:opacity-50 touch-manipulation min-h-[44px] min-w-[44px]"
           style={{ transform: `scale(${Math.min(Math.abs(swipeOffset) / 150, 1)})` }}
         >
           {isDeleting ? (
             <LoadingSpinner size="small" className="text-white" />
           ) : (
-            <TrashIcon className="w-5 h-5" />
+            <TrashIcon className="w-4 h-4 sm:w-5 sm:h-5" />
           )}
         </button>
       </div>
@@ -120,28 +120,28 @@ export const SavingCard = ({ saving, onEdit, onDelete }: SavingCardProps) => {
           transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
         }}
       >
-        <div className="p-3">
+        <div className="p-3 sm:p-4">
           <div className="flex items-center justify-between mb-2">
-            <div className="text-sm text-gray-500 dark:text-gray-400">
+            <div className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
               {new Date(saving.date).toLocaleDateString()}
             </div>
-            <div className={`flex items-center text-lg font-semibold ${
+            <div className={`flex items-center text-base sm:text-lg font-semibold ${
               isCredit ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
             }`}>
               {isCredit ? (
-                <ArrowUpIcon className="w-4 h-4 mr-1" />
+                <ArrowUpIcon className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
               ) : (
-                <ArrowDownIcon className="w-4 h-4 mr-1" />
+                <ArrowDownIcon className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
               )}
               {isCredit ? '+' : '-'}{formatUSD(Math.abs(saving.amount))}
             </div>
           </div>
 
-          <div className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">
+          <div className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-2 truncate">
             {saving.description}
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             {category && (
               <span 
                 className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"

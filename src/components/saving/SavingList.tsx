@@ -128,7 +128,7 @@ export const SavingList: React.FC<SavingListProps> = ({
 
   if (isLoading) {
     return (
-      <div className="flex justify-center py-8">
+      <div className="flex justify-center py-6 sm:py-8">
         <LoadingSpinner size="large" className="text-indigo-600" />
       </div>
     );
@@ -136,15 +136,22 @@ export const SavingList: React.FC<SavingListProps> = ({
 
   if (!savings.length) {
     return (
-      <div className="text-center py-8 text-gray-500">
-        <p className="text-lg">{t('savings.noSavings')}</p>
-        <p className="text-sm mt-2">{t('savings.addSavingPrompt')}</p>
+      <div className="text-center py-6 sm:py-8 text-gray-500 dark:text-gray-400 px-4">
+        <div className="max-w-sm mx-auto">
+          <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center">
+            <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+            </svg>
+          </div>
+          <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">{t('savings.noSavings')}</h3>
+          <p className="text-sm text-gray-500 dark:text-gray-400">{t('savings.addSavingPrompt')}</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3 sm:space-y-4">
       {/* Mobile Filter Bar */}
       <div className="block lg:hidden">
         <div className="flex flex-col gap-3 mb-4">
@@ -152,7 +159,8 @@ export const SavingList: React.FC<SavingListProps> = ({
             <div className="flex-1 relative">
               <input
                 type="text"
-                className="w-full pl-9 pr-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-700"
+                className="w-full pl-9 pr-3 py-2.5 text-sm rounded-lg border border-gray-300 dark:border-gray-700 
+                  dark:bg-gray-800 min-h-[44px] touch-manipulation"
                 placeholder={t('common.search')}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -161,7 +169,8 @@ export const SavingList: React.FC<SavingListProps> = ({
             </div>
             <button
               onClick={() => setIsFiltersOpen(!isFiltersOpen)}
-              className="p-2 rounded-lg border border-gray-300 dark:border-gray-700"
+              className="p-2.5 rounded-lg border border-gray-300 dark:border-gray-700 
+                min-h-[44px] min-w-[44px] touch-manipulation"
             >
               <FunnelIcon className="h-5 w-5 text-gray-500" />
             </button>
@@ -170,7 +179,8 @@ export const SavingList: React.FC<SavingListProps> = ({
           {isFiltersOpen && (
             <div className="grid grid-cols-2 gap-2 p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
               <select
-                className="px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800"
+                className="px-3 py-2.5 text-sm rounded-lg border border-gray-300 dark:border-gray-700 
+                  bg-white dark:bg-gray-800 min-h-[44px] touch-manipulation"
                 value={selectedCategory}
                 onChange={(e) => setSelectedCategory(e.target.value)}
               >
@@ -183,7 +193,8 @@ export const SavingList: React.FC<SavingListProps> = ({
               </select>
               
               <select
-                className="px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800"
+                className="px-3 py-2.5 text-sm rounded-lg border border-gray-300 dark:border-gray-700 
+                  bg-white dark:bg-gray-800 min-h-[44px] touch-manipulation"
                 value={selectedType}
                 onChange={(e) => setSelectedType(e.target.value as 'all' | 'credit' | 'debit')}
               >
@@ -204,7 +215,7 @@ export const SavingList: React.FC<SavingListProps> = ({
           </div>
           <input
             type="text"
-            className="block w-full pl-9 sm:pl-10 pr-3 py-2 text-sm border border-gray-300 rounded-md leading-5 bg-white dark:bg-gray-800 dark:border-gray-700 placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
+            className="block w-full pl-9 sm:pl-10 pr-3 py-2 text-sm border border-gray-300 rounded-md leading-5 bg-white dark:bg-gray-800 dark:border-gray-700 placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 min-h-[44px] touch-manipulation"
             placeholder={t('common.search')}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -214,7 +225,7 @@ export const SavingList: React.FC<SavingListProps> = ({
         {/* Filters in a responsive grid */}
         <div className="grid grid-cols-2 sm:flex gap-2 sm:gap-4">
           <select
-            className="px-3 py-2 text-sm border border-gray-300 rounded-md bg-white dark:bg-gray-800 dark:border-gray-700 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
+            className="px-3 py-2 text-sm border border-gray-300 rounded-md bg-white dark:bg-gray-800 dark:border-gray-700 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 min-h-[44px] touch-manipulation"
             value={selectedCategory}
             onChange={(e) => setSelectedCategory(e.target.value)}
           >
@@ -227,7 +238,7 @@ export const SavingList: React.FC<SavingListProps> = ({
           </select>
           
           <select
-            className="px-3 py-2 text-sm border border-gray-300 rounded-md bg-white dark:bg-gray-800 dark:border-gray-700 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
+            className="px-3 py-2 text-sm border border-gray-300 rounded-md bg-white dark:bg-gray-800 dark:border-gray-700 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 min-h-[44px] touch-manipulation"
             value={selectedType}
             onChange={(e) => setSelectedType(e.target.value as 'all' | 'credit' | 'debit')}
           >
@@ -260,13 +271,13 @@ export const SavingList: React.FC<SavingListProps> = ({
               <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                 <thead className="bg-gray-50 dark:bg-gray-800">
                   <tr>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    <th scope="col" className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                       {t('common.no')}
                     </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    <th scope="col" className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                       <button 
                         onClick={() => handleSort('date')}
-                        className="group inline-flex items-center space-x-1 hover:text-gray-700 dark:hover:text-gray-300"
+                        className="group inline-flex items-center space-x-1 hover:text-gray-700 dark:hover:text-gray-300 touch-manipulation"
                       >
                         <span>{t('savings.date')}</span>
                         {sortField === 'date' && (
@@ -276,10 +287,10 @@ export const SavingList: React.FC<SavingListProps> = ({
                         )}
                       </button>
                     </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    <th scope="col" className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                       <button 
                         onClick={() => handleSort('amount')}
-                        className="group inline-flex items-center space-x-1 hover:text-gray-700 dark:hover:text-gray-300"
+                        className="group inline-flex items-center space-x-1 hover:text-gray-700 dark:hover:text-gray-300 touch-manipulation"
                       >
                         <span>{t('savings.amount')}</span>
                         {sortField === 'amount' && (
@@ -289,16 +300,16 @@ export const SavingList: React.FC<SavingListProps> = ({
                         )}
                       </button>
                     </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    <th scope="col" className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                       {t('savings.description')}
                     </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    <th scope="col" className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                       {t('savings.category')}
                     </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    <th scope="col" className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                       {t('savings.type')}
                     </th>
-                    <th scope="col" className="relative px-6 py-3">
+                    <th scope="col" className="relative px-3 sm:px-6 py-3">
                       <span className="sr-only">{t('common.actions')}</span>
                     </th>
                   </tr>
@@ -314,33 +325,33 @@ export const SavingList: React.FC<SavingListProps> = ({
                         tabIndex={0}
                         onKeyDown={(e) => handleKeyDown(e, index, saving)}
                       >
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                        <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-500 dark:text-gray-400">
                           {index + 1 + (currentPage - 1) * itemsPerPage}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                        <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-500 dark:text-gray-400">
                           {new Date(saving.date).toLocaleDateString()}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
                           <div className="flex items-center space-x-2">
                             {isCredit ? (
                               <ArrowUpIcon className="h-4 w-4 text-green-500" />
                             ) : (
                               <ArrowDownIcon className="h-4 w-4 text-red-500" />
                             )}
-                            <span className={`text-lg font-semibold ${
+                            <span className={`text-sm sm:text-lg font-semibold ${
                               isCredit ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
                             }`}>
                               {isCredit ? '+' : '-'}{formatUSD(Math.abs(saving.amount))}
                             </span>
                           </div>
                         </td>
-                        <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
+                        <td className="px-3 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm text-gray-500 dark:text-gray-400 truncate max-w-[200px]">
                           {saving.description || '-'}
                         </td>
-                        <td className="px-6 py-4 text-sm">
+                        <td className="px-3 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm">
                           {category ? (
                             <span 
-                              className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+                              className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
                               style={{ 
                                 backgroundColor: `${category.color}20`,
                                 color: category.color 
@@ -350,8 +361,8 @@ export const SavingList: React.FC<SavingListProps> = ({
                             </span>
                           ) : '-'}
                         </td>
-                        <td className="px-6 py-4 text-sm">
-                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                        <td className="px-3 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm">
+                          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
                             isCredit 
                               ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400'
                               : 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400'
@@ -359,20 +370,20 @@ export const SavingList: React.FC<SavingListProps> = ({
                             {isCredit ? t('savings.credit') : t('savings.debit')}
                           </span>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-right text-xs sm:text-sm font-medium">
                           <button
                             onClick={() => onEdit(saving)}
-                            className="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300 mr-4"
+                            className="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300 mr-3 sm:mr-4 p-1 touch-manipulation min-h-[32px] min-w-[32px]"
                             aria-label={t('common.edit')}
                           >
-                            <PencilIcon className="h-5 w-5" />
+                            <PencilIcon className="h-4 w-4 sm:h-5 sm:w-5" />
                           </button>
                           <button
                             onClick={() => handleDeleteClick(saving.id)}
-                            className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
+                            className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 p-1 touch-manipulation min-h-[32px] min-w-[32px]"
                             aria-label={t('common.delete')}
                           >
-                            <TrashIcon className="h-5 w-5" />
+                            <TrashIcon className="h-4 w-4 sm:h-5 sm:w-5" />
                           </button>
                         </td>
                       </tr>
@@ -388,7 +399,7 @@ export const SavingList: React.FC<SavingListProps> = ({
       {/* Mobile-Friendly Pagination */}
       {totalPages > 1 && (
         <div className="px-3 py-3 flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-gray-200 dark:border-gray-700">
-          <p className="text-sm text-gray-500 dark:text-gray-400">
+          <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
             {(currentPage - 1) * itemsPerPage + 1}-{Math.min(currentPage * itemsPerPage, sortedSavings.length)} {t('common.of')} {sortedSavings.length}
           </p>
           
@@ -396,18 +407,18 @@ export const SavingList: React.FC<SavingListProps> = ({
             <button
               onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
               disabled={currentPage === 1}
-              className="px-4 py-2 text-sm font-medium rounded-lg border border-gray-300 dark:border-gray-700 
+              className="px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium rounded-lg border border-gray-300 dark:border-gray-700 
                 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 
-                disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px] touch-manipulation"
             >
               {t('common.prev')}
             </button>
             <button
               onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
               disabled={currentPage === totalPages}
-              className="px-4 py-2 text-sm font-medium rounded-lg border border-gray-300 dark:border-gray-700 
+              className="px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium rounded-lg border border-gray-300 dark:border-gray-700 
                 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 
-                disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px] touch-manipulation"
             >
               {t('common.next')}
             </button>
