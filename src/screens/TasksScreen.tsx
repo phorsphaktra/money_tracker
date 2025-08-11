@@ -81,11 +81,10 @@ export const TasksScreen = () => {
     }
   };
 
-
   // Render loading state with skeleton
   if (loading) {
     return (
-      <div className="flex h-screen items-center justify-center bg-gray-50 dark:bg-slate-900">
+      <div className="flex h-screen items-center justify-center bg-gray-50 dark:bg-slate-900 safe-area-inset-top">
         <div className="space-y-4 w-full max-w-lg px-4">
           {[...Array(3)].map((_, i) => (
             <div key={i} className="animate-pulse">
@@ -99,13 +98,13 @@ export const TasksScreen = () => {
   }
 
   return (
-    <div className="flex h-screen bg-gray-50 dark:bg-slate-900">
+    <div className="flex h-screen bg-gray-50 dark:bg-slate-900 safe-area-inset-top">
       {/* Mobile Sidebar Toggle */}
       <button
         onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-        className="lg:hidden fixed z-50 bottom-4 right-4 p-3 rounded-full bg-indigo-600 text-white shadow-lg"
+        className="lg:hidden fixed z-50 bottom-4 right-4 p-3 rounded-full bg-indigo-600 text-white shadow-lg min-h-[44px] min-w-[44px] touch-manipulation mobile-button mobile-active"
       >
-        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
             d={isSidebarOpen ? "M6 18L18 6M6 6l12 12" : "M4 6h16M4 12h16M4 18h16"} />
         </svg>
@@ -115,7 +114,7 @@ export const TasksScreen = () => {
       {isSidebarOpen && (
         <div
           onClick={() => setIsSidebarOpen(false)}
-          className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 lg:hidden
+          className="fixed inset-0 bg-black/20 mobile-modal-backdrop z-40 lg:hidden
             transition-opacity duration-300 ease-in-out"
         />
       )}
@@ -129,13 +128,13 @@ export const TasksScreen = () => {
           ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}
       >
         <div className="flex flex-col h-full">
-          <div className="flex items-center justify-between p-6">
-            <h2 className="text-xl font-semibold text-slate-900 dark:text-white">Projects</h2>
+          <div className="flex items-center justify-between p-4 sm:p-6">
+            <h2 className="text-lg sm:text-xl font-semibold text-slate-900 dark:text-white">Projects</h2>
             <button
               onClick={() => setShowNewProjectForm(true)}
               className="p-2 rounded-lg text-indigo-600 dark:text-indigo-400 
                 hover:bg-indigo-50 dark:hover:bg-indigo-500/10
-                transition-colors duration-200"
+                transition-colors duration-200 min-h-[44px] min-w-[44px] touch-manipulation"
             >
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -143,20 +142,23 @@ export const TasksScreen = () => {
             </button>
           </div>
 
-          <div className="flex-1 overflow-y-auto px-4">
+          <div className="flex-1 overflow-y-auto px-3 sm:px-4">
             <div className="space-y-1">
               {projects.map(project => (
                 <button
                   key={project.id}
-                  onClick={() => setSelectedProject(project)}
-                  className={`w-full text-left px-4 py-3 rounded-xl transition-all duration-200
+                  onClick={() => {
+                    setSelectedProject(project);
+                    setIsSidebarOpen(false); // Close sidebar on mobile after selection
+                  }}
+                  className={`w-full text-left px-3 sm:px-4 py-3 rounded-xl transition-all duration-200 min-h-[44px] touch-manipulation
                     ${selectedProject?.id === project.id
                       ? 'bg-gradient-to-r from-indigo-50 to-violet-50/50 dark:from-indigo-500/10 dark:to-violet-500/10 text-indigo-600 dark:text-indigo-400'
                       : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
                     }`}
                 >
-                  <div className="font-medium">{project.name}</div>
-                  <div className="text-sm text-slate-500 dark:text-slate-500">
+                  <div className="font-medium text-sm sm:text-base truncate">{project.name}</div>
+                  <div className="text-xs sm:text-sm text-slate-500 dark:text-slate-500">
                     {project.members.length} members
                   </div>
                 </button>
@@ -167,24 +169,24 @@ export const TasksScreen = () => {
       </aside>
 
       {/* Main content */}
-      <main className="flex-1 overflow-auto">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="flex-1 overflow-auto smooth-scroll">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8">
           {/* Error Message */}
           {error && (
-            <div className="mb-4 p-4 bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/30 rounded-xl">
-              <p className="text-red-600 dark:text-red-400">{error}</p>
+            <div className="mb-4 p-3 sm:p-4 bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/30 rounded-xl">
+              <p className="text-red-600 dark:text-red-400 text-sm sm:text-base">{error}</p>
             </div>
           )}
 
           {/* Header with Stats */}
-          <div className="mb-8 space-y-6">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="mb-6 sm:mb-8 space-y-4 sm:space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
               <div>
-                <h1 className="text-2xl font-semibold text-slate-900 dark:text-white">
+                <h1 className="text-xl sm:text-2xl font-semibold text-slate-900 dark:text-white leading-tight">
                   {selectedProject ? selectedProject.name : 'All Tasks'}
                 </h1>
                 {selectedProject && (
-                  <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+                  <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
                     {selectedProject.members.length} team members
                   </p>
                 )}
@@ -192,18 +194,19 @@ export const TasksScreen = () => {
               <button
                 onClick={() => setShowNewTaskForm(true)}
                 disabled={!selectedProject}
-                className="px-4 py-2 bg-gradient-to-r from-indigo-500 to-violet-500
+                className="px-4 py-2.5 sm:py-2 bg-gradient-to-r from-indigo-500 to-violet-500
                   hover:from-indigo-600 hover:to-violet-600
                   disabled:from-slate-400 disabled:to-slate-500
                   text-white rounded-lg shadow-sm disabled:opacity-50 
-                  disabled:cursor-not-allowed transition-all duration-200"
+                  disabled:cursor-not-allowed transition-all duration-200
+                  min-h-[44px] touch-manipulation mobile-button mobile-active"
               >
                 Add New Task
               </button>
             </div>
 
             {/* Task Statistics */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
               {[
                 { label: 'Total Tasks', value: taskStats.total, color: 'slate' },
                 { label: 'Completed', value: taskStats.completed, color: 'green' },
@@ -212,11 +215,11 @@ export const TasksScreen = () => {
               ].map(({ label, value, color }) => (
                 <div key={label} className={`bg-${color}-50 dark:bg-${color}-500/10 
                   border border-${color}-200/50 dark:border-${color}-500/30 
-                  rounded-xl p-4`}>
-                  <dt className={`text-${color}-600 dark:text-${color}-400 text-sm font-medium`}>
+                  rounded-xl p-3 sm:p-4 mobile-card-hover mobile-transition`}>
+                  <dt className={`text-${color}-600 dark:text-${color}-400 text-xs sm:text-sm font-medium truncate`}>
                     {label}
                   </dt>
-                  <dd className={`text-${color}-700 dark:text-${color}-300 text-2xl font-semibold`}>
+                  <dd className={`text-${color}-700 dark:text-${color}-300 text-lg sm:text-xl md:text-2xl font-semibold`}>
                     {value}
                   </dd>
                 </div>
@@ -235,19 +238,27 @@ export const TasksScreen = () => {
 
       {/* Modals */}
       {showNewTaskForm && selectedProject?.id && (
-        <TaskModal
-          onClose={() => setShowNewTaskForm(false)}
-          onSubmit={handleCreateTask}
-          projectMembers={selectedProject.members}
-          projectId={selectedProject.id}
-        />
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 mobile-modal-backdrop p-3 sm:p-4 overflow-y-auto safe-area-inset-top safe-area-inset-bottom">
+          <div className="w-full max-w-[95vw] sm:max-w-lg mx-auto">
+            <TaskModal
+              onClose={() => setShowNewTaskForm(false)}
+              onSubmit={handleCreateTask}
+              projectMembers={selectedProject.members}
+              projectId={selectedProject.id}
+            />
+          </div>
+        </div>
       )}
 
       {showNewProjectForm && (
-        <ProjectModal
-          onClose={() => setShowNewProjectForm(false)}
-          onSubmit={handleCreateProject}
-        />
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 mobile-modal-backdrop p-3 sm:p-4 overflow-y-auto safe-area-inset-top safe-area-inset-bottom">
+          <div className="w-full max-w-[95vw] sm:max-w-md mx-auto">
+            <ProjectModal
+              onClose={() => setShowNewProjectForm(false)}
+              onSubmit={handleCreateProject}
+            />
+          </div>
+        </div>
       )}
     </div>
   );

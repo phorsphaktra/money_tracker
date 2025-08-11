@@ -92,53 +92,80 @@ export const TaskModal: React.FC<TaskModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-2xl font-bold">{task ? 'Edit Task' : 'New Task'}</h2>
-            <button type="button" onClick={onClose} className="text-gray-500 hover:text-gray-700" disabled={isSubmitting}>✕</button>
+    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-h-[90vh] overflow-y-auto">
+      <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-4 sm:space-y-6">
+        <div className="flex justify-between items-center mb-4 sm:mb-6">
+          <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 dark:text-white">{task ? 'Edit Task' : 'New Task'}</h2>
+          <button 
+            type="button" 
+            onClick={onClose} 
+            className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 p-2 min-h-[44px] min-w-[44px] touch-manipulation" 
+            disabled={isSubmitting}
+          >
+            ✕
+          </button>
+        </div>
+
+        {error && (
+          <div className="p-3 sm:p-4 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 rounded-lg text-sm sm:text-base">
+            {error}
           </div>
+        )}
 
-          {error && (
-            <div className="p-3 bg-red-100 text-red-700 rounded">{error}</div>
-          )}
-
-          <div className="space-y-4">
+        <div className="space-y-4 sm:space-y-6">
+          <div className="space-y-1 sm:space-y-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              Task Title
+            </label>
             <input
               type="text"
               value={formData.title}
               onChange={e => setFormData({...formData, title: e.target.value})}
-              placeholder="Task title"
-              className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500"
+              placeholder="Enter task title"
+              className="w-full p-2.5 sm:p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white min-h-[44px] touch-manipulation"
               required
               disabled={isSubmitting}
             />
+          </div>
 
+          <div className="space-y-1 sm:space-y-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              Description
+            </label>
             <textarea
               value={formData.description}
               onChange={e => setFormData({...formData, description: e.target.value})}
-              placeholder="Task description"
-              className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 h-32"
+              placeholder="Enter task description"
+              className="w-full p-2.5 sm:p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white min-h-[88px] touch-manipulation resize-none"
               disabled={isSubmitting}
             />
+          </div>
 
-            <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+            <div className="space-y-1 sm:space-y-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                Priority
+              </label>
               <select
                 value={formData.priority}
                 onChange={e => setFormData({...formData, priority: e.target.value as TaskPriority})}
-                className="p-2 border rounded"
+                className="w-full p-2.5 sm:p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white min-h-[44px] touch-manipulation"
                 disabled={isSubmitting}
               >
                 <option value="Low">Low Priority</option>
                 <option value="Medium">Medium Priority</option>
                 <option value="High">High Priority</option>
               </select>
+            </div>
 
+            <div className="space-y-1 sm:space-y-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                Assign To
+              </label>
               <select
                 value={formData.assignedTo}
                 onChange={e => setFormData({...formData, assignedTo: e.target.value})}
-                className="p-2 border rounded"
+                className="w-full p-2.5 sm:p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white min-h-[44px] touch-manipulation"
                 disabled={isSubmitting}
               >
                 <option value="">Assign to...</option>
@@ -146,20 +173,30 @@ export const TaskModal: React.FC<TaskModalProps> = ({
                   <option key={member} value={member}>{member}</option>
                 ))}
               </select>
+            </div>
 
+            <div className="space-y-1 sm:space-y-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                Due Date
+              </label>
               <input
                 type="date"
                 value={formData.dueDate}
                 onChange={e => setFormData({...formData, dueDate: e.target.value})}
-                className="p-2 border rounded"
+                className="w-full p-2.5 sm:p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white min-h-[44px] touch-manipulation"
                 required
                 disabled={isSubmitting}
               />
+            </div>
 
+            <div className="space-y-1 sm:space-y-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                Status
+              </label>
               <select
                 value={formData.status}
                 onChange={e => setFormData({...formData, status: e.target.value as TaskStatus})}
-                className="p-2 border rounded"
+                className="w-full p-2.5 sm:p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white min-h-[44px] touch-manipulation"
                 disabled={isSubmitting}
               >
                 <option value="initial">Initial</option>
@@ -169,62 +206,62 @@ export const TaskModal: React.FC<TaskModalProps> = ({
               </select>
             </div>
           </div>
+        </div>
 
-          {/* Add Comments Section */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-medium">Comments</h3>
-            <div className="space-y-2 max-h-60 overflow-y-auto">
-              {formData.comments.map(comment => (
-                <div key={comment.id} className="bg-gray-50 p-3 rounded">
-                  <div className="flex justify-between items-center">
-                    <span className="font-medium text-sm">{comment.userId}</span>
-                    <span className="text-xs text-gray-500">
-                      {new Date(comment.createdAt).toLocaleString()}
-                    </span>
-                  </div>
-                  <p className="text-sm mt-1">{comment.message}</p>
+        {/* Add Comments Section */}
+        <div className="space-y-3 sm:space-y-4">
+          <h3 className="text-base sm:text-lg font-medium text-gray-900 dark:text-white">Comments</h3>
+          <div className="space-y-2 max-h-40 sm:max-h-60 overflow-y-auto">
+            {formData.comments.map(comment => (
+              <div key={comment.id} className="bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
+                <div className="flex justify-between items-center">
+                  <span className="font-medium text-xs sm:text-sm text-gray-900 dark:text-white">{comment.userId}</span>
+                  <span className="text-xs text-gray-500 dark:text-gray-400">
+                    {new Date(comment.createdAt).toLocaleString()}
+                  </span>
                 </div>
-              ))}
-            </div>
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={newComment}
-                onChange={e => setNewComment(e.target.value)}
-                placeholder="Add a comment..."
-                className="flex-1 p-2 border rounded focus:ring-2 focus:ring-blue-500"
-                disabled={isSubmitting}
-              />
-              <button
-                type="button"
-                onClick={handleAddComment}
-                disabled={isSubmitting || !newComment.trim()}
-                className="px-4 py-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 disabled:opacity-50"
-              >
-                Add Comment
-              </button>
-            </div>
+                <p className="text-xs sm:text-sm mt-1 text-gray-700 dark:text-gray-300">{comment.message}</p>
+              </div>
+            ))}
           </div>
-
-          <div className="flex justify-end gap-2 mt-6">
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={newComment}
+              onChange={e => setNewComment(e.target.value)}
+              placeholder="Add a comment..."
+              className="flex-1 p-2.5 sm:p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white min-h-[44px] touch-manipulation"
+              disabled={isSubmitting}
+            />
             <button
               type="button"
-              onClick={onClose}
-              className="px-4 py-2 text-gray-600 hover:text-gray-800"
-              disabled={isSubmitting}
+              onClick={handleAddComment}
+              disabled={isSubmitting || !newComment.trim()}
+              className="px-3 sm:px-4 py-2.5 sm:py-3 bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-500 disabled:opacity-50 min-h-[44px] touch-manipulation text-sm"
             >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={loading || isSubmitting}
-              className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50"
-            >
-              {loading ? 'Saving...' : task ? 'Update Task' : 'Create Task'}
+              Add
             </button>
           </div>
-        </form>
-      </div>
+        </div>
+
+        <div className="flex justify-end gap-2 sm:gap-3 mt-6 sm:mt-8">
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-4 py-2.5 sm:py-3 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 min-h-[44px] touch-manipulation"
+            disabled={isSubmitting}
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            disabled={loading || isSubmitting}
+            className="px-4 py-2.5 sm:py-3 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 disabled:opacity-50 min-h-[44px] touch-manipulation mobile-button mobile-active"
+          >
+            {loading ? 'Saving...' : task ? 'Update Task' : 'Create Task'}
+          </button>
+        </div>
+      </form>
     </div>
   );
 };

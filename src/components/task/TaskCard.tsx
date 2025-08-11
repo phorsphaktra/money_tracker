@@ -29,12 +29,13 @@ export const TaskCard: React.FC<TaskCardProps> = ({
       className={`group bg-white dark:bg-slate-800/50 rounded-lg sm:rounded-xl shadow-sm 
         hover:shadow-md border border-slate-200/50 dark:border-slate-700/50
         transition-all duration-200 cursor-pointer backdrop-blur-sm
-        hover:scale-[1.01] sm:hover:scale-[1.02] ${task.status === 'completed' ? 'bg-slate-50/50 dark:bg-slate-800/30' : ''}`}
+        hover:scale-[1.01] sm:hover:scale-[1.02] mobile-card-hover mobile-transition
+        ${task.status === 'completed' ? 'bg-slate-50/50 dark:bg-slate-800/30' : ''}`}
     >
       <div className={`p-3 sm:p-4 ${loading ? 'opacity-50' : ''}`}>
         <div className="flex items-start gap-2 sm:gap-4">
           <div onClick={(e) => e.stopPropagation()} 
-            className="mt-1 relative group-hover:scale-110 transition-transform">
+            className="mt-1 relative group-hover:scale-110 transition-transform flex-shrink-0">
             <input
               type="checkbox"
               checked={task.status === TaskStatus.Completed}
@@ -43,7 +44,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({
               disabled={loading}
               className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-600 rounded-lg focus:ring-indigo-500
                 dark:border-slate-600 dark:checked:border-indigo-500 cursor-pointer
-                transition-all duration-200"
+                transition-all duration-200 touch-manipulation"
             />
           </div>
           
@@ -69,9 +70,10 @@ export const TaskCard: React.FC<TaskCardProps> = ({
                 onChange={(e) => onPriorityChange(e.target.value)}
                 onClick={(e) => e.stopPropagation()}
                 disabled={loading}
-                className={`text-xs px-2 py-1 sm:px-2.5 sm:py-1.5 rounded-lg bg-white/50 dark:bg-slate-800/50 
+                className={`text-xs px-2 py-1.5 sm:px-2.5 sm:py-1.5 rounded-lg bg-white/50 dark:bg-slate-800/50 
                   border cursor-pointer transition-all duration-200 max-w-[110px]
                   hover:border-indigo-500/50 dark:hover:border-indigo-500/50
+                  min-h-[32px] sm:min-h-[36px] touch-manipulation
                   ${task.priority === 'High' 
                     ? 'border-red-200 dark:border-red-800/50 text-red-600 dark:text-red-400' 
                     : task.priority === 'Medium'
@@ -88,12 +90,12 @@ export const TaskCard: React.FC<TaskCardProps> = ({
                 onChange={(e) => onStatusChange(e.target.value as TaskStatus)}
                 onClick={(e) => e.stopPropagation()}
                 disabled={loading}
-                className="text-xs px-2 py-1 sm:px-2.5 sm:py-1.5 rounded-lg bg-white/50 dark:bg-slate-800/50 
+                className="text-xs px-2 py-1.5 sm:px-2.5 sm:py-1.5 rounded-lg bg-white/50 dark:bg-slate-800/50 
                   border border-slate-200 dark:border-slate-700 max-w-[120px]
                   text-slate-700 dark:text-slate-300 cursor-pointer
                   focus:ring-2 focus:ring-indigo-500/50 outline-none
                   hover:border-indigo-500/50 dark:hover:border-indigo-500/50
-                  transition-all duration-200"
+                  transition-all duration-200 min-h-[32px] sm:min-h-[36px] touch-manipulation"
               >
                 {Object.values(TaskStatus).map(status => (
                   <option key={status} value={status}>
@@ -102,9 +104,9 @@ export const TaskCard: React.FC<TaskCardProps> = ({
                 ))}
               </select>
 
-              <span className="text-xs px-2 py-1 sm:px-2.5 sm:py-1.5 text-slate-500 dark:text-slate-400 
+              <span className="text-xs px-2 py-1.5 sm:px-2.5 sm:py-1.5 text-slate-500 dark:text-slate-400 
                 bg-slate-100 dark:bg-slate-800/50 rounded-lg border border-slate-200/50 
-                dark:border-slate-700/50">
+                dark:border-slate-700/50 whitespace-nowrap">
                 Due {format(new Date(task.dueDate), 'MMM d')}
               </span>
             </div>
@@ -113,10 +115,11 @@ export const TaskCard: React.FC<TaskCardProps> = ({
           <div className="flex items-center gap-1 sm:gap-2 opacity-70 sm:opacity-0 group-hover:opacity-100 transition-opacity">
             <button
               onClick={(e) => { e.stopPropagation(); onEdit(); }}
-              className="p-1.5 sm:p-2 text-slate-400 hover:text-indigo-500 transition-colors"
+              className="p-1.5 sm:p-2 text-slate-400 hover:text-indigo-500 transition-colors
+                min-h-[32px] min-w-[32px] sm:min-h-[36px] sm:min-w-[36px] touch-manipulation"
               disabled={loading}
             >
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} 
                   d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
               </svg>
@@ -124,12 +127,13 @@ export const TaskCard: React.FC<TaskCardProps> = ({
             <button
               onClick={(e) => { e.stopPropagation(); onDelete(); }}
               disabled={loading}
-              className="p-1.5 sm:p-2 text-slate-400 hover:text-red-500 disabled:opacity-50 transition-colors"
+              className="p-1.5 sm:p-2 text-slate-400 hover:text-red-500 disabled:opacity-50 transition-colors
+                min-h-[32px] min-w-[32px] sm:min-h-[36px] sm:min-w-[36px] touch-manipulation"
             >
               {loading ? (
-                <div className="animate-spin h-5 w-5 border-2 border-slate-500 rounded-full" />
+                <div className="animate-spin h-4 w-4 sm:h-5 sm:w-5 border-2 border-slate-500 rounded-full" />
               ) : (
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} 
                     d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                 </svg>

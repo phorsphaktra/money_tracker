@@ -135,21 +135,22 @@ export const TaskList = ({ tasks, onUpdateTask, onDeleteTask }: TaskListProps) =
           placeholder="Search tasks..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full pl-10 pr-4 py-2.5 sm:py-2 text-sm sm:text-base rounded-xl 
+          className="w-full pl-10 pr-4 py-2.5 sm:py-3 text-sm sm:text-base rounded-xl 
             border border-slate-200 dark:border-slate-700/50 
             bg-white dark:bg-slate-800/50 focus:ring-2 
             focus:ring-indigo-500/50 outline-none
-            placeholder-slate-400 dark:placeholder-slate-500"
+            placeholder-slate-400 dark:placeholder-slate-500
+            min-h-[44px] touch-manipulation"
         />
         <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 
-          w-5 h-5 text-slate-400" />
+          w-4 h-4 sm:w-5 sm:h-5 text-slate-400" />
       </div>
 
       {/* Empty State with responsive design */}
       {filteredTasks.length === 0 && (
-        <div className="text-center py-8 sm:py-12">
+        <div className="text-center py-6 sm:py-8 md:py-12">
           <div className="text-slate-400 dark:text-slate-500 px-4">
-            <svg className="mx-auto h-10 w-10 sm:h-12 sm:w-12" fill="none" viewBox="0 0 24 24" 
+            <svg className="mx-auto h-8 w-8 sm:h-10 sm:w-10 md:h-12 md:w-12" fill="none" viewBox="0 0 24 24" 
               stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} 
                 d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
@@ -157,6 +158,11 @@ export const TaskList = ({ tasks, onUpdateTask, onDeleteTask }: TaskListProps) =
             <p className="mt-2 text-sm sm:text-base">
               {searchQuery ? 'No tasks found matching your search' : 'No tasks yet'}
             </p>
+            {!searchQuery && (
+              <p className="mt-1 text-xs sm:text-sm text-slate-400 dark:text-slate-500">
+                Create your first task to get started
+              </p>
+            )}
           </div>
         </div>
       )}
@@ -179,16 +185,20 @@ export const TaskList = ({ tasks, onUpdateTask, onDeleteTask }: TaskListProps) =
       </div>
 
       {editingTask && (
-        <TaskModal
-          task={editingTask}
-          onClose={() => setEditingTask(null)}
-          onSubmit={async (updates) => {
-            await onUpdateTask(editingTask.id, updates);
-            setEditingTask(null);
-          }}
-          projectMembers={[]} // Pass actual project members
-          projectId={editingTask.projectId}
-        />
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 mobile-modal-backdrop p-3 sm:p-4 overflow-y-auto safe-area-inset-top safe-area-inset-bottom">
+          <div className="w-full max-w-[95vw] sm:max-w-lg mx-auto">
+            <TaskModal
+              task={editingTask}
+              onClose={() => setEditingTask(null)}
+              onSubmit={async (updates) => {
+                await onUpdateTask(editingTask.id, updates);
+                setEditingTask(null);
+              }}
+              projectMembers={[]} // Pass actual project members
+              projectId={editingTask.projectId}
+            />
+          </div>
+        </div>
       )}
 
       <ConfirmDialog
@@ -222,14 +232,18 @@ export const TaskList = ({ tasks, onUpdateTask, onDeleteTask }: TaskListProps) =
       />
 
       {selectedTask && (
-        <TaskDetailModal
-          task={selectedTask}
-          onClose={() => setSelectedTask(null)}
-          onUpdate={() => {
-            // onUpdateTask(updatedTask);
-            setSelectedTask(null);
-          }}
-        />
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 mobile-modal-backdrop p-3 sm:p-4 overflow-y-auto safe-area-inset-top safe-area-inset-bottom">
+          <div className="w-full max-w-[95vw] sm:max-w-lg mx-auto">
+            <TaskDetailModal
+              task={selectedTask}
+              onClose={() => setSelectedTask(null)}
+              onUpdate={() => {
+                // onUpdateTask(updatedTask);
+                setSelectedTask(null);
+              }}
+            />
+          </div>
+        </div>
       )}
     </div>
   );
