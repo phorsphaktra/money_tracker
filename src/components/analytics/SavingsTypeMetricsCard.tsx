@@ -107,62 +107,62 @@ export const SavingsTypeMetricsCard: React.FC<SavingsTypeMetricsCardProps> = ({ 
 
     return (
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden">
-        <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <div className={`p-2 rounded-full ${bgColorClass}`}>
-                <Icon className={`h-5 w-5 ${colorClass}`}/>
+        <div className="p-3 sm:p-4 border-b border-gray-200 dark:border-gray-700">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center space-x-2 min-w-0 flex-1">
+              <div className={`p-1.5 sm:p-2 rounded-full ${bgColorClass} flex-shrink-0`}>
+                <Icon className={`h-4 w-4 sm:h-5 sm:w-5 ${colorClass}`}/>
               </div>
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+              <h3 className="text-sm sm:text-lg font-semibold text-gray-900 dark:text-gray-100 truncate">
                 {isCredit ? t('savings.credit') : t('savings.debit')}
               </h3>
             </div>
-            <div className="text-right">
-              <p className={`text-xl font-bold ${colorClass}`}>
+            <div className="text-right flex-shrink-0">
+              <p className={`text-base sm:text-xl font-bold ${colorClass} truncate`}>
                 {formatUSD(data.total)}
               </p>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
+              <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
                 {data.count} {t('savings.transactions')}
               </p>
             </div>
           </div>
         </div>
 
-        <div className="p-4 space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+        <div className="p-3 sm:p-4 space-y-3 sm:space-y-4">
+          <div className="grid grid-cols-2 gap-3 sm:gap-4">
             <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">{t('savings.average')}</p>
-              <p className={`text-lg font-semibold ${colorClass}`}>
+              <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">{t('savings.average')}</p>
+              <p className={`text-sm sm:text-lg font-semibold ${colorClass} truncate`}>
                 {formatUSD(data.average)}
               </p>
             </div>
             <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">{t('savings.largest')}</p>
-              <p className={`text-lg font-semibold ${colorClass}`}>
+              <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">{t('savings.largest')}</p>
+              <p className={`text-sm sm:text-lg font-semibold ${colorClass} truncate`}>
                 {formatUSD(data.largest)}
               </p>
             </div>
           </div>
 
           <div>
-            <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <h4 className="text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               {t('savings.category_breakdown')}
             </h4>
             <div className="space-y-2">
               {data.categories.map(category => (
                 <div key={category.category} className="space-y-1">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-600 dark:text-gray-300">
+                  <div className="flex items-center justify-between text-xs sm:text-sm gap-2">
+                    <span className="text-gray-600 dark:text-gray-300 truncate min-w-0 flex-1">
                       {category.category === 'uncategorized' ? t('savings.uncategorized') : category.category}
                     </span>
-                    <div className="flex items-center space-x-2">
-                      <span className={colorClass}>{formatUSD(category.amount)}</span>
-                      <span className="text-gray-500 dark:text-gray-400">
+                    <div className="flex items-center space-x-1 sm:space-x-2 flex-shrink-0">
+                      <span className={`${colorClass} truncate`}>{formatUSD(category.amount)}</span>
+                      <span className="text-gray-500 dark:text-gray-400 text-xs">
                         ({category.count})
                       </span>
                     </div>
                   </div>
-                  <div className="h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                  <div className="h-1 sm:h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
                     <div
                       className={`h-full rounded-full ${isCredit ? 'bg-green-600 dark:bg-green-400' : 'bg-red-600 dark:bg-red-400'}`}
                       style={{ width: `${category.percentage}%` }}
@@ -178,7 +178,7 @@ export const SavingsTypeMetricsCard: React.FC<SavingsTypeMetricsCardProps> = ({ 
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4">
       {renderMetricsCard('credit', metrics.credit)}
       {renderMetricsCard('debit', metrics.debit)}
     </div>

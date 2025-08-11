@@ -30,12 +30,10 @@ import { CategoryBreakdownChart } from '../components/analytics/CategoryBreakdow
 import { SavingsTypeMetricsCard } from '../components/analytics/SavingsTypeMetricsCard';
 
 // Helper Functions
-
-
-  const monthKeys = [
-    'january', 'february', 'march', 'april', 'may', 'june',
-    'july', 'august', 'september', 'october', 'november', 'december'
-  ];
+const monthKeys = [
+  'january', 'february', 'march', 'april', 'may', 'june',
+  'july', 'august', 'september', 'october', 'november', 'december'
+];
 
 // Dashboard Components
 const DashboardHeader = ({ 
@@ -59,7 +57,6 @@ const DashboardHeader = ({
     const year = date.getFullYear();
       return {
         value: date,
-        // label: date.toLocaleString('default', { month: 'long', year: 'numeric' })
         label: `${t(`date.${month}`)} ${year}`
       };
     });
@@ -67,26 +64,25 @@ const DashboardHeader = ({
     
   return (
     <div className="bg-gradient-to-br from-indigo-600 via-indigo-500 to-purple-600 
-      rounded-2xl p-6 md:p-8 shadow-lg 
+      rounded-2xl p-4 sm:p-6 md:p-8 shadow-lg 
       hover:shadow-xl hover:from-indigo-500 hover:to-purple-500 
       transition-all duration-300">
-      <div className="flex justify-between items-start">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-white">{title}</h1>
-          <p className="text-sm text-indigo-100 mt-2">{subtitle}</p>
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
+        <div className="flex-1">
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-white leading-tight">{title}</h1>
+          <p className="text-xs sm:text-sm text-indigo-100 mt-1 sm:mt-2">{subtitle}</p>
         </div>
-        <div className="relative">
+        <div className="relative self-start">
           <button
             onClick={() => setIsOpen(!isOpen)}
-            className="flex items-center gap-2 bg-white/10 px-4 py-2 rounded-lg 
-              hover:bg-white/20 transition-colors duration-200"
+            className="flex items-center gap-2 bg-white/10 px-3 sm:px-4 py-2.5 sm:py-2 rounded-lg 
+              hover:bg-white/20 transition-colors duration-200 min-h-[44px] touch-manipulation"
           >
-            <CalendarIcon className="w-5 h-5 text-white/70" />
-            <span className="text-sm text-white">
+            <CalendarIcon className="w-4 h-4 sm:w-5 sm:h-5 text-white/70 flex-shrink-0" />
+            <span className="text-xs sm:text-sm text-white whitespace-nowrap">
               {t(`date.${monthKeys[selectedMonth.getMonth()]}`)} {selectedMonth.getFullYear()}
-
             </span>
-            <ChevronDownIcon className={`w-4 h-4 text-white/70 transition-transform duration-200
+            <ChevronDownIcon className={`w-3 h-3 sm:w-4 sm:h-4 text-white/70 transition-transform duration-200 flex-shrink-0
               ${isOpen ? 'rotate-180' : ''}`} />
           </button>
 
@@ -97,8 +93,8 @@ const DashboardHeader = ({
                 className="fixed inset-0 z-30" 
                 onClick={() => setIsOpen(false)}
               />
-              <div className="absolute right-0 mt-2 w-56 rounded-xl bg-white dark:bg-gray-800 
-                shadow-lg ring-1 ring-black/5 z-40 py-1 max-h-96 overflow-auto">
+              <div className="absolute right-0 mt-2 w-48 sm:w-56 rounded-xl bg-white dark:bg-gray-800 
+                shadow-lg ring-1 ring-black/5 z-40 py-1 max-h-80 sm:max-h-96 overflow-auto">
                 {months.map((month) => (
                   <button
                     key={month.value.toISOString()}
@@ -106,8 +102,8 @@ const DashboardHeader = ({
                       onMonthChange(month.value);
                       setIsOpen(false);
                     }}
-                    className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 
-                      dark:hover:bg-gray-700 transition-colors duration-200
+                    className={`w-full text-left px-3 sm:px-4 py-2.5 sm:py-2 text-sm hover:bg-gray-100 
+                      dark:hover:bg-gray-700 transition-colors duration-200 min-h-[44px] touch-manipulation
                       ${month.value.getMonth() === selectedMonth.getMonth() &&
                       month.value.getFullYear() === selectedMonth.getFullYear()
                         ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400'
@@ -150,32 +146,31 @@ const MetricCard = ({
 
   if (loading) {
     return (
-      <div className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-100 dark:border-gray-700 animate-pulse">
-        <div className="h-20 bg-gray-200 dark:bg-gray-700 rounded" />
+      <div className="bg-white dark:bg-gray-800 rounded-xl p-4 sm:p-6 border border-gray-100 dark:border-gray-700 animate-pulse">
+        <div className="h-16 sm:h-20 bg-gray-200 dark:bg-gray-700 rounded" />
       </div>
     );
   }
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl p-6 
+    <div className="bg-white dark:bg-gray-800 rounded-xl p-4 sm:p-6 
       border border-gray-100 dark:border-gray-700 
-      hover:shadow-lg hover:-translate-y-1 
-      transition-all duration-300 ease-out">
-      <div className="flex items-center gap-3 mb-4">
-        <div className={`p-3 rounded-lg ${colors[type]}`}>
-          <Icon className="w-6 h-6" />
+      mobile-card-hover mobile-transition">
+      <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+        <div className={`p-2 sm:p-3 rounded-lg ${colors[type]} flex-shrink-0`}>
+          <Icon className="w-5 h-5 sm:w-6 sm:h-6" />
         </div>
-        <div>
-          <h3 className="text-sm font-medium text-gray-600 dark:text-gray-300">{title}</h3>
+        <div className="min-w-0 flex-1">
+          <h3 className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-300 truncate">{title}</h3>
           {subtitle && (
-            <p className="text-xs text-gray-500 dark:text-gray-400">{subtitle}</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{subtitle}</p>
           )}
         </div>
       </div>
       <div className="flex items-baseline gap-2">
-        <span className="text-2xl font-bold text-gray-900 dark:text-white">{value}</span>
+        <span className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 dark:text-white truncate">{value}</span>
         {trend && (
-          <div className={`px-2 py-1 rounded-full text-xs font-medium ${colors[type]}`}>
+          <div className={`px-2 py-1 rounded-full text-xs font-medium ${colors[type]} flex-shrink-0`}>
             {trend.value >= 0 ? '↑' : '↓'} {trend.label}
           </div>
         )}
@@ -229,34 +224,34 @@ const SpendingAnalysis = ({
       : 'dashboard.monthly_income';
       
     return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-100 dark:border-gray-700 hover:shadow-lg transition-all duration-300 hover:border-indigo-100 dark:hover:border-indigo-900/30">
-      <div className="flex items-center gap-3 mb-6">
-        <ChartPieIcon className="w-6 h-6 text-indigo-500" />
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+    <div className="bg-white dark:bg-gray-800 rounded-xl p-4 sm:p-6 border border-gray-100 dark:border-gray-700 mobile-card-hover mobile-transition">
+      <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
+        <ChartPieIcon className="w-5 h-5 sm:w-6 sm:h-6 text-indigo-500 flex-shrink-0" />
+        <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white truncate">
           {t(titleKey)}
         </h3>
       </div>
-      <div className="space-y-4">
+      <div className="space-y-3 sm:space-y-4">
         {categories.slice(0, 5).map(category => (
           <div key={category.category} 
-            className="space-y-2 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/30 
+            className="space-y-2 p-2 sm:p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/30 
               transition-colors duration-200">
-            <div className="flex justify-between items-center">
-              <div>
-                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            <div className="flex justify-between items-center gap-2">
+              <div className="min-w-0 flex-1">
+                <span className="text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 truncate block">
                   {category.category.charAt(0).toUpperCase() + category.category.slice(1).toLowerCase()}
                 </span>
-                <span className="ml-2 text-xs text-gray-500">
+                <span className="text-xs text-gray-500">
                   ({category.count} {t('dashboard.transactions')})
                 </span>
               </div>
-              <span className="text-sm font-semibold text-gray-900 dark:text-white">
+              <span className="text-xs sm:text-sm font-semibold text-gray-900 dark:text-white flex-shrink-0">
                 {formatUSD(category.amount)}
               </span>
             </div>
-            <div className="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-2">
+            <div className="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-1.5 sm:h-2">
               <div
-                className="bg-indigo-500 h-2 rounded-full"
+                className="bg-indigo-500 h-full rounded-full transition-all duration-300"
                 style={{ width: `${category.percentage}%` }}
               />
             </div>
@@ -268,15 +263,15 @@ const SpendingAnalysis = ({
 };
 
 const TaskAnalytics = ({ stats }: { stats: any }) => (
-  <div className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-100 dark:border-gray-700">
-    <div className="flex items-center gap-3 mb-6">
-      <ArrowPathIcon className="w-6 h-6 text-indigo-500" />
-      <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+  <div className="bg-white dark:bg-gray-800 rounded-xl p-4 sm:p-6 border border-gray-100 dark:border-gray-700 mobile-card-hover mobile-transition">
+    <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
+      <ArrowPathIcon className="w-5 h-5 sm:w-6 sm:h-6 text-indigo-500 flex-shrink-0" />
+      <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white">
         Task Analytics
       </h3>
     </div>
     
-    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
       <MetricCard
         title="Completed Tasks"
         value={stats.completed.toString()}
@@ -301,8 +296,8 @@ const TaskAnalytics = ({ stats }: { stats: any }) => (
       />
     </div>
 
-    <div className="mt-6">
-      <div className="w-full bg-gray-100 dark:bg-gray-700 rounded-lg h-4 flex overflow-hidden">
+    <div className="mt-4 sm:mt-6">
+      <div className="w-full bg-gray-100 dark:bg-gray-700 rounded-lg h-3 sm:h-4 flex overflow-hidden">
         <div 
           className="bg-green-500 transition-all duration-500"
           style={{ width: `${(stats.completed / stats.total) * 100}%` }}
@@ -317,14 +312,13 @@ const TaskAnalytics = ({ stats }: { stats: any }) => (
         />
       </div>
       <div className="flex justify-between mt-2 text-xs text-gray-500">
-        <span>{((stats.completed / stats.total) * 100).toFixed(1)}% Complete</span>
-        <span>{((stats.inProgress / stats.total) * 100).toFixed(1)}% In Progress</span>
-        <span>{((stats.blocked / stats.total) * 100).toFixed(1)}% Blocked</span>
+        <span className="truncate">{((stats.completed / stats.total) * 100).toFixed(1)}% Complete</span>
+        <span className="truncate">{((stats.inProgress / stats.total) * 100).toFixed(1)}% In Progress</span>
+        <span className="truncate">{((stats.blocked / stats.total) * 100).toFixed(1)}% Blocked</span>
       </div>
     </div>
   </div>
 );
-
 
 const FloatingActionButton = ({ onAddTransaction, onAddSaving }: {
   onAddTransaction: () => void;
@@ -344,11 +338,11 @@ const FloatingActionButton = ({ onAddTransaction, onAddSaving }: {
       )}
 
       {/* FAB Container */}
-      <div className="fixed lg:bottom-8 lg:right-20 md:bottom-2 md:right-6 bottom-4 right-4 
-        flex flex-col items-end space-y-4 z-50">
+      <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 md:bottom-8 md:right-8 
+        flex flex-col items-end space-y-3 sm:space-y-4 z-50">
         {/* FAB Menu Items */}
-        <div className={`flex flex-col items-end space-y-3 transition-all duration-300 ease-in-out
-          ${isOpen ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10 pointer-events-none'}`}
+        <div className={`flex flex-col items-end space-y-2 sm:space-y-3 transition-all duration-300 ease-in-out
+          ${isOpen ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'}`}
         >
           {/* Transaction Button */}
           <button
@@ -356,21 +350,20 @@ const FloatingActionButton = ({ onAddTransaction, onAddSaving }: {
               setIsOpen(false);
               onAddTransaction();
             }}
-            className="group flex items-center gap-2 pl-4 pr-3 py-2 
+            className="group flex items-center gap-2 pl-3 pr-2 py-2 
               bg-gradient-to-r from-indigo-500 to-indigo-600 
               text-white rounded-full shadow-lg hover:shadow-indigo-500/25 
-              hover:translate-x-0 translate-x-12 transition-all duration-300
-              md:translate-x-12 sm:translate-x-16 xs:translate-x-8
-              md:hover:translate-x-0 sm:hover:translate-x-0"
+              hover:translate-x-0 translate-x-8 transition-all duration-300
+              min-h-[44px] touch-manipulation"
           >
-            <span className="text-xs sm:text-sm md:text-sm font-medium whitespace-nowrap
+            <span className="text-xs sm:text-sm font-medium whitespace-nowrap
               max-w-0 sm:max-w-none overflow-hidden transition-all duration-300">
               {t('dashboard.add_transaction')}
             </span>
-            <div className="w-7 h-7 sm:w-8 sm:h-8 md:w-9 md:h-9 rounded-full 
+            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full 
               bg-indigo-500 flex items-center justify-center 
-              shadow-inner group-hover:scale-110 transition-transform">
-              <BanknotesIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4 md:w-5 md:h-5" />
+              shadow-inner group-hover:scale-110 transition-transform flex-shrink-0">
+              <BanknotesIcon className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
           </button>
           
@@ -380,21 +373,20 @@ const FloatingActionButton = ({ onAddTransaction, onAddSaving }: {
               setIsOpen(false);
               onAddSaving();
             }}
-            className="group flex items-center gap-2 pl-4 pr-3 py-2 
+            className="group flex items-center gap-2 pl-3 pr-2 py-2 
               bg-gradient-to-r from-emerald-500 to-emerald-600 
               text-white rounded-full shadow-lg hover:shadow-emerald-500/25 
-              hover:translate-x-0 translate-x-12 transition-all duration-300
-              md:translate-x-12 sm:translate-x-16 xs:translate-x-8
-              md:hover:translate-x-0 sm:hover:translate-x-0"
+              hover:translate-x-0 translate-x-8 transition-all duration-300
+              min-h-[44px] touch-manipulation"
           >
-            <span className="text-xs sm:text-sm md:text-sm font-medium whitespace-nowrap
+            <span className="text-xs sm:text-sm font-medium whitespace-nowrap
               max-w-0 sm:max-w-none overflow-hidden transition-all duration-300">
               {t('dashboard.add_saving')}
             </span>
-            <div className="w-7 h-7 sm:w-8 sm:h-8 md:w-9 md:h-9 rounded-full 
+            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full 
               bg-emerald-500 flex items-center justify-center 
-              shadow-inner group-hover:scale-110 transition-transform">
-              <CurrencyDollarIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4 md:w-5 md:h-5" />
+              shadow-inner group-hover:scale-110 transition-transform flex-shrink-0">
+              <CurrencyDollarIcon className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
           </button>
         </div>
@@ -402,9 +394,10 @@ const FloatingActionButton = ({ onAddTransaction, onAddSaving }: {
         {/* Main FAB Button */}
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className={`group relative rounded-full shadow-lg 
-            transition-all duration-300 ease-in-out transform
-            w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16
+          className={`group relative rounded-full shadow-lg mobile-button
+            mobile-transition transform
+            w-14 h-14 sm:w-16 sm:h-16
+            min-h-[56px] touch-manipulation mobile-active
             ${isOpen 
               ? 'bg-gray-700 hover:bg-gray-600 rotate-45 scale-110' 
               : 'bg-gradient-to-r from-indigo-500 to-purple-600 hover:scale-110'
@@ -419,10 +412,10 @@ const FloatingActionButton = ({ onAddTransaction, onAddSaving }: {
           {/* Icon Container */}
           <div className="absolute inset-0 flex items-center justify-center">
             {isOpen ? (
-              <XMarkIcon className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 text-white 
+              <XMarkIcon className="w-6 h-6 sm:w-7 sm:h-7 text-white 
                 transition-transform duration-300 group-hover:scale-110" />
             ) : (
-              <PlusIcon className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 text-white 
+              <PlusIcon className="w-6 h-6 sm:w-7 sm:h-7 text-white 
                 transition-transform duration-300 group-hover:scale-110" />
             )}
           </div>
@@ -565,9 +558,9 @@ export const DashboardScreen = () => {
   if (analyticsLoading || tasksLoading || savingState.isLoading || isRefetching) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-        <div className="flex flex-col items-center justify-center min-h-screen">
+        <div className="flex flex-col items-center justify-center min-h-screen px-4">
           <LoadingSpinner size="large" className="text-indigo-600" />
-          <p className="mt-4 text-sm text-gray-500 dark:text-gray-400 animate-pulse">
+          <p className="mt-4 text-sm text-gray-500 dark:text-gray-400 animate-pulse text-center">
             {t('common.loading')}
           </p>
         </div>
@@ -576,8 +569,8 @@ export const DashboardScreen = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <div className="max-w-7xl mx-auto px-2 sm:px-4 md:px-6 lg:px-8 py-2 sm:py-4 md:py-6 space-y-2 sm:space-y-4 md:space-y-6">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 safe-area-inset-top">
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-3 sm:py-4 md:py-6 space-y-3 sm:space-y-4 md:space-y-6 smooth-scroll">
         {/* Month Selector and KPI Cards */}
         <DashboardHeader
           title={t('dashboard.title')}
@@ -586,21 +579,24 @@ export const DashboardScreen = () => {
           selectedMonth={selectedMonth}
           onMonthChange={handleMonthChange}
         />
+        
         <CardGroup
           title={t('dashboard.summary')}
           icon={BanknotesIcon}
           defaultExpanded={true}
           accentColor="from-blue-500 to-indigo-500"
         >
-          <div className="overflow-x-auto min-w-[320px]">
-            <SummaryCards
-              yearIncome={currentMonthData.income || 0}
-              yearExpenses={currentMonthData.expenses || 0}
-              yearSavings={currentMonthData.savings || 0}
-              netBalance={currentMonthData.netBalance || 0}
-              netSavings={netSavings}
-              monthlyBurnRate={currentMonthData.expenses || 0}
-            />
+          <div className="overflow-x-auto">
+            <div className="min-w-[280px] sm:min-w-[320px]">
+              <SummaryCards
+                yearIncome={currentMonthData.income || 0}
+                yearExpenses={currentMonthData.expenses || 0}
+                yearSavings={currentMonthData.savings || 0}
+                netBalance={currentMonthData.netBalance || 0}
+                netSavings={netSavings}
+                monthlyBurnRate={currentMonthData.expenses || 0}
+              />
+            </div>
           </div>
         </CardGroup>
 
@@ -611,8 +607,10 @@ export const DashboardScreen = () => {
           defaultExpanded={true}
           accentColor="from-purple-500 to-purple-600"
         >
-          <div className="overflow-x-auto min-w-[320px]">
-            <MonthlyTrendsChart data={monthlyData} />
+          <div className="overflow-x-auto">
+            <div className="min-w-[280px] sm:min-w-[320px]">
+              <MonthlyTrendsChart data={monthlyData} />
+            </div>
           </div>
         </CardGroup>
 
@@ -623,18 +621,22 @@ export const DashboardScreen = () => {
           defaultExpanded={true}
           accentColor="from-green-500 to-green-600"
         >
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 sm:gap-4 md:gap-6">
-            <div className="overflow-x-auto min-w-[240px] sm:min-w-[280px]">
-              <CategoryBreakdownChart
-                data={monthExpenseCategories}
-                title={t('dashboard.expense_categories')}
-              />
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-3 sm:gap-4 md:gap-6">
+            <div className="overflow-x-auto">
+              <div className="min-w-[240px] sm:min-w-[280px]">
+                <CategoryBreakdownChart
+                  data={monthExpenseCategories}
+                  title={t('dashboard.expense_categories')}
+                />
+              </div>
             </div>
-            <div className="overflow-x-auto min-w-[240px] sm:min-w-[280px]">
-              <CategoryBreakdownChart
-                data={monthIncomeCategories}
-                title={t('dashboard.income_categories')}
-              />
+            <div className="overflow-x-auto">
+              <div className="min-w-[240px] sm:min-w-[280px]">
+                <CategoryBreakdownChart
+                  data={monthIncomeCategories}
+                  title={t('dashboard.income_categories')}
+                />
+              </div>
             </div>
           </div>
         </CardGroup>
@@ -646,30 +648,38 @@ export const DashboardScreen = () => {
           defaultExpanded={true}
           accentColor="from-green-500 to-emerald-500"
         >
-          <div className="overflow-x-auto min-w-[240px] sm:min-w-[320px]">
-            <SavingsTypeMetricsCard savings={filteredData.current.savings} />
+          <div className="overflow-x-auto">
+            <div className="min-w-[240px] sm:min-w-[320px]">
+              <SavingsTypeMetricsCard savings={filteredData.current.savings} />
+            </div>
           </div>
         </CardGroup>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 sm:gap-4 md:gap-6">
-          <div className="overflow-x-auto min-w-[240px] sm:min-w-[280px]">
-            <SpendingAnalysis
-              transactions={filteredData.current.transactions}
-              t={t}
-              type="income"
-            />
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-3 sm:gap-4 md:gap-6">
+          <div className="overflow-x-auto">
+            <div className="min-w-[240px] sm:min-w-[280px]">
+              <SpendingAnalysis
+                transactions={filteredData.current.transactions}
+                t={t}
+                type="income"
+              />
+            </div>
           </div>
-          <div className="overflow-x-auto min-w-[240px] sm:min-w-[280px]">
-            <SpendingAnalysis
-              transactions={filteredData.current.transactions}
-              t={t}
-              type="expense"
-            />
+          <div className="overflow-x-auto">
+            <div className="min-w-[240px] sm:min-w-[280px]">
+              <SpendingAnalysis
+                transactions={filteredData.current.transactions}
+                t={t}
+                type="expense"
+              />
+            </div>
           </div>
         </div>
 
-        <div className="overflow-x-auto min-w-[240px] sm:min-w-[320px]">
-          <TaskAnalytics stats={taskStats} />
+        <div className="overflow-x-auto">
+          <div className="min-w-[240px] sm:min-w-[320px]">
+            <TaskAnalytics stats={taskStats} />
+          </div>
         </div>
 
         {/* Floating Action Button */}
@@ -682,8 +692,8 @@ export const DashboardScreen = () => {
 
         {/* Transaction Modal */}
         {showTransactionModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm p-2 sm:p-4 overflow-y-auto">
-            <div className="w-full max-w-xs sm:max-w-lg mx-auto">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 mobile-modal-backdrop p-3 sm:p-4 overflow-y-auto safe-area-inset-top safe-area-inset-bottom">
+            <div className="w-full max-w-[95vw] sm:max-w-lg mx-auto">
               <TransactionModal
                 onClose={() => setShowTransactionModal(false)}
               />
@@ -693,8 +703,8 @@ export const DashboardScreen = () => {
 
         {/* Saving Form */}
         {showSavingForm && (
-          <div className="fixed inset-0 bg-black/30 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-xs sm:max-w-md w-full p-2 sm:p-6 mx-auto">
+          <div className="fixed inset-0 bg-black/30 mobile-modal-backdrop z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto safe-area-inset-top safe-area-inset-bottom">
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-[95vw] sm:max-w-md w-full p-3 sm:p-6 mx-auto">
               <SavingForm
                 onSubmit={async () => {
                     await loadSavings();

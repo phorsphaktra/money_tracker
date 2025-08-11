@@ -44,7 +44,7 @@ const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, per
       fill="#fff"
       textAnchor="middle"
       dominantBaseline="central"
-      fontSize={12}
+      fontSize={10}
       fontWeight="bold"
       style={{ pointerEvents: 'none' }}
     >
@@ -55,13 +55,13 @@ const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, per
 
 export const CategoryBreakdownChart = ({ data, title }: CategoryBreakdownChartProps) => {
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-100 dark:border-gray-700">
-      <div className="flex items-center gap-3 mb-6">
-        <ChartPieIcon className="w-6 h-6 text-indigo-500" />
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{title}</h3>
+    <div className="bg-white dark:bg-gray-800 rounded-xl p-3 sm:p-4 lg:p-6 border border-gray-100 dark:border-gray-700">
+      <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4 lg:mb-6">
+        <ChartPieIcon className="w-5 h-5 sm:w-6 sm:h-6 text-indigo-500 flex-shrink-0" />
+        <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white truncate">{title}</h3>
       </div>
 
-      <div className="h-[480px]">
+      <div className="h-[320px] sm:h-[400px] lg:h-[480px]">
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
             <Pie
@@ -70,7 +70,8 @@ export const CategoryBreakdownChart = ({ data, title }: CategoryBreakdownChartPr
               nameKey="label"
               cx="50%"
               cy="50%"
-              outerRadius={200}
+              outerRadius={120}
+              innerRadius={60}
               label={renderCustomizedLabel}
               labelLine={false}
             >
@@ -84,7 +85,12 @@ export const CategoryBreakdownChart = ({ data, title }: CategoryBreakdownChartPr
                 backgroundColor: 'white',
                 border: 'none',
                 borderRadius: '0.5rem',
-                boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
+                boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
+                fontSize: '12px'
+              }}
+              labelStyle={{
+                fontSize: '12px',
+                fontWeight: 'bold'
               }}
             />
           </PieChart>
