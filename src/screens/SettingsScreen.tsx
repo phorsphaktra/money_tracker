@@ -121,7 +121,7 @@ export const SettingsScreen = () => {
                   aria-checked={darkMode}
                   className={`${darkMode ? 'bg-indigo-600' : 'bg-gray-200 dark:bg-gray-600'
                     } relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 touch-manipulation mobile-button mobile-active p-1`}
-                  style={{ minHeight: '44px', minWidth: '44px' }}
+                  style={{ minHeight: '20px', minWidth: '40px' }}
                 >
                   <span className="sr-only">Enable dark mode</span>
                   <span
