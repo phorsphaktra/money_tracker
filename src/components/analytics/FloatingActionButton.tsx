@@ -22,12 +22,16 @@ export const FloatingActionButton = ({ onAddTransaction, onAddSaving }: Floating
         <div 
           className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 transition-opacity duration-300"
           onClick={() => setIsOpen(false)}
+          aria-hidden="true"
         />
       )}
 
       <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 md:bottom-8 md:right-8 
         flex flex-col items-end space-y-3 sm:space-y-4 z-50">
-        <div className={`flex flex-col items-end space-y-2 sm:space-y-3 transition-all duration-300 ease-in-out
+        <div
+          id="fab-actions-menu"
+          role="menu"
+          className={`flex flex-col items-end space-y-2 sm:space-y-3 transition-all duration-300 ease-in-out
           ${isOpen ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'}`}
         >
           <button
@@ -35,14 +39,16 @@ export const FloatingActionButton = ({ onAddTransaction, onAddSaving }: Floating
               setIsOpen(false);
               onAddTransaction();
             }}
+            role="menuitem"
+            aria-label={t('dashboard.add_transaction')}
             className="group flex items-center gap-2 pl-3 pr-2 py-2 
               bg-gradient-to-r from-indigo-500 to-indigo-600 
               text-white rounded-full shadow-lg hover:shadow-indigo-500/25 
               transition-all duration-300 min-h-[44px] touch-manipulation
-              mobile-button mobile-active"
+              mobile-button mobile-active focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40
+              focus-visible:ring-offset-2 focus-visible:ring-offset-indigo-500 dark:focus-visible:ring-offset-gray-800"
           >
-            <span className="text-xs sm:text-sm font-medium whitespace-nowrap
-              overflow-hidden transition-all duration-300">
+            <span className="text-xs sm:text-sm font-medium whitespace-nowrap transition-all duration-300">
               {t('dashboard.add_transaction')}
             </span>
             <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full 
@@ -57,14 +63,16 @@ export const FloatingActionButton = ({ onAddTransaction, onAddSaving }: Floating
               setIsOpen(false);
               onAddSaving();
             }}
+            role="menuitem"
+            aria-label={t('dashboard.add_saving')}
             className="group flex items-center gap-2 pl-3 pr-2 py-2 
               bg-gradient-to-r from-emerald-500 to-emerald-600 
               text-white rounded-full shadow-lg hover:shadow-emerald-500/25 
               transition-all duration-300 min-h-[44px] touch-manipulation
-              mobile-button mobile-active"
+              mobile-button mobile-active focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40
+              focus-visible:ring-offset-2 focus-visible:ring-offset-emerald-500 dark:focus-visible:ring-offset-gray-800"
           >
-            <span className="text-xs sm:text-sm font-medium whitespace-nowrap
-              overflow-hidden transition-all duration-300">
+            <span className="text-xs sm:text-sm font-medium whitespace-nowrap transition-all duration-300">
               {t('dashboard.add_saving')}
             </span>
             <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full 
@@ -77,6 +85,9 @@ export const FloatingActionButton = ({ onAddTransaction, onAddSaving }: Floating
         
         <button
           onClick={() => setIsOpen(!isOpen)}
+          aria-expanded={isOpen}
+          aria-controls="fab-actions-menu"
+          aria-label={isOpen ? t('common.close') : t('common.add')}
           className={`group relative rounded-full shadow-lg mobile-button
             mobile-transition transform
             w-14 h-14 sm:w-16 sm:h-16

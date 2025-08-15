@@ -353,11 +353,11 @@ const FloatingActionButton = ({ onAddTransaction, onAddSaving }: {
             className="group flex items-center gap-2 pl-3 pr-2 py-2 
               bg-gradient-to-r from-indigo-500 to-indigo-600 
               text-white rounded-full shadow-lg hover:shadow-indigo-500/25 
-              hover:translate-x-0 translate-x-8 transition-all duration-300
-              min-h-[44px] touch-manipulation"
+              transition-all duration-300
+              min-h-[44px] touch-manipulation mobile-button mobile-active"
           >
             <span className="text-xs sm:text-sm font-medium whitespace-nowrap
-              max-w-0 sm:max-w-none overflow-hidden transition-all duration-300">
+              overflow-hidden transition-all duration-300">
               {t('dashboard.add_transaction')}
             </span>
             <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full 
@@ -376,11 +376,11 @@ const FloatingActionButton = ({ onAddTransaction, onAddSaving }: {
             className="group flex items-center gap-2 pl-3 pr-2 py-2 
               bg-gradient-to-r from-emerald-500 to-emerald-600 
               text-white rounded-full shadow-lg hover:shadow-emerald-500/25 
-              hover:translate-x-0 translate-x-8 transition-all duration-300
-              min-h-[44px] touch-manipulation"
+              transition-all duration-300
+              min-h-[44px] touch-manipulation mobile-button mobile-active"
           >
             <span className="text-xs sm:text-sm font-medium whitespace-nowrap
-              max-w-0 sm:max-w-none overflow-hidden transition-all duration-300">
+              overflow-hidden transition-all duration-300">
               {t('dashboard.add_saving')}
             </span>
             <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full 
