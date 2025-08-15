@@ -26,11 +26,15 @@ interface SettingsContextType {
     currency: string;
     language: string;
     darkMode: boolean;
+    invitedMembers: string[];
+    allowMemberEditAllTransactions: boolean;
   };
   updatePreferences: (newPreferences: Partial<{
     currency: string;
     language: string;
     darkMode: boolean;
+    invitedMembers: string[];
+    allowMemberEditAllTransactions: boolean;
   }>) => Promise<void>;
   exchangeRates: ExchangeRates;
   updateExchangeRate: (rate: number) => Promise<void>;
@@ -57,7 +61,9 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [preferences, setPreferences] = useState({
     currency: 'USD',
     language: 'en',
-    darkMode: false
+    darkMode: false,
+    invitedMembers: [],
+    allowMemberEditAllTransactions: false
   });
   const [exchangeRates, setExchangeRates] = useState<ExchangeRates>(defaultExchangeRates);
   const [isLoading, setIsLoading] = useState(true);
@@ -70,8 +76,10 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           if (userProfile?.preferences) {
             setPreferences({
               currency: userProfile.preferences.currency ?? 'USD',
-              language: userProfile.preferences.language?? 'en',
-              darkMode: userProfile.preferences.darkMode ?? false
+              language: userProfile.preferences.language ?? 'en',
+              darkMode: userProfile.preferences.darkMode ?? false,
+              invitedMembers: userProfile.preferences.invitedMembers ?? [],
+              allowMemberEditAllTransactions: userProfile.preferences.allowMemberEditAllTransactions ?? false
             });
             
             // Validate and set exchange rates

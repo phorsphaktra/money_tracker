@@ -25,26 +25,43 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 max-w-sm w-full mx-4">
-        <h3 className="text-lg font-medium mb-2">{title}</h3>
-        <p className="text-gray-600 mb-6">{message}</p>
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 mobile-modal-backdrop p-3 sm:p-4 overflow-y-auto safe-area-inset-top safe-area-inset-bottom"
+      onClick={onClose}
+      aria-hidden={false}
+    >
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="confirm-dialog-title"
+        aria-describedby="confirm-dialog-desc"
+        className="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-[95vw] sm:max-w-md w-full p-3 sm:p-6 mx-auto"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <h3 id="confirm-dialog-title" className="text-lg font-semibold mb-2 text-gray-900 dark:text-white">
+          {title}
+        </h3>
+        <p id="confirm-dialog-desc" className="text-gray-600 dark:text-gray-300 mb-6">
+          {message}
+        </p>
         <div className="flex justify-end gap-3">
           <button
             onClick={onClose}
             disabled={loading}
-            className="px-4 py-2 text-gray-600 hover:text-gray-800 hover:bg-red disabled:opacity-50"
+            className="px-4 py-2 rounded-lg text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 disabled:opacity-50 min-h-[44px] touch-manipulation mobile-button mobile-active focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
           >
             {t('common.cancel')}
           </button>
           <button
             onClick={onConfirm}
             disabled={loading}
-            className={`px-4 py-2 text-white rounded disabled:opacity-50 ${confirmButtonClass}`}
+            className={`px-4 py-2 text-white rounded-lg disabled:opacity-50 min-h-[44px] touch-manipulation mobile-button mobile-active focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 ${confirmButtonClass}`}
           >
             {loading ? (
-              <div className="animate-spin h-5 w-5 border-2 border-white rounded-full" />
-            ) : confirmLabel}
+              <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+            ) : (
+              confirmLabel
+            )}
           </button>
         </div>
       </div>

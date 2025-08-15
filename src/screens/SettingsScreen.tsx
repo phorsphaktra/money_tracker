@@ -5,6 +5,8 @@ import { useSettings } from '../contexts/SettingsContext';
 import { useState, useEffect } from 'react';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { LoadingSpinner } from '../components/shared/LoadingSpinner';
+import { useAuth } from '../contexts/AuthContext';
+import { invitationService } from '../services/invitationService';
 
 const getRateChange = (currentRate: number, previousRate: number) => {
   const change = ((currentRate - previousRate) / previousRate) * 100;
@@ -20,12 +22,14 @@ export const SettingsScreen = () => {
   const { t } = useTranslation();
   const { language, setLanguage } = useLanguage();
   const { preferences, updatePreferences, exchangeRates, updateExchangeRate, isLoading } = useSettings();
+  const { user } = useAuth();
   const [khrRate, setKhrRate] = useState(exchangeRates.KHR_USD.toString());
   const [error, setError] = useState<string | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
   const [isHistoryExpanded, setIsHistoryExpanded] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [pendingRate, setPendingRate] = useState<number | null>(null);
+  const [newMemberEmail, setNewMemberEmail] = useState('');
 
   // Update khrRate when exchangeRates changes
   useEffect(() => {
@@ -80,6 +84,35 @@ export const SettingsScreen = () => {
     }
   };
 
+  const handleAddMember = async () => {
+    const emailInput = newMemberEmail.trim();
+    if (!emailInput) return;
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailInput)) {
+      setError('Please enter a valid email address');
+      return;
+    }
+    const emailLower = emailInput.toLowerCase();
+    const existing = preferences.invitedMembers || [];
+    const next = Array.from(new Set([emailInput, emailLower, ...existing]));
+    await updatePreferences({ invitedMembers: next });
+    if (user) {
+      await invitationService.createInvitation({
+        ownerId: user.uid,
+        ownerEmail: user.email || undefined,
+        ownerName: user.displayName || undefined,
+        inviteeEmail: emailInput,
+      });
+    }
+    setNewMemberEmail('');
+    setError(null);
+  };
+
+  const handleRemoveMember = async (email: string) => {
+    const existing = preferences.invitedMembers || [];
+    const emailLower = email.toLowerCase();
+    await updatePreferences({ invitedMembers: existing.filter(e => e !== email && e !== emailLower) });
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 safe-area-inset-top">
@@ -96,7 +129,7 @@ export const SettingsScreen = () => {
   return (
     <>
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 safe-area-inset-top">
-        <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 py-4 sm:py-6 md:py-8 smooth-scroll">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 py-4 sm:py-6 md:py-8 smooth-scroll pb-[env(safe-area-inset-bottom)]">
           <div className="mb-6 sm:mb-8">
             <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white leading-tight">
               {t('settings.title')}
@@ -119,9 +152,10 @@ export const SettingsScreen = () => {
                   onClick={handleDarkModeToggle}
                   role="switch"
                   aria-checked={darkMode}
+                  aria-label={t('settings.appearance.darkMode')}
                   className={`${darkMode ? 'bg-indigo-600' : 'bg-gray-200 dark:bg-gray-600'
-                    } relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 touch-manipulation mobile-button mobile-active p-1`}
-                  style={{ minHeight: '20px', minWidth: '40px' }}
+                    } relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 touch-manipulation mobile-button mobile-active p-1`}
+                  style={{ minHeight: '44px', minWidth: '44px' }}
                 >
                   <span className="sr-only">Enable dark mode</span>
                   <span
@@ -138,31 +172,114 @@ export const SettingsScreen = () => {
               </h2>
               <div className="space-y-3 sm:space-y-4">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
-                  <span className="text-sm sm:text-base text-gray-700 dark:text-gray-300">
+                  <label htmlFor="settings-currency-select" className="text-sm sm:text-base text-gray-700 dark:text-gray-300">
                     {t('settings.preferences.currency')}
-                  </span>
+                  </label>
                   <select
+                    id="settings-currency-select"
+                    name="currency"
                     value={preferences.currency}
                     onChange={(e) => handleCurrencyChange(e.target.value)}
-                    className="rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2.5 sm:py-2 text-gray-900 dark:text-white min-h-[44px] touch-manipulation w-full sm:w-auto"
+                    autoComplete="off"
+                    className="rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2.5 sm:py-2 text-gray-900 dark:text-white min-h-[44px] touch-manipulation w-full sm:w-auto focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
                   >
-                    <option value="USD">USD ($)</option>
-                    <option value="KHR">KHR (៛)</option>
+                    <option value="USD">{t('currencies.USD')} ($)</option>
+                    <option value="KHR">{t('currencies.KHR')} (៛)</option>
                   </select>
                 </div>
 
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
-                  <span className="text-sm sm:text-base text-gray-700 dark:text-gray-300">
+                  <label htmlFor="settings-language-select" className="text-sm sm:text-base text-gray-700 dark:text-gray-300">
                     {t('settings.preferences.language')}
-                  </span>
+                  </label>
                   <select
+                    id="settings-language-select"
+                    name="language"
                     value={language}
                     onChange={(e) => handleLanguageChange(e.target.value)}
-                    className="rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2.5 sm:py-2 text-gray-900 dark:text-white min-h-[44px] touch-manipulation w-full sm:w-auto"
+                    autoComplete="off"
+                    className="rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2.5 sm:py-2 text-gray-900 dark:text-white min-h-[44px] touch-manipulation w-full sm:w-auto focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
                   >
                     <option value="en">English</option>
                     <option value="km">ខ្មែរ</option>
                   </select>
+                </div>
+              </div>
+            </div>
+
+            {/* Collaborators Section */}
+            <div className="bg-white dark:bg-gray-800 rounded-lg p-3 sm:p-4 shadow-sm mobile-card-hover mobile-transition">
+              <h2 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-3 sm:mb-4">
+                Collaborators
+              </h2>
+              <div className="space-y-3 sm:space-y-4">
+                <div>
+                  <label htmlFor="invite-email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Invite member by email
+                  </label>
+                  <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+                    <input
+                      id="invite-email"
+                      name="inviteEmail"
+                      type="email"
+                      value={newMemberEmail}
+                      onChange={(e) => setNewMemberEmail(e.target.value)}
+                      placeholder="member@example.com"
+                      inputMode="email"
+                      autoComplete="off"
+                      className="flex-1 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2.5 sm:py-2 text-gray-900 dark:text-white min-h-[44px] touch-manipulation focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleAddMember}
+                      className="px-4 py-2.5 sm:py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg shadow-sm transition-colors duration-200 min-h-[44px] touch-manipulation mobile-button mobile-active"
+                    >
+                      Invite
+                    </button>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Invited Members
+                  </label>
+                  <div className="space-y-2">
+                    {(preferences.invitedMembers && preferences.invitedMembers.length > 0) ? (
+                      preferences.invitedMembers.map((email) => (
+                        <div key={email} className="flex items-center justify-between px-3 py-2 rounded-lg bg-gray-50 dark:bg-gray-700/30">
+                          <span className="text-sm text-gray-800 dark:text-gray-200 truncate">{email}</span>
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveMember(email)}
+                            className="text-xs px-2.5 py-1.5 rounded bg-red-500 hover:bg-red-600 text-white min-h-[32px] touch-manipulation"
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-sm text-gray-500 dark:text-gray-400 italic">No invited members yet</p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <span className="text-sm sm:text-base text-gray-700 dark:text-gray-300">
+                    Allow invited members to edit all transactions
+                  </span>
+                  <button
+                    onClick={() => updatePreferences({ allowMemberEditAllTransactions: !preferences.allowMemberEditAllTransactions })}
+                    role="switch"
+                    aria-checked={preferences.allowMemberEditAllTransactions}
+                    aria-label="Allow invited members to edit all transactions"
+                    className={`${preferences.allowMemberEditAllTransactions ? 'bg-indigo-600' : 'bg-gray-200 dark:bg-gray-600'} relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 touch-manipulation mobile-button mobile-active p-1`}
+                    style={{ minHeight: '44px', minWidth: '44px' }}
+                  >
+                    <span className="sr-only">Toggle member edit permission</span>
+                    <span
+                      className={`${preferences.allowMemberEditAllTransactions ? 'translate-x-5' : 'translate-x-0'} inline-block h-4 w-4 transform rounded-full bg-white transition-transform shadow-sm`}
+                    />
+                  </button>
                 </div>
               </div>
             </div>
@@ -192,18 +309,28 @@ export const SettingsScreen = () => {
                 <div className="bg-gray-50 dark:bg-gray-700/30 rounded-lg p-3 sm:p-4">
                   <div className="space-y-3 sm:space-y-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      <label htmlFor="khr-rate" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         {t('settings.exchangeRate.subtitle')}
                       </label>
                       <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
                         <div className="relative flex-1">
                           <input
-                            type="number"
+                            id="khr-rate"
+                            name="khrRate"
+                            type="text"
                             value={khrRate}
                             onChange={(e) => setKhrRate(e.target.value)}
+                            inputMode="decimal"
+                            enterKeyHint="done"
+                            step="0.01"
+                            min="0"
+                            autoComplete="off"
+                            autoCorrect="off"
+                            spellCheck={false}
+                            pattern="[0-9]*[.,]?[0-9]*"
                             className="block w-full pl-12 pr-4 py-2.5 sm:py-2 rounded-lg border border-gray-300 dark:border-gray-600 
                               bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm 
-                              focus:border-indigo-500 focus:ring-indigo-500 min-h-[44px] touch-manipulation"
+                              focus:border-indigo-500 focus:ring-indigo-500 min-h-[44px] touch-manipulation focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
                           />
                           <div className="absolute inset-y-0 left-0 flex items-center pl-3">
                             <span className="text-gray-500 dark:text-gray-400 text-sm">KHR</span>
@@ -212,9 +339,10 @@ export const SettingsScreen = () => {
                         <button
                           onClick={handleUpdateRate}
                           disabled={isUpdating}
+                          aria-label={t('settings.exchangeRate.update_button')}
                           className="px-4 py-2.5 sm:py-2 bg-indigo-600 hover:bg-indigo-700 
                             disabled:bg-gray-400 text-white rounded-lg shadow-sm
-                            transition-colors duration-200 min-h-[44px] touch-manipulation mobile-button mobile-active
+                            transition-colors duration-200 min-h-[44px] touch-manipulation mobile-button mobile-active focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-indigo-600
                             w-full sm:w-auto sm:min-w-[120px]"
                         >
                           {isUpdating ? (
@@ -243,7 +371,9 @@ export const SettingsScreen = () => {
                 <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
                   <button
                     onClick={() => setIsHistoryExpanded(!isHistoryExpanded)}
-                    className="w-full flex justify-between items-center mb-3 group min-h-[44px] touch-manipulation"
+                    aria-expanded={isHistoryExpanded}
+                    aria-controls="rate-history-panel"
+                    className="w-full flex justify-between items-center mb-3 group min-h-[44px] touch-manipulation mobile-button mobile-active focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 rounded-lg px-2"
                   >
                     <div className="flex items-center gap-2">
                       <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -264,8 +394,9 @@ export const SettingsScreen = () => {
                     </svg>
                   </button>
 
-                  <div className={`space-y-2 overflow-hidden transition-all duration-200 
-                    ${isHistoryExpanded ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}
+                  <div
+                    id="rate-history-panel"
+                    className={`space-y-2 transition-all duration-200 ${isHistoryExpanded ? 'max-h-[50vh] opacity-100 overflow-auto overscroll-contain touch-pan-y' : 'max-h-0 opacity-0 overflow-hidden'}`}
                   >
                     <div className="divide-y divide-gray-100 dark:divide-gray-700">
                       {exchangeRates.history?.map((history, index, array) => {

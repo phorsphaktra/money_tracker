@@ -226,6 +226,8 @@ export const authService = {
       currency?: string;
       language?: string;
       darkMode?: boolean;
+      invitedMembers?: string[];
+      allowMemberEditAllTransactions?: boolean;
     }
   ) {
     try {

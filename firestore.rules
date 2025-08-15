@@ -2,18 +2,55 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     match /users/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+      allow read: if request.auth != null && (
+        request.auth.uid == userId || (
+          resource.data.preferences.allowMemberEditAllTransactions == true &&
+          resource.data.preferences.invitedMembers.hasAny([request.auth.token.email])
+        )
+      );
+      allow write: if request.auth != null && request.auth.uid == userId;
     }
     match /stats/{userId} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
     }
+    function isOwner(userId) {
+      return request.auth != null && request.auth.uid == userId;
+    }
+
+    function canInvitedMemberEditAll(userId) {
+      return request.auth != null &&
+        get(/databases/$(database)/documents/users/$(userId)).data.preferences.allowMemberEditAllTransactions == true &&
+        get(/databases/$(database)/documents/users/$(userId)).data.preferences.invitedMembers.hasAny([request.auth.token.email]);
+    }
+
     match /monthly_tracker/{userId}/transactions/{transactionId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+      allow read, write: if isOwner(userId) || canInvitedMemberEditAll(userId);
     }
 
         // Add savings rules
     match /monthly_tracker/{userId}/savings/{savingId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+      allow read, write: if isOwner(userId) || canInvitedMemberEditAll(userId);
+    }
+
+    // Invitations
+    function isInvitationOwnerOrInvitee() {
+      return request.auth != null && (
+        resource.data.inviteeEmail == request.auth.token.email ||
+        resource.data.ownerId == request.auth.uid
+      );
+    }
+
+    match /invitations/{invitationId} {
+      allow read: if isInvitationOwnerOrInvitee();
+      allow create: if request.auth != null && request.resource.data.ownerId == request.auth.uid;
+      allow update: if request.auth != null && resource.data.inviteeEmail == request.auth.token.email &&
+        // Only allow status to be set to 'accepted' by invitee and record acceptedAt
+        request.resource.data.ownerId == resource.data.ownerId &&
+        request.resource.data.inviteeEmail == resource.data.inviteeEmail &&
+        request.resource.data.status in ['pending', 'accepted'] &&
+        request.resource.data.status == 'accepted' &&
+        request.resource.data.diff(resource.data).changedKeys().hasOnly(['status', 'acceptedAt']);
+      allow delete: if false;
     }
 
     function isSignedIn() {

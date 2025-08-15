@@ -13,6 +13,8 @@ export interface UserProfile {
         darkMode?: boolean;
         currency?: string;
         language?: string;
+        invitedMembers?: string[];
+        allowMemberEditAllTransactions?: boolean;
     };
     lastLogin?: Date;
 }

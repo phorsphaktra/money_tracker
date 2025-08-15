@@ -4,6 +4,8 @@ import { useAuth } from './AuthContext'; // Assuming you have an AuthContext
 import { useLoading } from './LoadingContext';
 import { CategoryId } from '../utils/categories';
 import { DeleteTransactionModal } from '../components/transaction/DeleteTransactionModal';
+import { db } from '../config/firebase';
+import { collection, getDocs, query, where, limit } from 'firebase/firestore';
 
 export interface Transaction {
   id: string;
@@ -59,18 +61,35 @@ export const TransactionProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const [sortBy, setSortBy] = useState<'date' | 'amount' | 'category'>('date');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const [transactionToDelete, setTransactionToDelete] = useState<Transaction | null>(null);
+  const [activeOwnerId, setActiveOwnerId] = useState<string | null>(null);
 
   useEffect(() => {
-    if (user) {
-      loadTransactions();
-    }
+    const init = async () => {
+      if (!user) return;
+
+      // Prefer invited-owner context first, then fallback to stored selection, then own data
+      const invitedOwnerId = await findInvitingOwnerId(user.email || '');
+      if (invitedOwnerId) {
+        setActiveOwnerId(invitedOwnerId);
+        localStorage.setItem('activeOwnerId', invitedOwnerId);
+        await loadTransactions(invitedOwnerId);
+        return;
+      }
+
+      const storedOwnerId = localStorage.getItem('activeOwnerId');
+      const ownerToUse = storedOwnerId || user.uid;
+      setActiveOwnerId(ownerToUse);
+      await loadTransactions(ownerToUse);
+    };
+    init();
   }, [user]);
 
-  const loadTransactions = async () => {
+  const loadTransactions = async (ownerId?: string) => {
     if (!user) return;
+    const targetOwnerId = ownerId || activeOwnerId || user.uid;
     showLoading();
     try {
-      const data = await transactionService.getTransactions(user.uid);
+      const data = await transactionService.getTransactions(targetOwnerId);
       setTransactions(data);
     } catch (err) {
       setError(err instanceof Error ? err : new Error('Failed to load transactions'));
@@ -79,11 +98,33 @@ export const TransactionProvider: React.FC<{ children: React.ReactNode }> = ({ c
     }
   };
 
+  const findInvitingOwnerId = async (email: string): Promise<string | null> => {
+    if (!email) return null;
+    try {
+      const usersRef = collection(db, 'users');
+      const q = query(
+        usersRef,
+        where('preferences.invitedMembers', 'array-contains', email),
+        where('preferences.allowMemberEditAllTransactions', '==', true),
+        limit(1)
+      );
+      const snap = await getDocs(q);
+      if (!snap.empty) {
+        return snap.docs[0].id;
+      }
+      return null;
+    } catch (e) {
+      console.error('Failed to find inviting owner:', e);
+      return null;
+    }
+  };
+
   const addTransaction = async (transaction: Omit<Transaction, 'id'>) => {
     if (!user) throw new Error('User not authenticated');
     showLoading();
     try {
-      const newTransaction = await transactionService.addTransaction(user.uid, transaction);
+      const targetOwnerId = activeOwnerId || user.uid;
+      const newTransaction = await transactionService.addTransaction(targetOwnerId, transaction);
       setTransactions(prev => [newTransaction, ...prev].sort((a, b) => 
         new Date(b.date).getTime() - new Date(a.date).getTime()
       ));
@@ -99,7 +140,8 @@ export const TransactionProvider: React.FC<{ children: React.ReactNode }> = ({ c
     if (!user) throw new Error('User not authenticated');
     showLoading();
     try {
-      await transactionService.updateTransaction(user.uid, id, transaction);
+      const targetOwnerId = activeOwnerId || user.uid;
+      await transactionService.updateTransaction(targetOwnerId, id, transaction);
       setTransactions(prev =>
         prev.map(t => (t.id === id ? { ...t, ...transaction } : t))
       );
@@ -114,7 +156,8 @@ export const TransactionProvider: React.FC<{ children: React.ReactNode }> = ({ c
     if (!user) throw new Error('User not authenticated');
     showLoading();
     try {
-      await transactionService.deleteTransaction(user.uid, id);
+      const targetOwnerId = activeOwnerId || user.uid;
+      await transactionService.deleteTransaction(targetOwnerId, id);
       setTransactions(prev => prev.filter(t => t.id !== id));
     } catch (err) {
       throw err instanceof Error ? err : new Error('Failed to delete transaction');

@@ -1,7 +1,8 @@
 import { Bars3Icon, BellIcon, SunIcon, MoonIcon } from '@heroicons/react/24/outline';
 import { useAuth } from '../contexts/AuthContext';
+import { invitationService } from '../services/invitationService';
 import { useTranslation } from 'react-i18next';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { NotificationPanel } from './notification/NotificationPanel';
 import { useTaskContext } from '../contexts/TaskContext';
 import { useNotifications } from '../contexts/NotificationContext';
@@ -17,6 +18,7 @@ export const Navbar = ({ onToggle, isCollapsed }: NavbarProps) => {
   const { t } = useTranslation();
   useTaskContext();
   const [showNotifications, setShowNotifications] = useState(false);
+  const [pendingInvites, setPendingInvites] = useState(0);
   const { 
     notificationCounts, 
     totalNotifications, 
@@ -32,6 +34,15 @@ export const Navbar = ({ onToggle, isCollapsed }: NavbarProps) => {
     setShowNotifications(!showNotifications);
     setShowNotificationTooltip(false);
   };
+
+  useEffect(() => {
+    const loadInvites = async () => {
+      if (!user?.email) return;
+      const invites = await invitationService.getPendingInvitationsForEmail(user.email);
+      setPendingInvites(invites.length);
+    };
+    loadInvites();
+  }, [user?.email]);
 
   return (
     <nav className="sticky top-0 z-40 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200/50 dark:border-slate-700/50">
@@ -67,14 +78,14 @@ export const Navbar = ({ onToggle, isCollapsed }: NavbarProps) => {
                 transition-all"
             >
               <BellIcon className="w-5 h-5" />
-              {!isLoading && totalNotifications > 0 && (
+              {(!isLoading && (totalNotifications > 0 || pendingInvites > 0)) && (
                 <span className={`absolute -top-1 -right-1 min-w-[20px] h-5 px-1
                   flex items-center justify-center rounded-full text-xs font-medium
                   ${notificationCounts.overdue > 0 
                     ? 'bg-red-500 text-white animate-pulse' 
-                    : 'bg-indigo-500 text-white'}`}
+                    : (pendingInvites > 0 ? 'bg-emerald-500 text-white' : 'bg-indigo-500 text-white')}`}
                 >
-                  {totalNotifications}
+                  {pendingInvites > 0 ? pendingInvites : totalNotifications}
                 </span>
               )}
             </button>
