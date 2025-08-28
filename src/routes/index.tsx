@@ -11,6 +11,7 @@ import { PrivateRoute } from './PrivateRoute';
 import { useAuth } from '../contexts/AuthContext';
 import { TasksScreen } from '../screens/TasksScreen';
 import SavingScreen from '../screens/SavingScreen';
+import SavingsPlanner from '../screens/SavingPlanerScreen';
 
 const AuthRedirect = () => {
   const { isAuthenticated } = useAuth();
@@ -51,6 +52,7 @@ export const router = createBrowserRouter([
       { index: true, element: <DashboardScreen /> },
       { path: 'transactions', element: <TransactionsScreen /> },
       { path: 'saving', element: <SavingScreen /> },
+  { path: 'saving/planner', element: <SavingsPlanner /> },
       { path: 'analytics', element: <AnalyticsScreen /> },
       { path: 'settings', element: <SettingsScreen /> },
       { path: 'task', element: <TasksScreen /> }

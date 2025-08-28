@@ -25,6 +25,7 @@ const navItems = [
   { path: '/', label: 'dashboard.navigation.dashboard', icon: HomeIcon },
   { path: '/transactions', label: 'dashboard.navigation.transactions', icon: CurrencyDollarIcon },
   { path: '/saving', label: 'dashboard.navigation.saving', icon: WalletIcon },
+  { path: '/saving/planner', label: 'dashboard.navigation.savingsPlanner', icon: ChartBarIcon },
   { path: '/analytics', label: 'dashboard.navigation.analytics', icon: ChartBarIcon },
   { path: '/task', label: 'dashboard.navigation.task', icon: ClipboardDocumentCheckIcon },
   { path: '/settings', label: 'dashboard.navigation.settings', icon: Cog6ToothIcon },
@@ -162,12 +163,12 @@ export const Sidebar = ({ isOpen, setIsOpen, isCollapsed }: SidebarProps) => {
             <NavLink
               key={path}
               to={path}
-              end={path === '/'}
+              end={true}
               onClick={handleMobileNavClick}
               className={({ isActive }) =>
-                `flex items-center ${isCollapsed ? 'justify-center' : ''} 
+                `group flex items-center ${isCollapsed ? 'justify-center' : ''} 
                 px-4 py-3 my-1 rounded-xl text-sm font-medium
-                transition-all duration-200 transform hover:scale-[1.02]
+                transition-colors duration-200 ease-in-out
                 ${isActive
                   ? 'bg-gradient-to-r from-indigo-50 to-indigo-100 dark:from-indigo-900/40 dark:to-indigo-800/40 text-indigo-600 dark:text-indigo-400'
                   : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800/50'}`

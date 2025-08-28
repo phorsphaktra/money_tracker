@@ -27,13 +27,15 @@
     "i18next": "^24.2.3",
     "i18next-browser-languagedetector": "^8.0.4",
     "i18next-http-backend": "^3.0.2",
+    "lucide-react": "^0.542.0",
     "react": "^18.2.0",
     "react-chartjs-2": "^5.3.0",
     "react-datepicker": "^8.3.0",
     "react-dom": "^18.2.0",
     "react-i18next": "^15.4.1",
     "react-router-dom": "^7.4.1",
-    "react-swipeable": "^7.0.2"
+    "react-swipeable": "^7.0.2",
+    "recharts": "^3.1.2"
   },
   "devDependencies": {
     "@eslint/js": "^9.21.0",

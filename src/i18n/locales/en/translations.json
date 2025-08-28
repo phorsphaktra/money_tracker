@@ -158,7 +158,8 @@
     "navigation": {
       "dashboard": "Dashboard",
       "transactions": "Transactions",
-      "analytics": "Analytics",
+  "analytics": "Analytics",
+  "savingsPlanner": "Savings Planner",
       "settings": "Settings",
       "saving": "Savings",
       "task": "Tasks"
