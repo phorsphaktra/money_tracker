@@ -1,6 +1,8 @@
-import React, { createContext, useContext, useReducer, useCallback } from 'react';
+import React, { createContext, useContext, useReducer, useCallback, useState, useEffect } from 'react';
 import { Saving, savingService } from '../services/savingService';
 import { useAuth } from './AuthContext';
+import { db } from '../config/firebase';
+import { collection, getDocs, query, where, limit, getDoc, doc } from 'firebase/firestore';
 import { calculateSavingsBreakdown, SavingsBreakdown } from '../utils/savings';
 
 interface SavingsSummary {
@@ -44,11 +46,14 @@ const initialState: SavingState = {
 
 const SavingContext = createContext<{
   state: SavingState;
-  loadSavings: () => Promise<void>;
-  loadSavingsByType: (type: 'credit' | 'debit') => Promise<void>;
+  loadSavings: (ownerId?: string) => Promise<void>;
+  loadSavingsByType: (type: 'credit' | 'debit', ownerId?: string) => Promise<void>;
   addSaving: (saving: Omit<Saving, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
   updateSaving: (id: string, saving: Partial<Saving>) => Promise<void>;
   deleteSaving: (id: string) => Promise<void>;
+  canEditOwner: (ownerId?: string) => Promise<boolean>;
+  activeOwnerId?: string | null;
+  switchActiveOwner: (ownerId: string) => Promise<void>;
 } | undefined>(undefined);
 
 const savingReducer = (state: SavingState, action: SavingAction): SavingState => {
@@ -91,15 +96,68 @@ const savingReducer = (state: SavingState, action: SavingAction): SavingState =>
 export const SavingProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [state, dispatch] = useReducer(savingReducer, initialState);
   const { user } = useAuth();
+  const [activeOwnerId, setActiveOwnerId] = useState<string | null>(user?.uid || null);
 
-  const loadSavings = useCallback(async () => {
-    if (!user?.uid) return;
+  // Initialize active owner from localStorage and prefer invited owner if present
+  useEffect(() => {
+    const init = async () => {
+      if (!user) return;
+      // Try to find an inviting owner for this user
+      try {
+        const invitedOwnerId = await findInvitingOwnerId(user.email || '');
+        if (invitedOwnerId) {
+          setActiveOwnerId(invitedOwnerId);
+          localStorage.setItem('activeOwnerId', invitedOwnerId);
+          await loadSavings(invitedOwnerId);
+          return;
+        }
+      } catch (e) {
+        // ignore and fall back
+      }
+
+      const stored = localStorage.getItem('activeOwnerId');
+      if (stored) {
+        setActiveOwnerId(stored);
+        await loadSavings(stored);
+      } else {
+        setActiveOwnerId(user.uid);
+        await loadSavings(user.uid);
+      }
+    };
+    init();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
+
+  const findInvitingOwnerId = async (email: string): Promise<string | null> => {
+    if (!email) return null;
+    try {
+      const usersRef = collection(db, 'users');
+      const q = query(
+        usersRef,
+        where('preferences.invitedMembers', 'array-contains', email),
+        where('preferences.allowMemberEditAllTransactions', '==', true),
+        limit(1)
+      );
+      const snap = await getDocs(q);
+      if (!snap.empty) {
+        return snap.docs[0].id;
+      }
+      return null;
+    } catch (e) {
+      console.error('Failed to find inviting owner for savings:', e);
+      return null;
+    }
+  };
+
+  const loadSavings = useCallback(async (ownerIdParam?: string) => {
+    const ownerId = ownerIdParam || activeOwnerId || user?.uid;
+    if (!ownerId) return;
     
     try {
       dispatch({ type: 'SET_LOADING', payload: true });
       const [savings, summary] = await Promise.all([
-        savingService.getAllSavings(user.uid),
-        savingService.getSavingsSummary(user.uid)
+        savingService.getAllSavings(ownerId),
+        savingService.getSavingsSummary(ownerId)
       ]);
       dispatch({ type: 'SET_SAVINGS', payload: savings });
       dispatch({ type: 'SET_SUMMARY', payload: summary });
@@ -108,16 +166,17 @@ export const SavingProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     } finally {
       dispatch({ type: 'SET_LOADING', payload: false });
     }
-  }, [user]);
+  }, [user, activeOwnerId]);
 
-  const loadSavingsByType = useCallback(async (type: 'credit' | 'debit') => {
-    if (!user?.uid) return;
+  const loadSavingsByType = useCallback(async (type: 'credit' | 'debit', ownerIdParam?: string) => {
+    const ownerId = ownerIdParam || activeOwnerId || user?.uid;
+    if (!ownerId) return;
     
     try {
       dispatch({ type: 'SET_LOADING', payload: true });
       const [savings, summary] = await Promise.all([
-        savingService.getSavingsByType(user.uid, type),
-        savingService.getSavingsSummary(user.uid)
+        savingService.getSavingsByType(ownerId, type),
+        savingService.getSavingsSummary(ownerId)
       ]);
       dispatch({ type: 'SET_SAVINGS', payload: savings });
       dispatch({ type: 'SET_SUMMARY', payload: summary });
@@ -126,21 +185,23 @@ export const SavingProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     } finally {
       dispatch({ type: 'SET_LOADING', payload: false });
     }
-  }, [user]);
+  }, [user, activeOwnerId]);
 
   const addSaving = useCallback(async (saving: Omit<Saving, 'id' | 'createdAt' | 'updatedAt'>) => {
-    if (!user?.uid) return;
+  const ownerId = activeOwnerId || user?.uid;
+  if (!ownerId) return;
     
     try {
       dispatch({ type: 'SET_LOADING', payload: true });
-      const newSaving = await savingService.addSaving(user.uid, saving);
+  const savingWithMeta = { ...saving, ...(user ? { createdBy: user.uid, createdByName: user.displayName || user.email || user.uid } : {}) } as any;
+  const newSaving = await savingService.addSaving(ownerId, savingWithMeta);
       if (Array.isArray(newSaving)) {
         dispatch({ type: 'SET_SAVINGS', payload: newSaving });
       } else {
         dispatch({ type: 'ADD_SAVING', payload: newSaving });
       }
       // Update summary after adding
-      const summary = await savingService.getSavingsSummary(user.uid);
+  const summary = await savingService.getSavingsSummary(ownerId);
       dispatch({ type: 'SET_SUMMARY', payload: summary });
     } catch (error) {
       dispatch({ type: 'SET_ERROR', payload: 'Failed to add saving' });
@@ -150,38 +211,65 @@ export const SavingProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   }, [user]);
 
   const updateSaving = useCallback(async (id: string, saving: Partial<Saving>) => {
-    if (!user?.uid) return;
+    const ownerId = activeOwnerId || user?.uid;
+    if (!ownerId) return;
     
     try {
       dispatch({ type: 'SET_LOADING', payload: true });
-      const updatedSaving = await savingService.updateSaving(user.uid, id, saving);
+      const updatedSaving = await savingService.updateSaving(ownerId, id, saving);
       dispatch({ type: 'UPDATE_SAVING', payload: updatedSaving });
       // Update summary after updating
-      const summary = await savingService.getSavingsSummary(user.uid);
+      const summary = await savingService.getSavingsSummary(ownerId);
       dispatch({ type: 'SET_SUMMARY', payload: summary });
     } catch (error) {
       dispatch({ type: 'SET_ERROR', payload: 'Failed to update saving' });
     } finally {
       dispatch({ type: 'SET_LOADING', payload: false });
     }
-  }, [user]);
+  }, [user, activeOwnerId]);
 
   const deleteSaving = useCallback(async (id: string) => {
-    if (!user?.uid) return;
+    const ownerId = activeOwnerId || user?.uid;
+    if (!ownerId) return;
     
     try {
       dispatch({ type: 'SET_LOADING', payload: true });
-      await savingService.deleteSaving(user.uid, id);
+      await savingService.deleteSaving(ownerId, id);
       dispatch({ type: 'DELETE_SAVING', payload: id });
       // Update summary after deleting
-      const summary = await savingService.getSavingsSummary(user.uid);
+      const summary = await savingService.getSavingsSummary(ownerId);
       dispatch({ type: 'SET_SUMMARY', payload: summary });
     } catch (error) {
       dispatch({ type: 'SET_ERROR', payload: 'Failed to delete saving' });
     } finally {
       dispatch({ type: 'SET_LOADING', payload: false });
     }
-  }, [user]);
+  }, [user, activeOwnerId]);
+
+  const switchActiveOwner = useCallback(async (ownerId: string) => {
+    setActiveOwnerId(ownerId);
+    localStorage.setItem('activeOwnerId', ownerId);
+    await loadSavings(ownerId);
+  }, [loadSavings]);
+
+  const canEditOwner = useCallback(async (ownerId?: string) => {
+    try {
+      if (!user) return false;
+      const target = ownerId || activeOwnerId || user.uid;
+      if (!target) return false;
+      if (target === user.uid) return true;
+      const userDocRef = doc(db, 'users', target);
+      const userDocSnap = await getDoc(userDocRef);
+      if (!userDocSnap.exists()) return false;
+      const data = userDocSnap.data() as any;
+      const prefs = data.preferences || {};
+      const allowed = !!(prefs.allowMemberEditAllTransactions === true && Array.isArray(prefs.invitedMembers) && prefs.invitedMembers.includes(user.email));
+      return allowed;
+    } catch (err) {
+      console.warn('canEditOwner (savings) check failed', err);
+      return false;
+    }
+  }, [user, activeOwnerId]);
 
   return (
     <SavingContext.Provider value={{ 
@@ -190,7 +278,10 @@ export const SavingProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       loadSavingsByType,
       addSaving, 
       updateSaving, 
-      deleteSaving 
+      deleteSaving,
+      canEditOwner,
+      activeOwnerId,
+      switchActiveOwner
     }}>
       {children}
     </SavingContext.Provider>

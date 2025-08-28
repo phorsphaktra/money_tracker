@@ -346,7 +346,12 @@ export const SavingList: React.FC<SavingListProps> = ({
                           </div>
                         </td>
                         <td className="px-3 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm text-gray-500 dark:text-gray-400 truncate max-w-[200px]">
-                          {saving.description || '-'}
+                          <span className="text-sm text-gray-900 dark:text-gray-100 block truncate max-w-[200px]">
+                            {saving.description || '-'}
+                          </span>
+                          {saving.createdByName && (
+                            <div className="text-xs text-gray-500 mt-1">By {saving.createdByName}</div>
+                          )}
                         </td>
                         <td className="px-3 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm">
                           {category ? (

@@ -8,6 +8,8 @@ export interface Saving {
   date: string;
   description?: string;
   categoryId?: string;
+  createdBy?: string;
+  createdByName?: string;
   createdAt: string;
   updatedAt: string;
   type: 'credit' | 'debit';
@@ -78,7 +80,9 @@ export class SavingService {
             categoryId: category.id,
             createdAt: now,
             updatedAt: now,
-            type: saving.type
+            type: saving.type,
+            createdBy: (saving as any).createdBy,
+            createdByName: (saving as any).createdByName,
           });
           return addDoc(collectionRef, savingData);
         });
@@ -95,6 +99,9 @@ export class SavingService {
           type: saving.type,
           createdAt: now,
           updatedAt: now
+          ,
+          createdBy: (saving as any).createdBy,
+          createdByName: (saving as any).createdByName,
         });
 
         const docRef = await addDoc(collectionRef, savingData);

@@ -47,6 +47,14 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
   const [pendingInvites, setPendingInvites] = useState<Invitation[]>([]);
   const { user } = useAuth();
   const { switchActiveOwner } = useTransactions();
+  // lazy-load saving context to avoid circular imports in some setups
+  const { switchActiveOwner: switchSavingOwner } = (function() {
+    try {
+      return require('./SavingContext').useSaving();
+    } catch (e) {
+      return { switchActiveOwner: async (_: string) => {} } as any;
+    }
+  })();
 
   const calculateGroups = useCallback(() => {
     setIsLoading(true);
@@ -111,17 +119,22 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
           const invites = await invitationService.getPendingInvitationsForEmail(user.email);
           setPendingInvites(invites);
         }
-        // load the accepted invitation to find ownerId and switch active owner
+        // load the accepted invitation to find ownerId and switch active owner for transactions and savings
         if (user && user.email) {
           const accepted = await invitationService.getPendingInvitationsForEmail(user.email);
           const justAccepted = accepted.find(inv => inv.id === inviteId) || null;
-        if (justAccepted && justAccepted.ownerId) {
-          try {
-            await switchActiveOwner(justAccepted.ownerId);
-          } catch (e) {
-            console.error('Failed to switch to accepted owner', e);
+          if (justAccepted && justAccepted.ownerId) {
+            try {
+              await switchActiveOwner(justAccepted.ownerId);
+            } catch (e) {
+              console.error('Failed to switch to accepted owner (transactions)', e);
+            }
+            try {
+              await switchSavingOwner(justAccepted.ownerId);
+            } catch (e) {
+              console.error('Failed to switch to accepted owner (savings)', e);
+            }
           }
-        }
         }
       } catch (e) {
         console.error('Failed to accept invite', e);

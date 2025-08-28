@@ -140,7 +140,9 @@ export const SavingCard = ({ saving, onEdit, onDelete }: SavingCardProps) => {
           <div className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-2 truncate">
             {saving.description}
           </div>
-
+          {saving.createdByName && (
+            <p className="text-xs text-gray-400 truncate">By {saving.createdByName}</p>
+          )}
           <div className="flex items-center gap-2 flex-wrap">
             {category && (
               <span 
