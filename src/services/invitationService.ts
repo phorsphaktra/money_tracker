@@ -44,6 +44,14 @@ export const invitationService = {
     });
   },
 
+  async rejectInvitation(invitationId: string) {
+    const ref = doc(db, COLLECTION, invitationId);
+    await updateDoc(ref, {
+      status: 'rejected',
+      acceptedAt: null
+    });
+  },
+
   async sendInviteEmail(invite: Invitation) {
     try {
       const webhookUrl = import.meta.env.VITE_INVITE_WEBHOOK_URL as string | undefined;

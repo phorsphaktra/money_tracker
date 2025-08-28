@@ -54,6 +54,8 @@ interface TransactionContextType {
   activeOwnerId?: string | null;
   // Check whether the current authenticated user can edit transactions for the given owner
   canEditOwner: (ownerId?: string) => Promise<boolean>;
+  // Switch the currently active owner and reload their transactions
+  switchActiveOwner: (ownerId: string) => Promise<void>;
 }
 
 const TransactionContext = createContext<TransactionContextType | undefined>(undefined);
@@ -145,6 +147,18 @@ export const TransactionProvider: React.FC<{ children: React.ReactNode }> = ({ c
     } catch (e) {
       console.error('Failed to find inviting owner:', e);
       return null;
+    }
+  };
+
+  const switchActiveOwner = async (ownerId: string) => {
+    if (!user) return;
+    try {
+      setActiveOwnerId(ownerId);
+      localStorage.setItem('activeOwnerId', ownerId);
+      await loadTransactions(ownerId);
+    } catch (e) {
+      console.error('Failed to switch active owner', e);
+      throw e;
     }
   };
 
@@ -299,6 +313,7 @@ export const TransactionProvider: React.FC<{ children: React.ReactNode }> = ({ c
   loadTransactions,
   activeOwnerId,
   canEditOwner,
+  switchActiveOwner,
       }}
     >
       {children}

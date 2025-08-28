@@ -1,5 +1,8 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useTaskContext } from './TaskContext';
+import { invitationService, Invitation } from '../services/invitationService';
+import { useAuth } from './AuthContext';
+import { useTransactions } from './TransactionContext';
 import { isToday, isPast, addDays } from 'date-fns';
 import { Task } from '../types/task';
 
@@ -18,6 +21,11 @@ interface NotificationContextType {
   refreshNotifications: () => void;
   isLoading: boolean;
   error: string | null;
+  // Invitations
+  pendingInvites: Invitation[];
+  refreshInvites: () => Promise<void>;
+  acceptInvite: (inviteId: string) => Promise<void>;
+  rejectInvite: (inviteId: string) => Promise<void>;
 }
 
 const NotificationContext = createContext<NotificationContextType | null>(null);
@@ -36,6 +44,9 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
     dueToday: 0,
     upcoming: 0
   });
+  const [pendingInvites, setPendingInvites] = useState<Invitation[]>([]);
+  const { user } = useAuth();
+  const { switchActiveOwner } = useTransactions();
 
   const calculateGroups = useCallback(() => {
     setIsLoading(true);
@@ -82,11 +93,74 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
     refreshNotifications: calculateGroups,
     isLoading,
     error
+    , pendingInvites,
+    refreshInvites: async () => {
+      if (!user?.email) return;
+      try {
+        const invites = await invitationService.getPendingInvitationsForEmail(user.email);
+        setPendingInvites(invites);
+      } catch (e) {
+        console.error('Failed to load invites', e);
+      }
+    },
+    acceptInvite: async (inviteId: string) => {
+      try {
+        await invitationService.acceptInvitation(inviteId);
+        // refresh list and notifications
+        if (user && user.email) {
+          const invites = await invitationService.getPendingInvitationsForEmail(user.email);
+          setPendingInvites(invites);
+        }
+        // load the accepted invitation to find ownerId and switch active owner
+        if (user && user.email) {
+          const accepted = await invitationService.getPendingInvitationsForEmail(user.email);
+          const justAccepted = accepted.find(inv => inv.id === inviteId) || null;
+        if (justAccepted && justAccepted.ownerId) {
+          try {
+            await switchActiveOwner(justAccepted.ownerId);
+          } catch (e) {
+            console.error('Failed to switch to accepted owner', e);
+          }
+        }
+        }
+      } catch (e) {
+        console.error('Failed to accept invite', e);
+        throw e;
+      }
+    },
+    rejectInvite: async (inviteId: string) => {
+      try {
+        await invitationService.rejectInvitation(inviteId);
+        if (user?.email) {
+          const invites = await invitationService.getPendingInvitationsForEmail(user.email);
+          setPendingInvites(invites);
+        }
+      } catch (e) {
+        console.error('Failed to reject invite', e);
+        throw e;
+      }
+    }
   };
 
   useEffect(() => {
     calculateGroups();
   }, [calculateGroups]);
+
+  useEffect(() => {
+    // load invites on auth change
+    (async () => {
+      if (user?.email) {
+        try {
+          const invites = await invitationService.getPendingInvitationsForEmail(user.email);
+          setPendingInvites(invites);
+        } catch (e) {
+          console.error('Failed to load invites', e);
+        }
+      } else {
+        setPendingInvites([]);
+      }
+    })();
+  }, [user?.email]);
 
   return (
     <NotificationContext.Provider value={value}>
