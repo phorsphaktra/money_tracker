@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { PiggyBank, Settings2, Plus, Trash2, Upload, Download, RotateCcw } from "lucide-react";
+import { useTranslation } from 'react-i18next';
 
 // ---------- helpers ----------
 const fmt = (n: number | string | undefined, c?: string) =>
@@ -25,8 +26,12 @@ const save = (key: string, value: any) => {
 
 // ---------- main component ----------
 export default function SavingsPlannerApp() {
+  const { t } = useTranslation();
   const [currency, setCurrency] = useState(load("sp_currency", "$"));
-  const [income, setIncome] = useState(load("sp_income", 300));
+  const initialIncome = load<number>("sp_income", 300);
+  // keep input as string so it's empty when zero and doesn't produce leading zeros when typing
+  const [incomeStr, setIncomeStr] = useState<string>(initialIncome === 0 ? '' : String(initialIncome));
+  const income = Number(incomeStr) || 0;
   const [rule, setRule] = useState(load("sp_rule", "50-30-20"));
 
   // Pay yourself first / aggressive settings
@@ -146,8 +151,8 @@ export default function SavingsPlannerApp() {
       try {
         const text = typeof reader.result === 'string' ? reader.result : '';
         const data = JSON.parse(text) as any;
-        if (data.currency) setCurrency(data.currency);
-        if (data.income) setIncome(data.income);
+  if (data.currency) setCurrency(data.currency);
+  if (data.income !== undefined) setIncomeStr(data.income ? String(data.income) : '');
         if (data.rule) setRule(data.rule);
         if (data.pyfPct) setPyfPct(data.pyfPct);
         if (data.aggPct) setAggPct(data.aggPct);
@@ -164,7 +169,7 @@ export default function SavingsPlannerApp() {
   const resetAll = () => {
     if (!confirm("Reset all settings?")) return;
     setCurrency("$");
-    setIncome(300);
+  setIncomeStr('300');
     setRule("50-30-20");
     setPyfPct(20);
     setAggPct(30);
@@ -184,26 +189,30 @@ export default function SavingsPlannerApp() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white text-slate-800 p-6">
-      <div className="max-w-5xl mx-auto">
-        <header className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3">
-            <PiggyBank className="w-8 h-8" />
-            <h1 className="text-2xl md:text-3xl font-semibold">Savings Planner</h1>
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 safe-area-inset-top text-slate-800 dark:text-slate-100">
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-3 sm:py-4 md:py-6 space-y-3 sm:space-y-4 md:space-y-6">
+        {/* Header */}
+        <div className="bg-gradient-to-br from-indigo-600 to-purple-600 rounded-xl sm:rounded-2xl p-4 sm:p-6 md:p-8 shadow-lg">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <PiggyBank className="w-8 h-8 text-white" />
+              <h1 className="text-2xl md:text-3xl font-semibold text-white">{t('savings.analysis') || 'Savings Planner'}</h1>
+            </div>
+            <div className="flex items-center gap-2">
+              <button onClick={exportJson} className="inline-flex items-center gap-2 px-3 py-2 rounded-2xl shadow-sm border bg-white/10 text-white hover:bg-white/20">
+                <Download className="w-4 h-4"/> <span className="hidden sm:inline">Export</span>
+              </button>
+              <label className="inline-flex items-center gap-2 px-3 py-2 rounded-2xl shadow-sm border bg-white/10 text-white hover:bg-white/20 cursor-pointer">
+                <Upload className="w-4 h-4"/> <span className="hidden sm:inline">Import</span>
+                <input type="file" accept="application/json" className="hidden" onChange={(e)=> e.target.files?.[0] && importJson(e.target.files[0])}/>
+              </label>
+              <button onClick={resetAll} className="inline-flex items-center gap-2 px-3 py-2 rounded-2xl shadow-sm border bg-white/10 text-white hover:bg-white/20">
+                <RotateCcw className="w-4 h-4"/> <span className="hidden sm:inline">Reset</span>
+              </button>
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            <button onClick={exportJson} className="inline-flex items-center gap-2 px-3 py-2 rounded-2xl shadow-sm border bg-white hover:bg-slate-50">
-              <Download className="w-4 h-4"/> Export
-            </button>
-            <label className="inline-flex items-center gap-2 px-3 py-2 rounded-2xl shadow-sm border bg-white hover:bg-slate-50 cursor-pointer">
-              <Upload className="w-4 h-4"/> Import
-              <input type="file" accept="application/json" className="hidden" onChange={(e)=> e.target.files?.[0] && importJson(e.target.files[0])}/>
-            </label>
-            <button onClick={resetAll} className="inline-flex items-center gap-2 px-3 py-2 rounded-2xl shadow-sm border bg-white hover:bg-slate-50">
-              <RotateCcw className="w-4 h-4"/> Reset
-            </button>
-          </div>
-        </header>
+          <p className="mt-3 text-sm sm:text-base text-indigo-100">Plan your savings using common rules and customize targets to fit your goals.</p>
+        </div>
 
         {/* Controls */}
         <div className="grid md:grid-cols-3 gap-4 mb-6">
@@ -219,13 +228,18 @@ export default function SavingsPlannerApp() {
 
           <div className="p-4 rounded-2xl border bg-white shadow-sm">
             <div className="text-sm text-slate-500 mb-1">Monthly Income</div>
-            <input
-              type="number"
-              className="w-full px-3 py-2 rounded-xl border"
-              value={income}
-              min={0}
-              onChange={(e) => setIncome(Number(e.target.value))}
-            />
+              <input
+                inputMode="numeric"
+                pattern="[0-9]*"
+                className="w-full px-3 py-2 rounded-xl border bg-white dark:bg-gray-700 text-slate-900 dark:text-slate-100"
+                value={incomeStr}
+                placeholder="0"
+                onChange={(e) => {
+                  // keep only digits, avoid leading zeros except single zero
+                  const cleaned = e.target.value.replace(/[^0-9]/g, '');
+                  setIncomeStr(cleaned.replace(/^0+(?=\d)/, ''));
+                }}
+              />
           </div>
 
           <div className="p-4 rounded-2xl border bg-white shadow-sm">
@@ -347,21 +361,21 @@ export default function SavingsPlannerApp() {
           )}
         </AnimatePresence>
 
-        {/* Summary */}
+    {/* Summary */}
         <div className="grid md:grid-cols-3 gap-4 mb-6">
           <div className="p-4 rounded-2xl border bg-white shadow-sm">
-            <div className="text-sm text-slate-500 mb-1">Total Planned</div>
-            <div className="text-2xl font-semibold">{fmt(totalPlanned, currency)}</div>
-            <div className="text-xs text-slate-500">Income: {fmt(income, currency)}</div>
+      <div className="text-sm text-slate-500 dark:text-slate-400 mb-1">{t('dashboard.summary') || 'Total Planned'}</div>
+      <div className="text-2xl font-semibold text-slate-900 dark:text-white">{fmt(totalPlanned, currency)}</div>
+      <div className="text-xs text-slate-500 dark:text-slate-400">Income: {fmt(income, currency)}</div>
           </div>
           <div className="p-4 rounded-2xl border bg-white shadow-sm">
-            <div className="text-sm text-slate-500 mb-1">Remainder</div>
-            <div className={`text-2xl font-semibold ${Math.abs(income-totalPlanned)<0.01?"text-emerald-600":"text-amber-600"}`}>{fmt(income - totalPlanned, currency)}</div>
-            <div className="text-xs text-slate-500">Aim for 0 remainder</div>
+      <div className="text-sm text-slate-500 dark:text-slate-400 mb-1">{t('savings.savings_rate') || 'Remainder'}</div>
+      <div className={`text-2xl font-semibold ${Math.abs(income-totalPlanned)<0.01?"text-emerald-600":"text-amber-600"}`}>{fmt(income - totalPlanned, currency)}</div>
+      <div className="text-xs text-slate-500 dark:text-slate-400">Aim for 0 remainder</div>
           </div>
           <div className="p-4 rounded-2xl border bg-white shadow-sm">
-            <div className="text-sm text-slate-500 mb-1">Autosave Tip</div>
-            <div className="text-sm">Schedule an automatic transfer on payday equal to your chosen savings amount.</div>
+      <div className="text-sm text-slate-500 dark:text-slate-400 mb-1">Autosave Tip</div>
+      <div className="text-sm text-slate-700 dark:text-slate-300">Schedule an automatic transfer on payday equal to your chosen savings amount.</div>
           </div>
         </div>
 
@@ -384,7 +398,7 @@ export default function SavingsPlannerApp() {
           </div>
         </div>
 
-        <footer className="mt-8 text-center text-xs text-slate-500">
+        <footer className="mt-8 text-center text-xs text-slate-400 dark:text-slate-500">
           Built for you — tweak the numbers until it fits. Autosaves to your browser.
         </footer>
       </div>
