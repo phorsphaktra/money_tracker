@@ -58,7 +58,7 @@ const SettingsContext = createContext<SettingsContextType | undefined>(undefined
 
 export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user } = useAuth();
-  const [preferences, setPreferences] = useState({
+  const [preferences, setPreferences] = useState<SettingsContextType['preferences']>({
     currency: 'USD',
     language: 'en',
     darkMode: false,
