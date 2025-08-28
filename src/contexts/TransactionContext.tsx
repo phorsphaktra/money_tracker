@@ -5,7 +5,7 @@ import { useLoading } from './LoadingContext';
 import { CategoryId } from '../utils/categories';
 import { DeleteTransactionModal } from '../components/transaction/DeleteTransactionModal';
 import { db } from '../config/firebase';
-import { collection, getDocs, query, where, limit } from 'firebase/firestore';
+import { collection, getDocs, query, where, limit, getDoc, doc } from 'firebase/firestore';
 
 export interface Transaction {
   id: string;
@@ -16,6 +16,9 @@ export interface Transaction {
   date: string;
   createdAt?: string;
   updatedAt?: string;
+  // Optional fields for multi-user setups: who created this record
+  createdBy?: string; // uid or identifier
+  createdByName?: string; // human-friendly name if stored
   originalAmount?: number;
   originalCurrency?: string;
   exchangeRate?: number;
@@ -47,6 +50,10 @@ interface TransactionContextType {
   transactionToDelete: Transaction | null;
   setTransactionToDelete: (transaction: Transaction | null) => void;
   loadTransactions: () => Promise<void>;
+  // The currently selected owner whose transactions are loaded (could be another user if invited)
+  activeOwnerId?: string | null;
+  // Check whether the current authenticated user can edit transactions for the given owner
+  canEditOwner: (ownerId?: string) => Promise<boolean>;
 }
 
 const TransactionContext = createContext<TransactionContextType | undefined>(undefined);
@@ -62,6 +69,7 @@ export const TransactionProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const [transactionToDelete, setTransactionToDelete] = useState<Transaction | null>(null);
   const [activeOwnerId, setActiveOwnerId] = useState<string | null>(null);
+  const [canEditCache] = useState<Map<string, boolean>>(() => new Map());
 
   useEffect(() => {
     const init = async () => {
@@ -86,13 +94,34 @@ export const TransactionProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
   const loadTransactions = async (ownerId?: string) => {
     if (!user) return;
-    const targetOwnerId = ownerId || activeOwnerId || user.uid;
+    let targetOwnerId = ownerId || activeOwnerId || user.uid;
     showLoading();
     try {
       const data = await transactionService.getTransactions(targetOwnerId);
       setTransactions(data);
     } catch (err) {
-      setError(err instanceof Error ? err : new Error('Failed to load transactions'));
+      const isPermError = (err as any)?.code === 'permission-denied' || String(err).toLowerCase().includes('permission');
+      if (isPermError && targetOwnerId !== user.uid) {
+        // Fallback: switch to current user's own owner id and retry once
+        console.warn('Permission denied for owner', targetOwnerId, '- falling back to current user', user.uid);
+        setActiveOwnerId(user.uid);
+        localStorage.setItem('activeOwnerId', user.uid);
+        try {
+          const retryData = await transactionService.getTransactions(user.uid);
+          setTransactions(retryData);
+          setError(new Error('Switched to your own account because you do not have permission to access the selected owner.'));
+        } catch (retryErr) {
+          const message = (retryErr as any)?.code === 'permission-denied' || String(retryErr).toLowerCase().includes('permission')
+            ? new Error('Missing permissions to load your transactions. Please sign in with a different account or check Firestore rules.')
+            : (retryErr instanceof Error ? retryErr : new Error('Failed to load transactions'));
+          setError(message);
+        }
+      } else {
+        const message = isPermError
+          ? new Error('Missing permissions to load transactions for the selected owner. Check invited member settings or active owner selection.')
+          : (err instanceof Error ? err : new Error('Failed to load transactions'));
+        setError(message);
+      }
     } finally {
       hideLoading();
     }
@@ -119,6 +148,30 @@ export const TransactionProvider: React.FC<{ children: React.ReactNode }> = ({ c
     }
   };
 
+  // Check whether the current user can edit transactions for ownerId.
+  // Mirrors the Firestore security rule: owner OR invited member with allowMemberEditAllTransactions
+  const canEditOwner = async (ownerId?: string) => {
+    if (!user) return false;
+    const target = ownerId || activeOwnerId || user.uid;
+    if (user.uid === target) return true;
+
+    // Cache check
+    if (canEditCache.has(target)) return canEditCache.get(target) as boolean;
+
+    try {
+      const userDoc = await getDoc(doc(db, 'users', target));
+      if (!userDoc.exists()) return false;
+      const data = userDoc.data();
+      const prefs = data.preferences || {};
+      const allowed = !!(prefs.allowMemberEditAllTransactions === true && Array.isArray(prefs.invitedMembers) && prefs.invitedMembers.includes(user.email));
+      canEditCache.set(target, allowed);
+      return allowed;
+    } catch (e) {
+      console.error('Failed to check edit permission for owner', target, e);
+      return false;
+    }
+  };
+
   const addTransaction = async (transaction: Omit<Transaction, 'id'>) => {
     if (!user) throw new Error('User not authenticated');
     showLoading();
@@ -130,6 +183,12 @@ export const TransactionProvider: React.FC<{ children: React.ReactNode }> = ({ c
       ));
       return newTransaction;
     } catch (err) {
+      // Map permission errors to clearer message
+      if ((err as any)?.code === 'permission-denied' || String(err).toLowerCase().includes('permission')) {
+        const e = new Error('Missing permissions to add transaction for the selected owner. Verify invited member permissions or switch active owner.');
+        setError(e);
+        throw e;
+      }
       throw err instanceof Error ? err : new Error('Failed to add transaction');
     } finally {
       hideLoading();
@@ -146,6 +205,11 @@ export const TransactionProvider: React.FC<{ children: React.ReactNode }> = ({ c
         prev.map(t => (t.id === id ? { ...t, ...transaction } : t))
       );
     } catch (err) {
+      if ((err as any)?.code === 'permission-denied' || String(err).toLowerCase().includes('permission')) {
+        const e = new Error('Missing permissions to update this transaction. Verify invited member permissions or switch active owner.');
+        setError(e);
+        throw e;
+      }
       throw err instanceof Error ? err : new Error('Failed to update transaction');
     } finally {
       hideLoading();
@@ -160,6 +224,11 @@ export const TransactionProvider: React.FC<{ children: React.ReactNode }> = ({ c
       await transactionService.deleteTransaction(targetOwnerId, id);
       setTransactions(prev => prev.filter(t => t.id !== id));
     } catch (err) {
+      if ((err as any)?.code === 'permission-denied' || String(err).toLowerCase().includes('permission')) {
+        const e = new Error('Missing permissions to delete this transaction. Verify invited member permissions or switch active owner.');
+        setError(e);
+        throw e;
+      }
       throw err instanceof Error ? err : new Error('Failed to delete transaction');
     } finally {
       hideLoading();
@@ -227,7 +296,9 @@ export const TransactionProvider: React.FC<{ children: React.ReactNode }> = ({ c
         deleteTransactionWithConfirmation,
         transactionToDelete,
         setTransactionToDelete,
-        loadTransactions,
+  loadTransactions,
+  activeOwnerId,
+  canEditOwner,
       }}
     >
       {children}

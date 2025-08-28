@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useTransactions, Transaction } from '../../contexts/TransactionContext';
+import { useAuth } from '../../contexts/AuthContext';
 import { Button } from '../shared/Button';
 import { EXPENSE_CATEGORIES, INCOME_CATEGORIES, isValidCategory } from '../../utils/categories';
 import { CategorySelect } from './CategorySelect';
@@ -47,6 +48,7 @@ const getInitialAmount = (
 
 export const TransactionModal = ({ transaction, onClose, type = 'expense' }: TransactionModalProps) => {
   const { addTransaction, updateTransaction } = useTransactions();
+  const { user } = useAuth();
   const userCurrency = useUserCurrency();
   const { exchangeRates } = useSettings();
   
@@ -123,6 +125,8 @@ export const TransactionModal = ({ transaction, onClose, type = 'expense' }: Tra
           originalCurrency: 'KHR',
           exchangeRate: exchangeRates.KHR_USD
         })
+  // Attach creator info for multi-user setups
+  , ...(user ? { createdBy: user.uid, createdByName: user.displayName || user.email || user.uid } : {})
       };
 
       if (transaction?.id) {

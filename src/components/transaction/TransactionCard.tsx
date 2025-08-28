@@ -14,6 +14,7 @@ import { LoadingSpinner } from '../shared/LoadingSpinner';
 interface TransactionCardProps {
   transaction: Transaction;
   index: number;
+  canEdit?: boolean;
 }
 
 interface AmountCalculation {
@@ -22,7 +23,7 @@ interface AmountCalculation {
   originalAmount: number;
 }
 
-export const TransactionCard = ({ transaction }: TransactionCardProps) => {
+export const TransactionCard = ({ transaction, canEdit }: TransactionCardProps) => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [swipeOffset, setSwipeOffset] = useState(0);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -105,10 +106,11 @@ export const TransactionCard = ({ transaction }: TransactionCardProps) => {
         }}
       >
         <button
-          onClick={handleEdit}
-          disabled={isDeleting}
-          className="p-2.5 sm:p-3 bg-blue-500 text-white rounded-full shadow-lg transform transition-all duration-200 
-            hover:scale-105 hover:bg-blue-600 active:scale-95 disabled:opacity-50 touch-manipulation min-h-[44px] min-w-[44px]"
+          onClick={canEdit === false ? undefined : handleEdit}
+          disabled={isDeleting || canEdit === false}
+          className={`p-2.5 sm:p-3 rounded-full shadow-lg transform transition-all duration-200 
+            ${canEdit === false ? 'bg-gray-500 text-white opacity-60 cursor-not-allowed' : 'bg-blue-500 text-white hover:scale-105 hover:bg-blue-600 active:scale-95'}
+            touch-manipulation min-h-[44px] min-w-[44px]`}
           style={{ transform: `scale(${Math.min(Math.abs(swipeOffset) / 150, 1)})` }}
         >
           <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -116,10 +118,11 @@ export const TransactionCard = ({ transaction }: TransactionCardProps) => {
           </svg>
         </button>
         <button
-          onClick={initiateDelete}
-          disabled={isDeleting}
-          className="p-2.5 sm:p-3 bg-red-500 text-white rounded-full shadow-lg transform transition-all duration-200 
-            hover:scale-105 hover:bg-red-600 active:scale-95 disabled:opacity-50 touch-manipulation min-h-[44px] min-w-[44px]"
+          onClick={canEdit === false ? undefined : initiateDelete}
+          disabled={isDeleting || canEdit === false}
+          className={`p-2.5 sm:p-3 rounded-full shadow-lg transform transition-all duration-200 
+            ${canEdit === false ? 'bg-gray-500 text-white opacity-60 cursor-not-allowed' : 'bg-red-500 text-white hover:scale-105 hover:bg-red-600 active:scale-95'}
+            touch-manipulation min-h-[44px] min-w-[44px]`}
           style={{ transform: `scale(${Math.min(Math.abs(swipeOffset) / 150, 1)})` }}
         >
           {isDeleting ? (
@@ -169,6 +172,9 @@ export const TransactionCard = ({ transaction }: TransactionCardProps) => {
                 <p className="text-xs text-gray-500 dark:text-gray-400">
                   {new Date(transaction.date).toLocaleDateString()}
                 </p>
+                {transaction.createdByName && (
+                  <p className="text-xs text-gray-400 truncate">By {transaction.createdByName}</p>
+                )}
               </div>
               
               <div className="flex-shrink-0 text-right">

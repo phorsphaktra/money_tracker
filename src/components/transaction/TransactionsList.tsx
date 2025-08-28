@@ -10,6 +10,7 @@ import { useTransactions } from '../../contexts/TransactionContext';
 import { TransactionActions } from './TransactionActions';
 import { TransactionCard } from './TransactionCard';
 import { LoadingSpinner } from '../shared/LoadingSpinner';
+// ...existing code...
 
 /**
  * Props for the TransactionsList component
@@ -78,10 +79,12 @@ const EmptyState = () => (
  */
 const TransactionItem = ({ 
   transaction, 
-  index 
+  index,
+  canEdit
 }: { 
   transaction: Transaction;
   index: number;
+  canEdit?: boolean;
 }) => {
   const [showEditModal, setShowEditModal] = useState(false);
   const { deleteTransaction } = useTransactions();
@@ -116,9 +119,12 @@ const TransactionItem = ({
             <span className="text-xs sm:text-sm font-medium text-gray-900 dark:text-gray-200 truncate">
               {transaction.description || category.label}
             </span>
-            <span className="text-xs text-gray-500">
-              {new Date(transaction.date).toLocaleDateString()}
-            </span>
+            <div className="text-xs text-gray-500">
+              <div>{new Date(transaction.date).toLocaleDateString()}</div>
+              {transaction.createdByName && (
+                <div className="text-xs text-gray-400 truncate">By {transaction.createdByName}</div>
+              )}
+            </div>
           </div>
           <span className="hidden sm:block text-sm text-gray-900 dark:text-gray-200 truncate">
             {category.label}
@@ -129,6 +135,9 @@ const TransactionItem = ({
         <span className="text-sm text-gray-900 dark:text-gray-200 truncate max-w-[200px] block">
           {transaction.description || category.label}
         </span>
+        {transaction.createdByName && (
+          <div className="text-xs text-gray-500 mt-1">By {transaction.createdByName}</div>
+        )}
       </td>
       <td className="hidden md:table-cell px-6 py-3 sm:py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
         {new Date(transaction.date).toLocaleDateString()}
@@ -161,6 +170,7 @@ const TransactionItem = ({
           transaction={transaction}
           onDelete={() => deleteTransaction(transaction.id)}
           onEdit={handleEdit}
+          canEdit={canEdit}
         />
       </td>
       {showEditModal && (
@@ -199,11 +209,27 @@ export const TransactionsList = ({
   endDate
 }: TransactionsListProps) => {
   const [currentPage, setCurrentPage] = useState(1);
+  const { activeOwnerId, canEditOwner } = useTransactions();
+  const [canEdit, setCanEdit] = useState<boolean | null>(null);
   
   // Reset pagination when transactions change
   useEffect(() => {
     setCurrentPage(1);
   }, [transactions]);
+
+  // Check edit permission for active owner and cache result for UI
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const allowed = await canEditOwner(activeOwnerId || undefined);
+        if (mounted) setCanEdit(allowed);
+      } catch (e) {
+        if (mounted) setCanEdit(false);
+      }
+    })();
+    return () => { mounted = false; };
+  }, [activeOwnerId, canEditOwner]);
 
   /** 
    * Filter and paginate transactions
@@ -258,6 +284,11 @@ export const TransactionsList = ({
 
   return (
     <div className="w-full mx-auto mb-auto">
+      {canEdit === false && (
+        <div className="px-3 sm:px-4 py-2 mb-2 rounded-md bg-yellow-50 dark:bg-yellow-900/20 text-sm text-yellow-800 dark:text-yellow-200">
+          You don't have permission to edit transactions for the selected owner. Switch owner or ask the owner to enable invited member edit permission.
+        </div>
+      )}
       {/* Mobile View */}
       <div className="lg:hidden space-y-2">
         <div className="bg-gray-50 dark:bg-gray-800/50 backdrop-blur-sm sticky top-0 z-10 p-3 -mx-3 sm:-mx-4">
@@ -271,6 +302,7 @@ export const TransactionsList = ({
               key={transaction.id}
               transaction={transaction}
               index={(currentPage - 1) * itemsPerPage + index + 1}
+              canEdit={canEdit === null ? undefined : canEdit}
             />
           ))}
         </div>
@@ -306,6 +338,7 @@ export const TransactionsList = ({
                   key={transaction.id} 
                   transaction={transaction} 
                   index={(currentPage - 1) * itemsPerPage + index + 1}
+                  canEdit={canEdit === null ? undefined : canEdit}
                 />
               ))}
             </tbody>
