@@ -43,12 +43,12 @@ service cloud.firestore {
     match /invitations/{invitationId} {
       allow read: if isInvitationOwnerOrInvitee();
       allow create: if request.auth != null && request.resource.data.ownerId == request.auth.uid;
+      // Allow the invitee to update the invitation status to 'accepted' or 'rejected'.
+      // Only allow ownerId and inviteeEmail to remain unchanged and only allow changes to 'status' and 'acceptedAt'.
       allow update: if request.auth != null && resource.data.inviteeEmail == request.auth.token.email &&
-        // Only allow status to be set to 'accepted' by invitee and record acceptedAt
         request.resource.data.ownerId == resource.data.ownerId &&
         request.resource.data.inviteeEmail == resource.data.inviteeEmail &&
-        request.resource.data.status in ['pending', 'accepted'] &&
-        request.resource.data.status == 'accepted' &&
+        request.resource.data.status in ['pending', 'accepted', 'rejected'] &&
         request.resource.data.diff(resource.data).changedKeys().hasOnly(['status', 'acceptedAt']);
       allow delete: if false;
     }
