@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState, ReactNode, useCallback, useRef } from 'react';
-import { User } from 'firebase/auth';
+import { User, getRedirectResult } from 'firebase/auth';
 import { auth } from '../config/firebase';
 import { authService } from '../services/authService';
 
@@ -17,9 +17,9 @@ interface AuthState {
  * Interface extending AuthState with authentication methods
  */
 interface AuthContextType extends AuthState {
-    login: (email: string, password: string) => Promise<void>;
-    register: (email: string, password: string, displayName: string) => Promise<void>;
-    loginWithGoogle: () => Promise<void>;
+    login: (email: string, password: string) => Promise<User | null>;
+    register: (email: string, password: string, displayName: string) => Promise<User | null>;
+    loginWithGoogle: () => Promise<User | null>;
     logout: () => Promise<void>;
     clearError: () => void;
 }
@@ -43,22 +43,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         error: null
     });
     
-    const activityTimeoutRef = useRef<NodeJS.Timeout>();
-
-    /**
-     * Handles authentication errors and displays them to the user
-     * Auto-clears errors after 5 seconds
-     */
-    const handleError = useCallback((error: Error) => {
-        const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred';
-        setState(prev => ({ 
-            ...prev, 
-            error: errorMessage,
-            loading: false 
-        }));
-        // Auto-clear error after 5 seconds
-        setTimeout(clearError, 5000);
-    }, []);
+    const activityTimeoutRef = useRef<number | null>(null);
+    const refreshIntervalRef = useRef<number | null>(null);
+    const clearErrorTimeoutRef = useRef<number | null>(null);
 
     /**
      * Clears any displayed error messages
@@ -66,6 +53,36 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const clearError = useCallback(() => {
         setState(prev => ({ ...prev, error: null }));
     }, []);
+
+    /**
+     * Handles authentication errors and displays them to the user
+     * Auto-clears errors after 5 seconds
+     */
+    const handleError = useCallback((error: Error) => {
+        // Map common Firebase errors to friendlier messages
+        let errorMessage = 'An unexpected error occurred';
+        if (error && (error as any).code) {
+            const code = (error as any).code as string;
+            if (code.includes('auth/email-already-in-use')) errorMessage = 'Email already in use';
+            else if (code.includes('auth/invalid-email')) errorMessage = 'Invalid email address';
+            else if (code.includes('auth/wrong-password')) errorMessage = 'Invalid credentials';
+            else if (code.includes('auth/user-not-found')) errorMessage = 'User not found';
+            else errorMessage = (error as any).message || String(error);
+        } else if (error instanceof Error) {
+            errorMessage = error.message;
+        }
+
+        setState(prev => ({ 
+            ...prev, 
+            error: errorMessage,
+            loading: false 
+        }));
+        // Auto-clear error after 5 seconds (clear previous timer if any)
+        if (clearErrorTimeoutRef.current) {
+            clearTimeout(clearErrorTimeoutRef.current);
+        }
+        clearErrorTimeoutRef.current = window.setTimeout(() => clearError(), 5000) as unknown as number;
+    }, [clearError]);
 
     /**
      * Handles user logout
@@ -78,7 +95,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             await authService.logout();
             if (activityTimeoutRef.current) {
                 clearTimeout(activityTimeoutRef.current);
+                activityTimeoutRef.current = null;
             }
+            // clear token refresh interval
+            if (refreshIntervalRef.current) {
+                clearInterval(refreshIntervalRef.current);
+                refreshIntervalRef.current = null;
+            }
+            // reset state
+            setState({ user: null, loading: false, isAuthenticated: false, error: null });
             clearError();
         } catch (error) {
             handleError(error as Error);
@@ -109,6 +134,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
      * Updates user state and handles token refresh
      */
     useEffect(() => {
+        // Process redirect result (if any) once on mount so redirect-based
+        // Google sign-in can create the user profile server-side.
+        (async () => {
+            try {
+                const redirectResult = await getRedirectResult(auth);
+                if (redirectResult && redirectResult.user) {
+                    // Ensure profile exists for redirected user
+                    await authService.handleGoogleLogin(redirectResult.user);
+                }
+            } catch (err) {
+                // If there was no redirect result this will often throw - ignore
+                // non-fatal errors but surface others.
+                if ((err as any)?.code && !(String(err).includes('no-auth-event')) ) {
+                    console.error('Redirect sign-in result handling failed', err);
+                }
+            }
+        })();
+
         const unsubscribe = auth.onAuthStateChanged(async (user) => {
             setState(prev => ({
                 ...prev,
@@ -117,12 +160,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 loading: false
             }));
 
+            // clear any existing interval whenever auth state changes
+            if (refreshIntervalRef.current) {
+                clearInterval(refreshIntervalRef.current);
+                refreshIntervalRef.current = null;
+            }
+
             if (user) {
                 try {
                     await authService.updateLastLogin(user.uid);
                     // Set up token refresh interval
-                    const refreshInterval = setInterval(refreshToken, TOKEN_REFRESH_INTERVAL);
-                    return () => clearInterval(refreshInterval);
+                    refreshIntervalRef.current = window.setInterval(refreshToken, TOKEN_REFRESH_INTERVAL) as unknown as number;
                 } catch (error) {
                     if (error instanceof Error && error.message.includes('auth/id-token-expired')) {
                         await logout();
@@ -136,6 +184,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
         return () => {
             unsubscribe();
+            if (refreshIntervalRef.current) {
+                clearInterval(refreshIntervalRef.current);
+                refreshIntervalRef.current = null;
+            }
+            if (clearErrorTimeoutRef.current) {
+                clearTimeout(clearErrorTimeoutRef.current);
+                clearErrorTimeoutRef.current = null;
+            }
         };
     }, [refreshToken, logout, handleError]);
 
@@ -148,10 +204,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const login = useCallback(async (email: string, password: string) => {
         try {
             setState(prev => ({ ...prev, loading: true }));
-            await authService.loginWithEmail(email, password);
+            const result = await authService.loginWithEmail(email, password);
             clearError();
+            return result ? (result as any).user ?? null : null;
         } catch (error) {
             handleError(error as Error);
+            return null;
         } finally {
             setState(prev => ({ ...prev, loading: false }));
         }
@@ -164,12 +222,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const resetActivityTimer = useCallback(() => {
         if (activityTimeoutRef.current) {
             clearTimeout(activityTimeoutRef.current);
+            activityTimeoutRef.current = null;
         }
-        
+
         if (state.isAuthenticated) {
-            activityTimeoutRef.current = setTimeout(async () => {
+            activityTimeoutRef.current = window.setTimeout(async () => {
                 await authService.logout();
-            }, INACTIVITY_TIMEOUT);
+            }, INACTIVITY_TIMEOUT) as unknown as number;
         }
     }, [state.isAuthenticated]);
 
@@ -182,11 +241,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const register = useCallback(async (email: string, password: string, displayName: string) => {
         try {
             setState(prev => ({ ...prev, loading: true }));
-            await authService.registerWithProfile(email, password, displayName);
+            const user = await authService.registerWithProfile(email, password, displayName);
             resetActivityTimer();
             clearError();
+            return user ?? null;
         } catch (error) {
             handleError(error as Error);
+            return null;
         } finally {
             setState(prev => ({ ...prev, loading: false }));
         }
@@ -201,11 +262,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const loginWithGoogle = useCallback(async () => {
         try {
             setState(prev => ({ ...prev, loading: true }));
-            await authService.loginWithGoogle();
+            const user = await authService.loginWithGoogle();
             resetActivityTimer();
             clearError();
+            return user ?? null;
         } catch (error) {
             handleError(error as Error);
+            return null;
         } finally {
             setState(prev => ({ ...prev, loading: false }));
         }
@@ -249,14 +312,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         clearError
     };
 
-    // Show nothing while initial loading
-    if (state.loading) {
-        return null;
-    }
-
+    // Always render the provider so children can safely call useAuth.
+    // While loading, show a minimal full-screen spinner so the app doesn't try
+    // to render protected routes/components before auth state is ready.
     return (
         <AuthContext.Provider value={value}>
-            {children}
+            {state.loading ? (
+                <div className="min-h-screen w-full flex items-center justify-center bg-gray-50">
+                    <svg className="animate-spin h-8 w-8 text-indigo-600" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    </svg>
+                </div>
+            ) : (
+                children
+            )}
         </AuthContext.Provider>
     );
 };

@@ -4,6 +4,7 @@ import {
   signOut,
   GoogleAuthProvider,
   signInWithPopup,
+  signInWithRedirect,
   User,
   updateProfile,
 } from "firebase/auth";
@@ -101,9 +102,33 @@ export const authService = {
   async loginWithGoogle() {
     try {
       const provider = new GoogleAuthProvider();
-      const { user } = await signInWithPopup(auth, provider);
-      await this.handleGoogleLogin(user);
-      return user;
+
+      // Detect mobile browsers (simple UA check). On many mobile browsers
+      // popups are blocked or third-party cookies cause popup login to fail.
+      const ua = typeof navigator !== 'undefined' ? navigator.userAgent || '' : '';
+      const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(ua);
+      const preferRedirect = isMobile;
+
+      if (preferRedirect) {
+        // Start redirect flow. Caller should not expect an immediate user result.
+        await signInWithRedirect(auth, provider);
+        return null;
+      }
+
+      try {
+        const { user } = await signInWithPopup(auth, provider);
+        await this.handleGoogleLogin(user);
+        return user;
+      } catch (popupError) {
+        // If popup is blocked or closed, fallback to redirect which works
+        // more reliably on mobile and restricted browsers.
+        const code = (popupError as any)?.code || '';
+        if (code.includes('popup') || code.includes('popup-blocked') || code.includes('popup-closed-by-user') || code.includes('cancelled-popup-request')) {
+          await signInWithRedirect(auth, provider);
+          return null;
+        }
+        throw popupError;
+      }
     } catch (error) {
       throw this.handleAuthError(error);
     }
