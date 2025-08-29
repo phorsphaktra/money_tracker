@@ -50,6 +50,23 @@
       "updating": "Updating...",
       "no_history": "No rate history available",
       "current": "Current"
+    },
+    "invite": {
+      "label": "Invite member by email",
+      "placeholder": "member@example.com",
+      "button": "Invite",
+      "sending": "Sending…",
+      "already_invited": "{{email}} is already invited",
+      "sent": "Invite sent to {{email}}",
+      "failed": "Failed to send invite",
+      "removing": "Removing…",
+      "remove_button": "Remove",
+      "removed": "Removed {{email}}",
+      "remove_failed": "Failed to remove invite",
+      "none": "No invited members yet",
+      "allow_edit_label": "Allow invited members to edit all transactions",
+      "allow_edit_aria": "Allow invited members to edit all transactions",
+      "allow_edit_sr": "Toggle member edit permission"
     }
   },
   "common": {
@@ -69,17 +86,17 @@
     "created": "Created at",
     "updated": "Updated at",
     "confirmDelete": "Delete Saving",
-    "no":"No",
+    "no": "No",
     "search": "Search...",
     "showing": "Showing",
     "to": "to",
     "of": "of",
     "results": "results",
     "prev": "Previous",
-    "next": "Next"  
+    "next": "Next"
   },
   "dashboard": {
-    "version":"Version: ",
+    "version": "Version: ",
     "title": "Dashboard",
     "subtitle": "Track your finances and manage your savings",
     "monthly_income": "Monthly Income",
@@ -93,12 +110,12 @@
     "add_transaction": "New Transaction",
     "add_saving": "New Saving",
     "transactions": "transactions",
-    "net_saving":"Net Savings",
-    "summary":"Monthly Summary",
-    "monthly_trends":"Monthly Trends",
-    "category_breakdown":"Category Breakdown",
-    "expense_categories":"Expense Categories",
-    "income_categories":"Income Categories",
+    "net_saving": "Net Savings",
+    "summary": "Monthly Summary",
+    "monthly_trends": "Monthly Trends",
+    "category_breakdown": "Category Breakdown",
+    "expense_categories": "Expense Categories",
+    "income_categories": "Income Categories",
     "metrics": {
       "income": {
         "title": "Monthly Income",
@@ -158,8 +175,8 @@
     "navigation": {
       "dashboard": "Dashboard",
       "transactions": "Transactions",
-  "analytics": "Analytics",
-  "savingsPlanner": "Savings Planner",
+      "analytics": "Analytics",
+      "savingsPlanner": "Savings Planner",
       "settings": "Settings",
       "saving": "Savings",
       "task": "Tasks"
@@ -297,7 +314,7 @@
     }
   },
   "savings": {
-    "analysis":"Saving Summary",
+    "analysis": "Saving Summary",
     "title": "Savings",
     "subtitle": "Track your savings goals and progress",
     "search": "Search savings...",
@@ -335,16 +352,23 @@
     "savings_rate": "Savings Rate",
     "percentage_credits": "Percentage of Credits",
     "type_metrics": "Type Matrics",
-    "average":"Average",
+    "average": "Average",
     "largest": "Largest",
-    "category_breakdown": "Category"
-   
+    "category_breakdown": "Category",
+    "addSuccess": "Saving added successfully",
+    "updateSuccess": "Saving updated successfully",
+    "addError": "Failed to add saving",
+    "updateError": "Failed to update saving",
+    "add_debit": "Add Debit",
+    "add_credit": "Add Credit",
+    "update_debit": "Update Debit",
+    "update_credit": "Update Credit"
   },
   "currencies": {
     "USD": "USD",
     "KHR": "KHR"
   },
-  "date":{
+  "date": {
     "january": "January",
     "february": "February",
     "march": "March",
@@ -358,7 +382,7 @@
     "november": "November",
     "december": "December"
   },
-  "analytics":{
+  "analytics": {
     "title": "Analytics",
     "subtitle": "Analyze your financial data",
     "spendingByCategory": "Spending by Category",

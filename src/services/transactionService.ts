@@ -1,5 +1,5 @@
 import { db } from '../config/firebase';
-import { collection, addDoc, updateDoc, deleteDoc, doc, getDocs, getDoc } from 'firebase/firestore';
+import { collection, addDoc, updateDoc, deleteDoc, doc, getDocs, getDoc, onSnapshot } from 'firebase/firestore';
 import { Transaction } from '../contexts/TransactionContext';
 
 export class TransactionService {
@@ -53,6 +53,44 @@ export class TransactionService {
       id: doc.id,
       ...doc.data()
     })) as Transaction[];
+  }
+
+  /**
+   * Subscribe to realtime updates for a user's transactions.
+   * Returns an unsubscribe function to stop listening.
+   */
+  subscribeToTransactions(userId: string, onChange: (transactions: Transaction[]) => void) {
+    const collectionRef = collection(db, this.getTransactionPath(userId));
+    const unsubscribe = onSnapshot(collectionRef, (snapshot) => {
+      const items = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Transaction[];
+      onChange(items);
+    }, (error) => {
+      console.error('subscribeToTransactions onSnapshot error:', error);
+      // In case of error, surface an empty array (caller can handle errors separately)
+      onChange([]);
+    });
+
+    return unsubscribe;
+  }
+
+  /**
+   * Subscribe to realtime change events for a user's transactions.
+   * Calls onChange with snapshot.docChanges() so callers can apply incremental updates.
+   */
+  subscribeToTransactionsChanges(userId: string, onChange: (changes: Array<{ type: 'added'|'modified'|'removed', doc: Transaction }>) => void) {
+    const collectionRef = collection(db, this.getTransactionPath(userId));
+    const unsubscribe = onSnapshot(collectionRef, (snapshot) => {
+      const changes = snapshot.docChanges().map(ch => ({
+        type: ch.type as 'added'|'modified'|'removed',
+        doc: ({ id: ch.doc.id, ...ch.doc.data() } as Transaction)
+      }));
+      onChange(changes);
+    }, (error) => {
+      console.error('subscribeToTransactionsChanges onSnapshot error:', error);
+      onChange([]);
+    });
+
+    return unsubscribe;
   }
 }
 
