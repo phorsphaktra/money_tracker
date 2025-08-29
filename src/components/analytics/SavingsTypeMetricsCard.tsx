@@ -73,24 +73,45 @@ export const SavingsTypeMetricsCard: React.FC<SavingsTypeMetricsCardProps> = ({ 
     debitMetrics.average = debitMetrics.count > 0 ? debitMetrics.total / debitMetrics.count : 0;
 
     // Process categories
+    // For credit categories we want to show net amount = credit - debit
     Object.entries(categoryMap).forEach(([category, amounts]) => {
-      if (amounts.credit > 0) {
+      const creditCount = savings.filter(s => s.type === 'credit' && (s.categoryId || 'uncategorized') === category).length;
+      const debitCount = savings.filter(s => s.type === 'debit' && (s.categoryId || 'uncategorized') === category).length;
+
+      const net = (amounts.credit || 0) - (amounts.debit || 0);
+      if (net !== 0) {
         creditMetrics.categories.push({
           category,
-          amount: amounts.credit,
-          count: savings.filter(s => s.type === 'credit' && (s.categoryId || 'uncategorized') === category).length,
-          percentage: (amounts.credit / creditMetrics.total) * 100
+          amount: net,
+          count: Math.max(0, creditCount - debitCount),
+          percentage: 0 // compute later
         });
       }
-      if (amounts.debit > 0) {
+
+      if ((amounts.debit || 0) > 0) {
         debitMetrics.categories.push({
           category,
           amount: amounts.debit,
-          count: savings.filter(s => s.type === 'debit' && (s.categoryId || 'uncategorized') === category).length,
-          percentage: (amounts.debit / debitMetrics.total) * 100
+          count: debitCount,
+          percentage: 0 // compute later
         });
       }
     });
+
+    // Recompute percentages for credit using net totals (sum of positive nets)
+    const totalNetPositive = creditMetrics.categories.reduce((sum, c) => sum + (c.amount > 0 ? c.amount : 0), 0);
+    // Use net-positive total as the displayed credit total so top-level card matches category breakdown
+    creditMetrics.total = totalNetPositive;
+    creditMetrics.categories = creditMetrics.categories.map(c => ({
+      ...c,
+      percentage: totalNetPositive > 0 ? (c.amount / totalNetPositive) * 100 : (creditMetrics.total > 0 ? (c.amount / creditMetrics.total) * 100 : 0)
+    }));
+
+    // Recompute percentages for debit as before but guard divide by zero
+    debitMetrics.categories = debitMetrics.categories.map(c => ({
+      ...c,
+      percentage: debitMetrics.total > 0 ? (c.amount / debitMetrics.total) * 100 : 0
+    }));
 
     // Sort categories by amount
     creditMetrics.categories.sort((a, b) => b.amount - a.amount);
