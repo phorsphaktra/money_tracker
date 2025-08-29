@@ -4,6 +4,7 @@ import { useAuth } from './AuthContext';
 import { db } from '../config/firebase';
 import { collection, getDocs, query, where, limit, getDoc, doc } from 'firebase/firestore';
 import { calculateSavingsBreakdown, SavingsBreakdown } from '../utils/savings';
+import { useLoading } from './LoadingContext';
 
 interface SavingsSummary {
   total: number;
@@ -48,8 +49,10 @@ const SavingContext = createContext<{
   state: SavingState;
   loadSavings: (ownerId?: string) => Promise<void>;
   loadSavingsByType: (type: 'credit' | 'debit', ownerId?: string) => Promise<void>;
-  addSaving: (saving: Omit<Saving, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
-  updateSaving: (id: string, saving: Partial<Saving>) => Promise<void>;
+  // addSaving may return the created Saving or an array when auto-allocating across categories
+  addSaving: (saving: Omit<Saving, 'id' | 'createdAt' | 'updatedAt'>) => Promise<Saving | Saving[] | void>;
+  // updateSaving returns the updated Saving
+  updateSaving: (id: string, saving: Partial<Saving>) => Promise<Saving | void>;
   deleteSaving: (id: string) => Promise<void>;
   canEditOwner: (ownerId?: string) => Promise<boolean>;
   activeOwnerId?: string | null;
@@ -103,6 +106,7 @@ const savingReducer = (state: SavingState, action: SavingAction): SavingState =>
 export const SavingProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [state, dispatch] = useReducer(savingReducer, initialState);
   const { user } = useAuth();
+  const { showLoading, hideLoading } = useLoading();
   const [activeOwnerId, setActiveOwnerId] = useState<string | null>(user?.uid || null);
 
   // Initialize active owner from localStorage and prefer invited owner if present
@@ -258,26 +262,32 @@ export const SavingProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }
     
     try {
-      dispatch({ type: 'SET_LOADING', payload: true });
+      showLoading();
       const savingWithMeta = { ...saving, ...(user ? { createdBy: user.uid, createdByName: user.displayName || user.email || user.uid } : {}) } as any;
       console.debug('[SavingContext] addSaving calling service', { ownerId, saving: savingWithMeta });
+
+      // Optimistic behaviour: call service, but update UI immediately when single record is returned.
       const newSaving = await savingService.addSaving(ownerId, savingWithMeta);
       console.debug('[SavingContext] addSaving result', { ownerId, newSaving });
 
       if (Array.isArray(newSaving)) {
+        // Service returned full list (e.g., auto allocation across categories)
         dispatch({ type: 'SET_SAVINGS', payload: newSaving });
       } else {
+        // Insert optimistically but dedupe guard in reducer will prevent duplicates
         dispatch({ type: 'ADD_SAVING', payload: newSaving });
       }
-      // Update summary after adding
+
+      // Recalculate summary (server source of truth)
       const summary = await savingService.getSavingsSummary(ownerId);
       dispatch({ type: 'SET_SUMMARY', payload: summary });
+      return newSaving;
     } catch (error) {
       console.error('[SavingContext] addSaving failed', error);
       dispatch({ type: 'SET_ERROR', payload: 'Failed to add saving' });
       throw error;
     } finally {
-      dispatch({ type: 'SET_LOADING', payload: false });
+      hideLoading();
     }
   }, [user, activeOwnerId]);
 
@@ -286,16 +296,19 @@ export const SavingProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     if (!ownerId) return;
     
     try {
-      dispatch({ type: 'SET_LOADING', payload: true });
+      showLoading();
       const updatedSaving = await savingService.updateSaving(ownerId, id, saving);
       dispatch({ type: 'UPDATE_SAVING', payload: updatedSaving });
       // Update summary after updating
       const summary = await savingService.getSavingsSummary(ownerId);
       dispatch({ type: 'SET_SUMMARY', payload: summary });
+      return updatedSaving;
     } catch (error) {
+      console.error('[SavingContext] updateSaving failed', error);
       dispatch({ type: 'SET_ERROR', payload: 'Failed to update saving' });
+      throw error;
     } finally {
-      dispatch({ type: 'SET_LOADING', payload: false });
+      hideLoading();
     }
   }, [user, activeOwnerId]);
 
@@ -304,16 +317,18 @@ export const SavingProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     if (!ownerId) return;
     
     try {
-      dispatch({ type: 'SET_LOADING', payload: true });
+      showLoading();
       await savingService.deleteSaving(ownerId, id);
       dispatch({ type: 'DELETE_SAVING', payload: id });
       // Update summary after deleting
       const summary = await savingService.getSavingsSummary(ownerId);
       dispatch({ type: 'SET_SUMMARY', payload: summary });
     } catch (error) {
+      console.error('[SavingContext] deleteSaving failed', error);
       dispatch({ type: 'SET_ERROR', payload: 'Failed to delete saving' });
+      throw error;
     } finally {
-      dispatch({ type: 'SET_LOADING', payload: false });
+      hideLoading();
     }
   }, [user, activeOwnerId]);
 
