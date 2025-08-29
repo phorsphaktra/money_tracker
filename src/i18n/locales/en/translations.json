@@ -50,6 +50,23 @@
       "updating": "Updating...",
       "no_history": "No rate history available",
       "current": "Current"
+    },
+     "invite": {
+      "label": "Invite member by email",
+      "placeholder": "member@example.com",
+      "button": "Invite",
+      "sending": "Sending…",
+      "already_invited": "{{email}} is already invited",
+      "sent": "Invite sent to {{email}}",
+      "failed": "Failed to send invite",
+      "removing": "Removing…",
+      "remove_button": "Remove",
+      "removed": "Removed {{email}}",
+      "remove_failed": "Failed to remove invite",
+      "none": "No invited members yet",
+      "allow_edit_label": "Allow invited members to edit all transactions",
+      "allow_edit_aria": "Allow invited members to edit all transactions",
+      "allow_edit_sr": "Toggle member edit permission"
     }
   },
   "common": {

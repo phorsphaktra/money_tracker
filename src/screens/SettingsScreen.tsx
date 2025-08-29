@@ -2,7 +2,7 @@ import { useDarkMode } from '../contexts/DarkModeContext';
 import { useTranslation } from 'react-i18next';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useSettings } from '../contexts/SettingsContext';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { LoadingSpinner } from '../components/shared/LoadingSpinner';
 import { useAuth } from '../contexts/AuthContext';
@@ -30,6 +30,9 @@ export const SettingsScreen = () => {
   const [showConfirm, setShowConfirm] = useState(false);
   const [pendingRate, setPendingRate] = useState<number | null>(null);
   const [newMemberEmail, setNewMemberEmail] = useState('');
+  const [isInviting, setIsInviting] = useState(false);
+  const [inviteFeedback, setInviteFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const [removingEmail, setRemovingEmail] = useState<string | null>(null);
 
   // Update khrRate when exchangeRates changes
   useEffect(() => {
@@ -84,34 +87,76 @@ export const SettingsScreen = () => {
     }
   };
 
-  const handleAddMember = async () => {
+  const handleAddMember = useCallback(async () => {
     const emailInput = newMemberEmail.trim();
     if (!emailInput) return;
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailInput)) {
-      setError('Please enter a valid email address');
+      setInviteFeedback({ type: 'error', message: t('settings.invite.invalid_email') || 'Please enter a valid email address' });
       return;
     }
-    const emailLower = emailInput.toLowerCase();
-    const existing = preferences.invitedMembers || [];
-    const next = Array.from(new Set([emailInput, emailLower, ...existing]));
-    await updatePreferences({ invitedMembers: next });
-    if (user) {
-      await invitationService.createInvitation({
-        ownerId: user.uid,
-        ownerEmail: user.email || undefined,
-        ownerName: user.displayName || undefined,
-        inviteeEmail: emailInput,
-      });
-    }
-    setNewMemberEmail('');
-    setError(null);
-  };
 
-  const handleRemoveMember = async (email: string) => {
+    setIsInviting(true);
+    setInviteFeedback(null);
+
+    try {
+      // normalize and store canonical lower-cased emails to keep preferences consistent
+      const emailLower = emailInput.toLowerCase();
+      const existing = preferences.invitedMembers || [];
+
+      if (existing.includes(emailLower)) {
+        setInviteFeedback({ type: 'error', message: t('settings.invite.already_invited', { email: emailLower }) || `${emailLower} is already invited` });
+        return;
+      }
+
+      const next = [emailLower, ...existing];
+      await updatePreferences({ invitedMembers: next });
+
+      if (user) {
+        await invitationService.createInvitation({
+          ownerId: user.uid,
+          ownerEmail: user.email || undefined,
+          ownerName: user.displayName || undefined,
+          inviteeEmail: emailLower,
+        });
+      }
+
+      setNewMemberEmail('');
+      setInviteFeedback({ type: 'success', message: t('settings.invite.sent', { email: emailLower }) || `Invite sent to ${emailLower}` });
+      setError(null);
+
+      // auto-dismiss success after a few seconds
+      setTimeout(() => setInviteFeedback(null), 5000);
+    } catch (err) {
+      console.error('Failed to send invite:', err);
+      setInviteFeedback({ type: 'error', message: (err instanceof Error ? err.message : t('settings.invite.failed') || 'Failed to send invite') });
+    } finally {
+      setIsInviting(false);
+    }
+  }, [newMemberEmail, preferences.invitedMembers, updatePreferences, user, t]);
+
+  const handleRemoveMember = useCallback(async (email: string) => {
     const existing = preferences.invitedMembers || [];
     const emailLower = email.toLowerCase();
-    await updatePreferences({ invitedMembers: existing.filter(e => e !== email && e !== emailLower) });
-  };
+
+    // store canonical removing key as lower-case to match stored values
+    setRemovingEmail(emailLower);
+    setInviteFeedback(null);
+
+    try {
+      const next = existing.filter(e => e !== emailLower);
+      await updatePreferences({ invitedMembers: next });
+
+      setInviteFeedback({ type: 'success', message: t('settings.invite.removed', { email: emailLower }) || `Removed ${emailLower}` });
+
+      // auto-dismiss success after a few seconds
+      setTimeout(() => setInviteFeedback(null), 5000);
+    } catch (err) {
+      console.error('Failed to remove invite:', err);
+      setInviteFeedback({ type: 'error', message: (err instanceof Error ? err.message : t('settings.invite.remove_failed') || 'Failed to remove invite') });
+    } finally {
+      setRemovingEmail(null);
+    }
+  }, [preferences.invitedMembers, updatePreferences, t]);
 
   if (isLoading) {
     return (
@@ -215,16 +260,16 @@ export const SettingsScreen = () => {
               <div className="space-y-3 sm:space-y-4">
                 <div>
                   <label htmlFor="invite-email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Invite member by email
+                    {t('settings.invite.label') || 'Invite member by email'}
                   </label>
                   <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
-                    <input
+                      <input
                       id="invite-email"
                       name="inviteEmail"
                       type="email"
                       value={newMemberEmail}
                       onChange={(e) => setNewMemberEmail(e.target.value)}
-                      placeholder="member@example.com"
+                      placeholder={t('settings.invite.placeholder') || 'member@example.com'}
                       inputMode="email"
                       autoComplete="off"
                       className="flex-1 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2.5 sm:py-2 text-gray-900 dark:text-white min-h-[44px] touch-manipulation focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
@@ -232,11 +277,20 @@ export const SettingsScreen = () => {
                     <button
                       type="button"
                       onClick={handleAddMember}
-                      className="px-4 py-2.5 sm:py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg shadow-sm transition-colors duration-200 min-h-[44px] touch-manipulation mobile-button mobile-active"
+                      disabled={isInviting}
+                      className={`px-4 py-2.5 sm:py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg shadow-sm transition-colors duration-200 min-h-[44px] touch-manipulation mobile-button mobile-active ${isInviting ? 'opacity-70 cursor-wait' : ''}`}
                     >
-                      Invite
+                      {isInviting ? (
+                        <span className="inline-flex items-center gap-2">
+                          <LoadingSpinner size="small" className="text-white" />
+                          {t('settings.invite.sending')}
+                        </span>
+                      ) : (
+                        t('settings.invite.button') || 'Invite'
+                      )}
                     </button>
                   </div>
+                  
                 </div>
 
                 <div>
@@ -251,31 +305,44 @@ export const SettingsScreen = () => {
                           <button
                             type="button"
                             onClick={() => handleRemoveMember(email)}
-                            className="text-xs px-2.5 py-1.5 rounded bg-red-500 hover:bg-red-600 text-white min-h-[32px] touch-manipulation"
+                            disabled={removingEmail === email}
+                            className={`text-xs px-2.5 py-1.5 rounded ${removingEmail === email ? 'bg-gray-400 cursor-wait' : 'bg-red-500 hover:bg-red-600'} text-white min-h-[32px] touch-manipulation`}
                           >
-                            Remove
+                            {removingEmail === email ? (
+                              <span className="inline-flex items-center gap-2">
+                                <LoadingSpinner size="small" className="text-white" />
+                                {t('settings.invite.removing')}
+                              </span>
+                              ) : (
+                              (t('settings.invite.remove_button') || 'Remove')
+                            )}
                           </button>
                         </div>
                       ))
                     ) : (
-                      <p className="text-sm text-gray-500 dark:text-gray-400 italic">No invited members yet</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400 italic">{t('settings.invite.none') || 'No invited members yet'}</p>
+                    )}
+                    {inviteFeedback && (
+                      <div className={`mt-3 text-sm ${inviteFeedback.type === 'success' ? 'text-green-600' : 'text-red-600'}`}>
+                        {inviteFeedback.message}
+                      </div>
                     )}
                   </div>
                 </div>
 
                 <div className="flex items-center justify-between">
                   <span className="text-sm sm:text-base text-gray-700 dark:text-gray-300">
-                    Allow invited members to edit all transactions
+                    {t('settings.invite.allow_edit_label') || 'Allow invited members to edit all transactions'}
                   </span>
                   <button
                     onClick={() => updatePreferences({ allowMemberEditAllTransactions: !preferences.allowMemberEditAllTransactions })}
                     role="switch"
                     aria-checked={preferences.allowMemberEditAllTransactions}
-                    aria-label="Allow invited members to edit all transactions"
+                    aria-label={t('settings.invite.allow_edit_aria') || 'Allow invited members to edit all transactions'}
                     className={`${preferences.allowMemberEditAllTransactions ? 'bg-indigo-600' : 'bg-gray-200 dark:bg-gray-600'} relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 touch-manipulation mobile-button mobile-active p-1`}
                     style={{ minHeight: '44px', minWidth: '44px' }}
                   >
-                    <span className="sr-only">Toggle member edit permission</span>
+                    <span className="sr-only">{t('settings.invite.allow_edit_sr') || 'Toggle member edit permission'}</span>
                     <span
                       className={`${preferences.allowMemberEditAllTransactions ? 'translate-x-5' : 'translate-x-0'} inline-block h-4 w-4 transform rounded-full bg-white transition-transform shadow-sm`}
                     />
