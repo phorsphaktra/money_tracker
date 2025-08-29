@@ -185,18 +185,6 @@ export const TransactionModal = ({ transaction, onClose, type = 'expense' }: Tra
     <div className="fixed inset-0 bg-black/30 z-50 flex items-center justify-center px-4 safe-area-inset-top safe-area-inset-bottom">
       <div className="w-full max-w-[95vw] sm:max-w-md bg-white dark:bg-gray-900 rounded-lg shadow-md overflow-hidden">
         <div className="flex flex-col">
-          {/* Header: drag handle + title + close */}
-          {/* <div className="px-4 pt-3 pb-2 sm:pt-4 sm:pb-3 border-b border-gray-100 dark:border-gray-800">
-            <div className="flex items-center justify-center">
-              <div className="w-12 h-0.5 bg-gray-300 rounded-full"></div>
-            </div>
-              <div className='text-center mb-1 sm:mb-2'>
-                <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 dark:text-white">
-                  {transaction ? 'Edit' : 'Add'} Transaction
-                </h2>
-                <p className="text-xs text-gray-500">Enter the details of your transaction</p>
-              </div>
-          </div> */}
             {/* Title */}
         <div className="text-center mb-1 sm:mb-2 px-4 pt-3 pb-2 sm:pt-6 sm:pb-6">
           <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 dark:text-white">
