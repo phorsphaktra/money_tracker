@@ -186,23 +186,28 @@ export const TransactionModal = ({ transaction, onClose, type = 'expense' }: Tra
       <div className="w-full max-w-[95vw] sm:max-w-md bg-white dark:bg-gray-900 rounded-lg shadow-md overflow-hidden">
         <div className="flex flex-col">
           {/* Header: drag handle + title + close */}
-          <div className="px-4 pt-3 pb-2 sm:pt-4 sm:pb-3 border-b border-gray-100 dark:border-gray-800">
+          {/* <div className="px-4 pt-3 pb-2 sm:pt-4 sm:pb-3 border-b border-gray-100 dark:border-gray-800">
             <div className="flex items-center justify-center">
               <div className="w-12 h-0.5 bg-gray-300 rounded-full"></div>
             </div>
-            <div className="flex items-center justify-between mt-3">
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+              <div className='text-center mb-1 sm:mb-2'>
+                <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 dark:text-white">
                   {transaction ? 'Edit' : 'Add'} Transaction
-                </h3>
-                <p className="text-xs text-gray-500">Quick entry — optimized for mobile</p>
+                </h2>
+                <p className="text-xs text-gray-500">Enter the details of your transaction</p>
               </div>
-              <Button variant="outline" onClick={onClose} className="p-2 rounded-md">
-                <span className="sr-only">Close</span>
-                ×
-              </Button>
-            </div>
-          </div>
+          </div> */}
+            {/* Title */}
+        <div className="text-center mb-1 sm:mb-2 px-4 pt-3 pb-2 sm:pt-6 sm:pb-6">
+          <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 dark:text-white">
+            {/* {t('savings.add_new')} */}
+             {transaction ? 'Edit' : 'Add'} Transaction
+          </h2>
+          <p className="mt-1 text-xs sm:text-sm text-gray-500 dark:text-gray-400">
+            {/* {t('savings.form_subtitle')} */}
+            <p className="text-xs text-gray-500">Enter the details of your transaction</p>
+          </p>
+        </div>
 
           <div className="px-4 pb-4 sm:px-6 sm:pb-6 overflow-y-auto">
             {errors.submit && (
