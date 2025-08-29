@@ -61,13 +61,18 @@ const savingReducer = (state: SavingState, action: SavingAction): SavingState =>
 
   switch (action.type) {
     case 'SET_SAVINGS':
-      newState = { ...state, savings: action.payload };
+  newState = { ...state, savings: action.payload };
       break;
     case 'SET_SUMMARY':
       newState = { ...state, summary: action.payload };
       break;
     case 'ADD_SAVING':
-      newState = { ...state, savings: [...state.savings, action.payload] };
+      // avoid duplicates (e.g., optimistic add + onSnapshot)
+      if (state.savings.find(s => s.id === action.payload.id)) {
+        newState = state;
+      } else {
+        newState = { ...state, savings: [...state.savings, action.payload] };
+      }
       break;
     case 'DELETE_SAVING':
       newState = { ...state, savings: state.savings.filter(s => s.id !== action.payload) };
@@ -86,10 +91,12 @@ const savingReducer = (state: SavingState, action: SavingAction): SavingState =>
       return state;
   }
 
-  // Recalculate breakdown whenever savings change
+  // Keep savings sorted by date desc and recalculate breakdown
+  const sortedSavings = [...newState.savings].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   return {
     ...newState,
-    savingsBreakdown: calculateSavingsBreakdown(newState.savings)
+    savings: sortedSavings,
+    savingsBreakdown: calculateSavingsBreakdown(sortedSavings)
   };
 };
 
@@ -244,27 +251,35 @@ export const SavingProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   }, [user, activeOwnerId]);
 
   const addSaving = useCallback(async (saving: Omit<Saving, 'id' | 'createdAt' | 'updatedAt'>) => {
-  const ownerId = activeOwnerId || user?.uid;
-  if (!ownerId) return;
+    const ownerId = activeOwnerId || user?.uid;
+    if (!ownerId) {
+      console.debug('[SavingContext] addSaving aborted - no ownerId', { activeOwnerId, userId: user?.uid });
+      return;
+    }
     
     try {
       dispatch({ type: 'SET_LOADING', payload: true });
-  const savingWithMeta = { ...saving, ...(user ? { createdBy: user.uid, createdByName: user.displayName || user.email || user.uid } : {}) } as any;
-  const newSaving = await savingService.addSaving(ownerId, savingWithMeta);
+      const savingWithMeta = { ...saving, ...(user ? { createdBy: user.uid, createdByName: user.displayName || user.email || user.uid } : {}) } as any;
+      console.debug('[SavingContext] addSaving calling service', { ownerId, saving: savingWithMeta });
+      const newSaving = await savingService.addSaving(ownerId, savingWithMeta);
+      console.debug('[SavingContext] addSaving result', { ownerId, newSaving });
+
       if (Array.isArray(newSaving)) {
         dispatch({ type: 'SET_SAVINGS', payload: newSaving });
       } else {
         dispatch({ type: 'ADD_SAVING', payload: newSaving });
       }
       // Update summary after adding
-  const summary = await savingService.getSavingsSummary(ownerId);
+      const summary = await savingService.getSavingsSummary(ownerId);
       dispatch({ type: 'SET_SUMMARY', payload: summary });
     } catch (error) {
+      console.error('[SavingContext] addSaving failed', error);
       dispatch({ type: 'SET_ERROR', payload: 'Failed to add saving' });
+      throw error;
     } finally {
       dispatch({ type: 'SET_LOADING', payload: false });
     }
-  }, [user]);
+  }, [user, activeOwnerId]);
 
   const updateSaving = useCallback(async (id: string, saving: Partial<Saving>) => {
     const ownerId = activeOwnerId || user?.uid;

@@ -155,11 +155,14 @@ export class SavingService {
   console.debug('[SavingService] getAllSavings', { userId });
       const collectionRef = collection(db, this.getSavingPath(userId));
       const querySnapshot = await getDocs(collectionRef);
-      
-      return querySnapshot.docs.map(doc => ({
+      const items = querySnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
       })) as Saving[];
+
+      // sort by date desc for consistent ordering
+      items.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      return items;
     } catch (error) {
       console.error('Error getting all savings:', error);
       throw error;
@@ -170,14 +173,14 @@ export class SavingService {
     try {
       const collectionRef = collection(db, this.getSavingPath(userId));
       const querySnapshot = await getDocs(collectionRef);
-      
       const savings = querySnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
       })) as Saving[];
 
-      // Filter by type
-      return savings.filter(saving => saving.type === type);
+      const filtered = savings.filter(saving => saving.type === type);
+      filtered.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      return filtered;
     } catch (error) {
       console.error(`Error getting ${type} savings:`, error);
       throw error;
