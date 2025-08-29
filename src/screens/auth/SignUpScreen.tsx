@@ -12,10 +12,9 @@ export const SignUpScreen = () => {
         country: '',
     });
     const [error, setError] = useState('');
-    const [loading, setLoading] = useState(false);
     const [step, setStep] = useState(1);
-    
-    const { register, loginWithGoogle } = useAuth();
+    const { register, loginWithGoogle, loading: authLoading } = useAuth();
+    const [isRedirecting, setIsRedirecting] = useState(false);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         setFormData(prev => ({
@@ -40,16 +39,10 @@ export const SignUpScreen = () => {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!validateForm()) return;
-        
         setError('');
-        setLoading(true);
-
-        try {
-            await register(formData.email, formData.password, formData.displayName);
-        } catch (err) {
-            setError('Failed to create account: ' + (err as Error).message);
-        } finally {
-            setLoading(false);
+        const user = await register(formData.email, formData.password, formData.displayName);
+        if (user) {
+            navigate('/');
         }
     };
 
@@ -164,7 +157,7 @@ export const SignUpScreen = () => {
                                 </button>
                                 <button
                                     type="submit"
-                                    disabled={loading}
+                                    disabled={authLoading}
                                     className="flex-1 py-2 sm:py-3 px-4 border border-transparent rounded-md shadow-sm text-base font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                                 >
                                     Create Account
@@ -186,7 +179,12 @@ export const SignUpScreen = () => {
 
                             <button
                                 type="button"
-                                onClick={loginWithGoogle}
+                                onClick={async () => {
+                                    setIsRedirecting(true);
+                                    const user = await loginWithGoogle();
+                                    if (user) navigate('/');
+                                }}
+                                disabled={isRedirecting}
                                 className="mt-3 sm:mt-4 w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-xs sm:text-sm font-medium text-gray-500 hover:bg-gray-50"
                             >
                                 <img
@@ -194,7 +192,7 @@ export const SignUpScreen = () => {
                                     src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
                                     alt="Google"
                                 />
-                                Sign up with Google
+                                {isRedirecting ? 'Redirecting to Google...' : 'Sign up with Google'}
                             </button>
                         </div>
                     )}

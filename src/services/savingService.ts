@@ -1,4 +1,4 @@
-import { collection, addDoc, deleteDoc, doc, updateDoc, getDocs, getDoc } from 'firebase/firestore';
+import { collection, addDoc, deleteDoc, doc, updateDoc, getDocs, getDoc, onSnapshot } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { SAVINGS_CATEGORIES } from '../utils/savings';
 
@@ -64,6 +64,7 @@ export class SavingService {
 
   async addSaving(userId: string, saving: Omit<Saving, 'id' | 'createdAt' | 'updatedAt'>) {
     try {
+  console.debug('[SavingService] addSaving', { userId, saving });
       this.validateSaving(saving);
       
       const collectionRef = collection(db, this.getSavingPath(userId));
@@ -105,7 +106,8 @@ export class SavingService {
         });
 
         const docRef = await addDoc(collectionRef, savingData);
-        return this.getSaving(userId, docRef.id);
+  console.debug('[SavingService] addSaving created', { userId, id: docRef.id });
+  return this.getSaving(userId, docRef.id);
       }
     } catch (error) {
       console.error('Error adding saving:', error);
@@ -115,6 +117,7 @@ export class SavingService {
 
   async updateSaving(userId: string, savingId: string, saving: Partial<Saving>) {
     try {
+  console.debug('[SavingService] updateSaving', { userId, savingId, saving });
       if (!savingId) throw new Error('Saving ID is required');
       this.validateSaving(saving);
 
@@ -125,6 +128,7 @@ export class SavingService {
       });
 
       await updateDoc(docRef, updateData);
+  console.debug('[SavingService] updateSaving updated', { userId, savingId });
       return this.getSaving(userId, savingId);
     } catch (error) {
       console.error('Error updating saving:', error);
@@ -134,10 +138,12 @@ export class SavingService {
 
   async deleteSaving(userId: string, savingId: string) {
     try {
+  console.debug('[SavingService] deleteSaving', { userId, savingId });
       if (!savingId) throw new Error('Saving ID is required');
       
       const docRef = doc(db, this.getSavingPath(userId), savingId);
       await deleteDoc(docRef);
+  console.debug('[SavingService] deleteSaving deleted', { userId, savingId });
     } catch (error) {
       console.error('Error deleting saving:', error);
       throw error;
@@ -146,13 +152,21 @@ export class SavingService {
 
   async getAllSavings(userId: string) {
     try {
+  console.debug('[SavingService] getAllSavings', { userId });
       const collectionRef = collection(db, this.getSavingPath(userId));
       const querySnapshot = await getDocs(collectionRef);
-      
-      return querySnapshot.docs.map(doc => ({
+      const items = querySnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
       })) as Saving[];
+
+      // sort by createdAt desc for consistent ordering; fall back to date when createdAt is missing
+      items.sort((a, b) => {
+        const aKey = a.createdAt || a.date || '';
+        const bKey = b.createdAt || b.date || '';
+        return new Date(bKey).getTime() - new Date(aKey).getTime();
+      });
+      return items;
     } catch (error) {
       console.error('Error getting all savings:', error);
       throw error;
@@ -163,18 +177,61 @@ export class SavingService {
     try {
       const collectionRef = collection(db, this.getSavingPath(userId));
       const querySnapshot = await getDocs(collectionRef);
-      
       const savings = querySnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
       })) as Saving[];
 
-      // Filter by type
-      return savings.filter(saving => saving.type === type);
+      const filtered = savings.filter(saving => saving.type === type);
+      filtered.sort((a, b) => {
+        const aKey = a.createdAt || a.date || '';
+        const bKey = b.createdAt || b.date || '';
+        return new Date(bKey).getTime() - new Date(aKey).getTime();
+      });
+      return filtered;
     } catch (error) {
       console.error(`Error getting ${type} savings:`, error);
       throw error;
     }
+  }
+
+  /**
+   * Subscribe to realtime updates for a user's savings collection.
+   * Calls onChange with the full list on each snapshot and returns an unsubscribe function.
+   */
+  subscribeToSavings(userId: string, onChange: (savings: Saving[]) => void) {
+    const collectionRef = collection(db, this.getSavingPath(userId));
+    const unsubscribe = onSnapshot(collectionRef, (snapshot) => {
+  const items = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Saving[];
+  // normalize sort by date desc so consumers get consistent ordering
+  items.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  onChange(items);
+    }, (error) => {
+      console.error('subscribeToSavings onSnapshot error:', error);
+      onChange([]);
+    });
+
+    return unsubscribe;
+  }
+
+  /**
+   * Subscribe to realtime change events for a user's savings collection.
+   * Calls onChange with snapshot.docChanges() so callers can apply incremental updates.
+   */
+  subscribeToSavingsChanges(userId: string, onChange: (changes: Array<{ type: 'added'|'modified'|'removed', doc: Saving }>) => void) {
+    const collectionRef = collection(db, this.getSavingPath(userId));
+    const unsubscribe = onSnapshot(collectionRef, (snapshot) => {
+      const changes = snapshot.docChanges().map(ch => ({
+        type: ch.type as 'added'|'modified'|'removed',
+        doc: ({ id: ch.doc.id, ...ch.doc.data() } as Saving)
+      }));
+      onChange(changes);
+    }, (error) => {
+      console.error('subscribeToSavingsChanges onSnapshot error:', error);
+      onChange([]);
+    });
+
+    return unsubscribe;
   }
 
   async getSavingsSummary(userId: string) {

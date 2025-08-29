@@ -4,6 +4,7 @@ import { useAuth } from './AuthContext';
 import { db } from '../config/firebase';
 import { collection, getDocs, query, where, limit, getDoc, doc } from 'firebase/firestore';
 import { calculateSavingsBreakdown, SavingsBreakdown } from '../utils/savings';
+import { useLoading } from './LoadingContext';
 
 interface SavingsSummary {
   total: number;
@@ -48,8 +49,10 @@ const SavingContext = createContext<{
   state: SavingState;
   loadSavings: (ownerId?: string) => Promise<void>;
   loadSavingsByType: (type: 'credit' | 'debit', ownerId?: string) => Promise<void>;
-  addSaving: (saving: Omit<Saving, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
-  updateSaving: (id: string, saving: Partial<Saving>) => Promise<void>;
+  // addSaving may return the created Saving or an array when auto-allocating across categories
+  addSaving: (saving: Omit<Saving, 'id' | 'createdAt' | 'updatedAt'>) => Promise<Saving | Saving[] | void>;
+  // updateSaving returns the updated Saving
+  updateSaving: (id: string, saving: Partial<Saving>) => Promise<Saving | void>;
   deleteSaving: (id: string) => Promise<void>;
   canEditOwner: (ownerId?: string) => Promise<boolean>;
   activeOwnerId?: string | null;
@@ -61,13 +64,18 @@ const savingReducer = (state: SavingState, action: SavingAction): SavingState =>
 
   switch (action.type) {
     case 'SET_SAVINGS':
-      newState = { ...state, savings: action.payload };
+  newState = { ...state, savings: action.payload };
       break;
     case 'SET_SUMMARY':
       newState = { ...state, summary: action.payload };
       break;
     case 'ADD_SAVING':
-      newState = { ...state, savings: [...state.savings, action.payload] };
+      // avoid duplicates (e.g., optimistic add + onSnapshot)
+      if (state.savings.find(s => s.id === action.payload.id)) {
+        newState = state;
+      } else {
+        newState = { ...state, savings: [...state.savings, action.payload] };
+      }
       break;
     case 'DELETE_SAVING':
       newState = { ...state, savings: state.savings.filter(s => s.id !== action.payload) };
@@ -86,16 +94,23 @@ const savingReducer = (state: SavingState, action: SavingAction): SavingState =>
       return state;
   }
 
-  // Recalculate breakdown whenever savings change
+  // Keep savings sorted by date desc and recalculate breakdown
+  const sortedSavings = [...newState.savings].sort((a, b) => {
+    const aKey = a.createdAt || a.date || '';
+    const bKey = b.createdAt || b.date || '';
+    return new Date(bKey).getTime() - new Date(aKey).getTime();
+  });
   return {
     ...newState,
-    savingsBreakdown: calculateSavingsBreakdown(newState.savings)
+    savings: sortedSavings,
+    savingsBreakdown: calculateSavingsBreakdown(sortedSavings)
   };
 };
 
 export const SavingProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [state, dispatch] = useReducer(savingReducer, initialState);
   const { user } = useAuth();
+  const { showLoading, hideLoading } = useLoading();
   const [activeOwnerId, setActiveOwnerId] = useState<string | null>(user?.uid || null);
 
   // Initialize active owner from localStorage and prefer invited owner if present
@@ -128,14 +143,70 @@ export const SavingProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
+  // Subscribe to realtime change events for savings when activeOwnerId changes
+  useEffect(() => {
+    if (!activeOwnerId) return;
+
+    // perform an initial load so permission errors are surfaced immediately
+    (async () => {
+      try {
+        await loadSavings(activeOwnerId);
+      } catch (e) {
+        console.warn('[SavingContext] initial loadSavings failed', { ownerId: activeOwnerId, error: e });
+      }
+    })();
+
+    console.debug('[SavingContext] subscribing to savings changes', { ownerId: activeOwnerId });
+
+    const unsubscribe = savingService.subscribeToSavingsChanges(activeOwnerId, (changes) => {
+      if (!Array.isArray(changes) || changes.length === 0) return;
+
+      console.debug('[SavingContext] onSnapshot changes', { ownerId: activeOwnerId, changes: changes.map(c => ({ type: c.type, id: c.doc.id })) });
+
+      // Apply incremental changes to state
+      dispatch({ type: 'SET_LOADING', payload: true });
+      try {
+        // Work on a copy of current savings
+        // We'll dispatch individual actions to keep reducer logic simple
+        for (const change of changes) {
+          const doc = change.doc;
+          if (change.type === 'added') {
+            dispatch({ type: 'ADD_SAVING', payload: doc });
+          } else if (change.type === 'modified') {
+            dispatch({ type: 'UPDATE_SAVING', payload: doc });
+          } else if (change.type === 'removed') {
+            dispatch({ type: 'DELETE_SAVING', payload: doc.id });
+          }
+        }
+      } finally {
+        (async () => {
+          try {
+            const summary = await savingService.getSavingsSummary(activeOwnerId);
+            dispatch({ type: 'SET_SUMMARY', payload: summary });
+          } catch (e) {
+            // ignore
+          } finally {
+            dispatch({ type: 'SET_LOADING', payload: false });
+          }
+        })();
+      }
+    });
+
+    return () => {
+      try { unsubscribe(); } catch (e) { /* ignore */ }
+    };
+  }, [activeOwnerId]);
+
   const findInvitingOwnerId = async (email: string): Promise<string | null> => {
     if (!email) return null;
     try {
       const usersRef = collection(db, 'users');
+      // For savings we should allow invited members to be discovered even if
+      // the owner didn't grant full edit permissions. This enables view-only
+      // invitees to have the owner's data loaded in the UI when appropriate.
       const q = query(
         usersRef,
         where('preferences.invitedMembers', 'array-contains', email),
-        where('preferences.allowMemberEditAllTransactions', '==', true),
         limit(1)
       );
       const snap = await getDocs(q);
@@ -188,43 +259,60 @@ export const SavingProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   }, [user, activeOwnerId]);
 
   const addSaving = useCallback(async (saving: Omit<Saving, 'id' | 'createdAt' | 'updatedAt'>) => {
-  const ownerId = activeOwnerId || user?.uid;
-  if (!ownerId) return;
+    const ownerId = activeOwnerId || user?.uid;
+    if (!ownerId) {
+      console.debug('[SavingContext] addSaving aborted - no ownerId', { activeOwnerId, userId: user?.uid });
+      return;
+    }
     
     try {
-      dispatch({ type: 'SET_LOADING', payload: true });
-  const savingWithMeta = { ...saving, ...(user ? { createdBy: user.uid, createdByName: user.displayName || user.email || user.uid } : {}) } as any;
-  const newSaving = await savingService.addSaving(ownerId, savingWithMeta);
+      showLoading();
+      const savingWithMeta = { ...saving, ...(user ? { createdBy: user.uid, createdByName: user.displayName || user.email || user.uid } : {}) } as any;
+      console.debug('[SavingContext] addSaving calling service', { ownerId, saving: savingWithMeta });
+
+      // Optimistic behaviour: call service, but update UI immediately when single record is returned.
+      const newSaving = await savingService.addSaving(ownerId, savingWithMeta);
+      console.debug('[SavingContext] addSaving result', { ownerId, newSaving });
+
       if (Array.isArray(newSaving)) {
+        // Service returned full list (e.g., auto allocation across categories)
         dispatch({ type: 'SET_SAVINGS', payload: newSaving });
       } else {
+        // Insert optimistically but dedupe guard in reducer will prevent duplicates
         dispatch({ type: 'ADD_SAVING', payload: newSaving });
       }
-      // Update summary after adding
-  const summary = await savingService.getSavingsSummary(ownerId);
+
+      // Recalculate summary (server source of truth)
+      const summary = await savingService.getSavingsSummary(ownerId);
       dispatch({ type: 'SET_SUMMARY', payload: summary });
+      return newSaving;
     } catch (error) {
+      console.error('[SavingContext] addSaving failed', error);
       dispatch({ type: 'SET_ERROR', payload: 'Failed to add saving' });
+      throw error;
     } finally {
-      dispatch({ type: 'SET_LOADING', payload: false });
+      hideLoading();
     }
-  }, [user]);
+  }, [user, activeOwnerId]);
 
   const updateSaving = useCallback(async (id: string, saving: Partial<Saving>) => {
     const ownerId = activeOwnerId || user?.uid;
     if (!ownerId) return;
     
     try {
-      dispatch({ type: 'SET_LOADING', payload: true });
+      showLoading();
       const updatedSaving = await savingService.updateSaving(ownerId, id, saving);
       dispatch({ type: 'UPDATE_SAVING', payload: updatedSaving });
       // Update summary after updating
       const summary = await savingService.getSavingsSummary(ownerId);
       dispatch({ type: 'SET_SUMMARY', payload: summary });
+      return updatedSaving;
     } catch (error) {
+      console.error('[SavingContext] updateSaving failed', error);
       dispatch({ type: 'SET_ERROR', payload: 'Failed to update saving' });
+      throw error;
     } finally {
-      dispatch({ type: 'SET_LOADING', payload: false });
+      hideLoading();
     }
   }, [user, activeOwnerId]);
 
@@ -233,16 +321,18 @@ export const SavingProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     if (!ownerId) return;
     
     try {
-      dispatch({ type: 'SET_LOADING', payload: true });
+      showLoading();
       await savingService.deleteSaving(ownerId, id);
       dispatch({ type: 'DELETE_SAVING', payload: id });
       // Update summary after deleting
       const summary = await savingService.getSavingsSummary(ownerId);
       dispatch({ type: 'SET_SUMMARY', payload: summary });
     } catch (error) {
+      console.error('[SavingContext] deleteSaving failed', error);
       dispatch({ type: 'SET_ERROR', payload: 'Failed to delete saving' });
+      throw error;
     } finally {
-      dispatch({ type: 'SET_LOADING', payload: false });
+      hideLoading();
     }
   }, [user, activeOwnerId]);
 

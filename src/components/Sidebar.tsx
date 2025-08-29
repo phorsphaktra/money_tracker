@@ -14,6 +14,7 @@ import {
   WalletIcon,
   ArrowPathIcon
 } from '@heroicons/react/24/outline';
+import { Calculator } from 'lucide-react';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -25,7 +26,7 @@ const navItems = [
   { path: '/', label: 'dashboard.navigation.dashboard', icon: HomeIcon },
   { path: '/transactions', label: 'dashboard.navigation.transactions', icon: CurrencyDollarIcon },
   { path: '/saving', label: 'dashboard.navigation.saving', icon: WalletIcon },
-  { path: '/saving/planner', label: 'dashboard.navigation.savingsPlanner', icon: ChartBarIcon },
+  { path: '/saving/planner', label: 'dashboard.navigation.savingsPlanner', icon: Calculator },
   { path: '/analytics', label: 'dashboard.navigation.analytics', icon: ChartBarIcon },
   { path: '/task', label: 'dashboard.navigation.task', icon: ClipboardDocumentCheckIcon },
   { path: '/settings', label: 'dashboard.navigation.settings', icon: Cog6ToothIcon },

@@ -94,6 +94,36 @@ export const TransactionProvider: React.FC<{ children: React.ReactNode }> = ({ c
     init();
   }, [user]);
 
+  // Subscribe to realtime change events when activeOwnerId changes.
+  useEffect(() => {
+    if (!user || !activeOwnerId) return;
+
+    const unsubscribe = transactionService.subscribeToTransactionsChanges(activeOwnerId, (changes) => {
+      if (!Array.isArray(changes) || changes.length === 0) return;
+
+      setTransactions(prev => {
+        let next = [...prev];
+        for (const change of changes) {
+          const doc = change.doc;
+          if (change.type === 'added') {
+            // insert if not exists
+            if (!next.find(t => t.id === doc.id)) next.push(doc);
+          } else if (change.type === 'modified') {
+            next = next.map(t => t.id === doc.id ? { ...t, ...doc } : t);
+          } else if (change.type === 'removed') {
+            next = next.filter(t => t.id !== doc.id);
+          }
+        }
+        // keep sorted by date desc
+        return next.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      });
+    });
+
+    return () => {
+      try { unsubscribe(); } catch (e) { /* ignore */ }
+    };
+  }, [user, activeOwnerId]);
+
   const loadTransactions = async (ownerId?: string) => {
     if (!user) return;
     let targetOwnerId = ownerId || activeOwnerId || user.uid;
@@ -192,9 +222,14 @@ export const TransactionProvider: React.FC<{ children: React.ReactNode }> = ({ c
     try {
       const targetOwnerId = activeOwnerId || user.uid;
       const newTransaction = await transactionService.addTransaction(targetOwnerId, transaction);
-      setTransactions(prev => [newTransaction, ...prev].sort((a, b) => 
-        new Date(b.date).getTime() - new Date(a.date).getTime()
-      ));
+      setTransactions(prev => {
+        // avoid duplicates if onSnapshot already delivered this doc
+        if (prev.find(t => t.id === newTransaction.id)) {
+          // still ensure ordering
+          return [...prev].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        }
+        return [newTransaction, ...prev].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      });
       return newTransaction;
     } catch (err) {
       // Map permission errors to clearer message
@@ -215,9 +250,10 @@ export const TransactionProvider: React.FC<{ children: React.ReactNode }> = ({ c
     try {
       const targetOwnerId = activeOwnerId || user.uid;
       await transactionService.updateTransaction(targetOwnerId, id, transaction);
-      setTransactions(prev =>
-        prev.map(t => (t.id === id ? { ...t, ...transaction } : t))
-      );
+      setTransactions(prev => {
+        if (!prev.find(t => t.id === id)) return prev;
+        return prev.map(t => (t.id === id ? { ...t, ...transaction } : t));
+      });
     } catch (err) {
       if ((err as any)?.code === 'permission-denied' || String(err).toLowerCase().includes('permission')) {
         const e = new Error('Missing permissions to update this transaction. Verify invited member permissions or switch active owner.');
@@ -236,7 +272,10 @@ export const TransactionProvider: React.FC<{ children: React.ReactNode }> = ({ c
     try {
       const targetOwnerId = activeOwnerId || user.uid;
       await transactionService.deleteTransaction(targetOwnerId, id);
-      setTransactions(prev => prev.filter(t => t.id !== id));
+      setTransactions(prev => {
+        if (!prev.find(t => t.id === id)) return prev;
+        return prev.filter(t => t.id !== id);
+      });
     } catch (err) {
       if ((err as any)?.code === 'permission-denied' || String(err).toLowerCase().includes('permission')) {
         const e = new Error('Missing permissions to delete this transaction. Verify invited member permissions or switch active owner.');

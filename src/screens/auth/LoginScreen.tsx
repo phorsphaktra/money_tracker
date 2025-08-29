@@ -5,12 +5,16 @@ import { useNavigate } from 'react-router-dom';
 export const LoginScreen = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const { login, error ,loginWithGoogle} = useAuth();
-  const [isLoading] = useState(false);
+  const { login, error, loginWithGoogle, loading } = useAuth();
+  const isLoading = loading;
+  const [isRedirecting, setIsRedirecting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await login(email, password);
+    const user = await login(email, password);
+    if (user) {
+      navigate('/');
+    }
   };
 
   const navigate = useNavigate();
@@ -121,7 +125,12 @@ export const LoginScreen = () => {
 
           <button
             type="button"
-            onClick={loginWithGoogle}
+            onClick={async () => {
+              setIsRedirecting(true);
+              const user = await loginWithGoogle();
+              if (user) navigate('/');
+            }}
+            disabled={isRedirecting}
             className="mt-3 sm:mt-4 w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-xs sm:text-sm font-medium text-gray-500 hover:bg-gray-50"
           >
             <img
@@ -129,7 +138,7 @@ export const LoginScreen = () => {
               src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
               alt="Google"
             />
-            Sign up with Google
+            {isRedirecting ? 'Redirecting to Google...' : 'Sign in with Google'}
           </button>
         </div>
       </div>
