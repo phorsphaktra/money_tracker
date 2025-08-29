@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
+import { formatDistanceToNow } from 'date-fns';
 import { Transaction } from '../../contexts/TransactionContext';
 import { getCategoryById } from '../../utils/categories';
 import { CategoryIcon } from './CategoryIcon';
@@ -121,6 +122,9 @@ const TransactionItem = ({
             </span>
             <div className="text-xs text-gray-500">
               <div>{new Date(transaction.date).toLocaleDateString()}</div>
+              {transaction.createdAt && (
+                <div className="text-xs text-gray-400">Created {formatDistanceToNow(new Date(transaction.createdAt), { addSuffix: true })}</div>
+              )}
               {transaction.createdByName && (
                 <div className="text-xs text-gray-400 truncate">By {transaction.createdByName}</div>
               )}
@@ -238,7 +242,13 @@ export const TransactionsList = ({
    */
   const paginatedTransactions = useMemo(() => {
     // First apply date filtering
-    let filtered = allTransactions;
+    let filtered = [...allTransactions];
+    // Sort by createdAt desc, fallback to date
+    filtered.sort((a, b) => {
+      const aKey = a.createdAt || a.date || '';
+      const bKey = b.createdAt || b.date || '';
+      return bKey.localeCompare(aKey);
+    });
     if (startDate || endDate) {
       // clone date inputs to avoid mutating props
       const startOfDate = startDate ? new Date(startDate) : null;
@@ -246,7 +256,7 @@ export const TransactionsList = ({
       if (startOfDate) startOfDate.setHours(0, 0, 0, 0);
       if (endOfDate) endOfDate.setHours(23, 59, 59, 999);
 
-      filtered = allTransactions.filter(transaction => {
+  filtered = filtered.filter(transaction => {
         const transactionDate = new Date(transaction.date);
         if (startOfDate && transactionDate < startOfDate) return false;
         if (endOfDate && transactionDate > endOfDate) return false;
