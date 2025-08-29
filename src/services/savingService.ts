@@ -184,10 +184,32 @@ export class SavingService {
   subscribeToSavings(userId: string, onChange: (savings: Saving[]) => void) {
     const collectionRef = collection(db, this.getSavingPath(userId));
     const unsubscribe = onSnapshot(collectionRef, (snapshot) => {
-      const items = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Saving[];
-      onChange(items);
+  const items = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Saving[];
+  // normalize sort by date desc so consumers get consistent ordering
+  items.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  onChange(items);
     }, (error) => {
       console.error('subscribeToSavings onSnapshot error:', error);
+      onChange([]);
+    });
+
+    return unsubscribe;
+  }
+
+  /**
+   * Subscribe to realtime change events for a user's savings collection.
+   * Calls onChange with snapshot.docChanges() so callers can apply incremental updates.
+   */
+  subscribeToSavingsChanges(userId: string, onChange: (changes: Array<{ type: 'added'|'modified'|'removed', doc: Saving }>) => void) {
+    const collectionRef = collection(db, this.getSavingPath(userId));
+    const unsubscribe = onSnapshot(collectionRef, (snapshot) => {
+      const changes = snapshot.docChanges().map(ch => ({
+        type: ch.type as 'added'|'modified'|'removed',
+        doc: ({ id: ch.doc.id, ...ch.doc.data() } as Saving)
+      }));
+      onChange(changes);
+    }, (error) => {
+      console.error('subscribeToSavingsChanges onSnapshot error:', error);
       onChange([]);
     });
 

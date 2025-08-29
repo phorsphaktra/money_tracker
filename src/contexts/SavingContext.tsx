@@ -128,20 +128,42 @@ export const SavingProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
-  // Subscribe to realtime updates for savings when activeOwnerId changes
+  // Subscribe to realtime change events for savings when activeOwnerId changes
   useEffect(() => {
     if (!activeOwnerId) return;
-    const unsubscribe = savingService.subscribeToSavings(activeOwnerId, (items) => {
-      dispatch({ type: 'SET_SAVINGS', payload: items });
-      // recalc summary
-      (async () => {
-        try {
-          const summary = await savingService.getSavingsSummary(activeOwnerId);
-          dispatch({ type: 'SET_SUMMARY', payload: summary });
-        } catch (e) {
-          // ignore
+
+    const unsubscribe = savingService.subscribeToSavingsChanges(activeOwnerId, (changes) => {
+      if (!Array.isArray(changes) || changes.length === 0) return;
+
+      console.debug('[SavingContext] onSnapshot changes', { ownerId: activeOwnerId, changes: changes.map(c => ({ type: c.type, id: c.doc.id })) });
+
+      // Apply incremental changes to state
+      dispatch({ type: 'SET_LOADING', payload: true });
+      try {
+        // Work on a copy of current savings
+        // We'll dispatch individual actions to keep reducer logic simple
+        for (const change of changes) {
+          const doc = change.doc;
+          if (change.type === 'added') {
+            dispatch({ type: 'ADD_SAVING', payload: doc });
+          } else if (change.type === 'modified') {
+            dispatch({ type: 'UPDATE_SAVING', payload: doc });
+          } else if (change.type === 'removed') {
+            dispatch({ type: 'DELETE_SAVING', payload: doc.id });
+          }
         }
-      })();
+      } finally {
+        (async () => {
+          try {
+            const summary = await savingService.getSavingsSummary(activeOwnerId);
+            dispatch({ type: 'SET_SUMMARY', payload: summary });
+          } catch (e) {
+            // ignore
+          } finally {
+            dispatch({ type: 'SET_LOADING', payload: false });
+          }
+        })();
+      }
     });
 
     return () => {
@@ -153,10 +175,12 @@ export const SavingProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     if (!email) return null;
     try {
       const usersRef = collection(db, 'users');
+      // For savings we should allow invited members to be discovered even if
+      // the owner didn't grant full edit permissions. This enables view-only
+      // invitees to have the owner's data loaded in the UI when appropriate.
       const q = query(
         usersRef,
         where('preferences.invitedMembers', 'array-contains', email),
-        where('preferences.allowMemberEditAllTransactions', '==', true),
         limit(1)
       );
       const snap = await getDocs(q);
