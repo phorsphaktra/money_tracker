@@ -24,7 +24,7 @@ import { LoadingSpinner } from '../shared/LoadingSpinner';
  * @property {Date|null} [endDate] - Optional end date for filtering transactions
  */
 interface TransactionsListProps {
-  transactions: Transaction[];
+  transactions?: Transaction[];
   isLoading?: boolean;
   limit?: number;
   showFilters?: boolean;
@@ -209,13 +209,15 @@ export const TransactionsList = ({
   endDate
 }: TransactionsListProps) => {
   const [currentPage, setCurrentPage] = useState(1);
-  const { activeOwnerId, canEditOwner } = useTransactions();
+  const txContext = useTransactions();
+  const { activeOwnerId, canEditOwner } = txContext;
+  const allTransactions = transactions ?? txContext.transactions;
   const [canEdit, setCanEdit] = useState<boolean | null>(null);
   
-  // Reset pagination when transactions change
+  // Reset pagination when underlying transactions change
   useEffect(() => {
     setCurrentPage(1);
-  }, [transactions]);
+  }, [allTransactions]);
 
   // Check edit permission for active owner and cache result for UI
   useEffect(() => {
@@ -236,14 +238,16 @@ export const TransactionsList = ({
    */
   const paginatedTransactions = useMemo(() => {
     // First apply date filtering
-    let filtered = transactions;
+    let filtered = allTransactions;
     if (startDate || endDate) {
-      filtered = transactions.filter(transaction => {
-        const transactionDate = new Date(transaction.date);
-        // Set times to beginning and end of day for comparison
-        const startOfDate = startDate ? new Date(startDate.setHours(0, 0, 0, 0)) : null;
-        const endOfDate = endDate ? new Date(endDate.setHours(23, 59, 59, 999)) : null;
+      // clone date inputs to avoid mutating props
+      const startOfDate = startDate ? new Date(startDate) : null;
+      const endOfDate = endDate ? new Date(endDate) : null;
+      if (startOfDate) startOfDate.setHours(0, 0, 0, 0);
+      if (endOfDate) endOfDate.setHours(23, 59, 59, 999);
 
+      filtered = allTransactions.filter(transaction => {
+        const transactionDate = new Date(transaction.date);
         if (startOfDate && transactionDate < startOfDate) return false;
         if (endOfDate && transactionDate > endOfDate) return false;
         return true;
@@ -252,33 +256,33 @@ export const TransactionsList = ({
 
     // Then apply limit or pagination
     if (limit) return filtered.slice(0, limit);
-    
+
     const startIndex = (currentPage - 1) * itemsPerPage;
     const endIndex = startIndex + itemsPerPage;
     return filtered.slice(startIndex, endIndex);
-  }, [transactions, currentPage, itemsPerPage, limit, startDate, endDate]);
+  }, [allTransactions, currentPage, itemsPerPage, limit, startDate, endDate]);
 
   // Calculate total pages based on filtered transactions
   const totalPages = Math.ceil(
     (startDate || endDate ? 
-      transactions.filter(t => {
+      allTransactions.filter(t => {
         const date = new Date(t.date);
         return (!startDate || date >= startDate) && 
                (!endDate || date <= endDate);
       }).length : 
-      transactions.length) / itemsPerPage
+      allTransactions.length) / itemsPerPage
   );
 
   // Reset pagination when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [transactions, startDate, endDate]);
+  }, [allTransactions, startDate, endDate]);
 
   if (isLoading) {
     return <TransactionSkeleton />;
   }
 
-  if (!transactions.length) {
+  if (!allTransactions.length) {
     return <EmptyState />;
   }
 
@@ -351,14 +355,14 @@ export const TransactionsList = ({
                 <p className="text-xs sm:text-sm text-gray-700 dark:text-gray-300">
                   Showing{' '}
                   <span className="font-medium">
-                    {Math.min(((currentPage - 1) * itemsPerPage) + 1, transactions.length)}
+                    {Math.min(((currentPage - 1) * itemsPerPage) + 1, allTransactions.length)}
                   </span>
                   {' '}-{' '}
                   <span className="font-medium">
-                    {Math.min(currentPage * itemsPerPage, transactions.length)}
+                    {Math.min(currentPage * itemsPerPage, allTransactions.length)}
                   </span>
                   {' '}of{' '}
-                  <span className="font-medium">{transactions.length}</span>
+                  <span className="font-medium">{allTransactions.length}</span>
                   {' '}filtered results
                 </p>
               </div>

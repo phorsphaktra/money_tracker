@@ -1,4 +1,4 @@
-import { collection, addDoc, deleteDoc, doc, updateDoc, getDocs, getDoc } from 'firebase/firestore';
+import { collection, addDoc, deleteDoc, doc, updateDoc, getDocs, getDoc, onSnapshot } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { SAVINGS_CATEGORIES } from '../utils/savings';
 
@@ -175,6 +175,23 @@ export class SavingService {
       console.error(`Error getting ${type} savings:`, error);
       throw error;
     }
+  }
+
+  /**
+   * Subscribe to realtime updates for a user's savings collection.
+   * Calls onChange with the full list on each snapshot and returns an unsubscribe function.
+   */
+  subscribeToSavings(userId: string, onChange: (savings: Saving[]) => void) {
+    const collectionRef = collection(db, this.getSavingPath(userId));
+    const unsubscribe = onSnapshot(collectionRef, (snapshot) => {
+      const items = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Saving[];
+      onChange(items);
+    }, (error) => {
+      console.error('subscribeToSavings onSnapshot error:', error);
+      onChange([]);
+    });
+
+    return unsubscribe;
   }
 
   async getSavingsSummary(userId: string) {

@@ -128,6 +128,27 @@ export const SavingProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
+  // Subscribe to realtime updates for savings when activeOwnerId changes
+  useEffect(() => {
+    if (!activeOwnerId) return;
+    const unsubscribe = savingService.subscribeToSavings(activeOwnerId, (items) => {
+      dispatch({ type: 'SET_SAVINGS', payload: items });
+      // recalc summary
+      (async () => {
+        try {
+          const summary = await savingService.getSavingsSummary(activeOwnerId);
+          dispatch({ type: 'SET_SUMMARY', payload: summary });
+        } catch (e) {
+          // ignore
+        }
+      })();
+    });
+
+    return () => {
+      try { unsubscribe(); } catch (e) { /* ignore */ }
+    };
+  }, [activeOwnerId]);
+
   const findInvitingOwnerId = async (email: string): Promise<string | null> => {
     if (!email) return null;
     try {
