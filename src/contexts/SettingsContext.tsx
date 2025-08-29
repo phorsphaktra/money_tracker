@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useAuth } from './AuthContext';
 import { authService } from '../services/authService';
-import { doc, setDoc } from 'firebase/firestore';
+import { doc, setDoc, onSnapshot, collection, query, where, updateDoc, arrayRemove } from 'firebase/firestore';
 import { db } from '../config/firebase';
 
 interface RateHistory {
@@ -69,47 +69,83 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const loadUserPreferences = async () => {
-      if (user) {
-        try {
-          const userProfile = await authService.getUserProfile(user.uid);
-          if (userProfile?.preferences) {
-            setPreferences({
-              currency: userProfile.preferences.currency ?? 'USD',
-              language: userProfile.preferences.language ?? 'en',
-              darkMode: userProfile.preferences.darkMode ?? false,
-              invitedMembers: userProfile.preferences.invitedMembers ?? [],
-              allowMemberEditAllTransactions: userProfile.preferences.allowMemberEditAllTransactions ?? false
-            });
-            
-            // Validate and set exchange rates
-            const storedRates = userProfile.preferences.exchangeRates;
-            if (storedRates?.KHR_USD && storedRates.KHR_USD > 0) {
-              setExchangeRates({
-                ...storedRates,
-                source: 'user',
-                history: storedRates.history || [
-                  {
-                    rate: storedRates.KHR_USD,
-                    date: storedRates.lastUpdated || new Date().toISOString(),
-                    updatedBy: 'System Import'
-                  }
-                ]
-              });
-            }
-          }
-        } catch (error) {
-          console.error('Failed to load preferences:', error);
-          // Keep using default rates if loading fails
+    // Use a real-time listener so changes to the user's preferences (for example
+    // invitedMembers being removed when an invitee rejects) are reflected
+    // immediately in the UI without requiring a reload.
+    let unsubscribe: (() => void) | undefined;
+    if (user) {
+      const userRef = doc(db, 'users', user.uid);
+      unsubscribe = onSnapshot(userRef, (snap) => {
+        if (!snap.exists()) {
+          setIsLoading(false);
+          return;
+        }
+        const userProfile = snap.data() as any;
+        const prefs = userProfile.preferences || {};
+        setPreferences({
+          currency: prefs.currency ?? 'USD',
+          language: prefs.language ?? 'en',
+          darkMode: prefs.darkMode ?? false,
+          invitedMembers: prefs.invitedMembers ?? [],
+          allowMemberEditAllTransactions: prefs.allowMemberEditAllTransactions ?? false
+        });
+
+        // Validate and set exchange rates
+        const storedRates = prefs.exchangeRates;
+        if (storedRates?.KHR_USD && storedRates.KHR_USD > 0) {
           setExchangeRates({
-            ...defaultExchangeRates,
-            source: 'default'
+            ...storedRates,
+            source: 'user',
+            history: storedRates.history || [
+              {
+                rate: storedRates.KHR_USD,
+                date: storedRates.lastUpdated || new Date().toISOString(),
+                updatedBy: 'System Import'
+              }
+            ]
           });
         }
-      }
+        setIsLoading(false);
+      }, (err) => {
+        console.error('Failed to subscribe to user preferences:', err);
+        setIsLoading(false);
+      });
+    } else {
       setIsLoading(false);
+    }
+
+    return () => {
+      if (unsubscribe) unsubscribe();
     };
-    loadUserPreferences();
+  }, [user]);
+
+  // Listen for invitations rejected by invitees where the current user is the owner.
+  // When detected, remove the invitee email from the owner's invitedMembers (owner has write permission
+  // on their own user doc so this client-side update is allowed).
+  useEffect(() => {
+    if (!user) return;
+
+    const invitationsRef = collection(db, 'invitations');
+    const q = query(invitationsRef, where('ownerId', '==', user.uid), where('status', '==', 'rejected'));
+    const unsubInv = onSnapshot(q, async (snap) => {
+      if (snap.empty) return;
+      const ownerRef = doc(db, 'users', user.uid);
+      for (const d of snap.docs) {
+        try {
+          const data = d.data() as any;
+          const email = data.inviteeEmail;
+          if (email) {
+            await updateDoc(ownerRef, {
+              'preferences.invitedMembers': arrayRemove(email)
+            });
+          }
+        } catch (err) {
+          console.error('Failed to remove rejected invitee from preferences:', err);
+        }
+      }
+    }, (err) => console.error('Invitation listener error:', err));
+
+    return () => unsubInv();
   }, [user]);
 
   const updatePreferences = async (newPreferences: Partial<typeof preferences>) => {
