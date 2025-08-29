@@ -160,8 +160,12 @@ export class SavingService {
         ...doc.data()
       })) as Saving[];
 
-      // sort by date desc for consistent ordering
-      items.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      // sort by createdAt desc for consistent ordering; fall back to date when createdAt is missing
+      items.sort((a, b) => {
+        const aKey = a.createdAt || a.date || '';
+        const bKey = b.createdAt || b.date || '';
+        return new Date(bKey).getTime() - new Date(aKey).getTime();
+      });
       return items;
     } catch (error) {
       console.error('Error getting all savings:', error);
@@ -179,7 +183,11 @@ export class SavingService {
       })) as Saving[];
 
       const filtered = savings.filter(saving => saving.type === type);
-      filtered.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      filtered.sort((a, b) => {
+        const aKey = a.createdAt || a.date || '';
+        const bKey = b.createdAt || b.date || '';
+        return new Date(bKey).getTime() - new Date(aKey).getTime();
+      });
       return filtered;
     } catch (error) {
       console.error(`Error getting ${type} savings:`, error);

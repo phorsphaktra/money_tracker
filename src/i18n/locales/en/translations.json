@@ -354,8 +354,11 @@
     "type_metrics": "Type Matrics",
     "average":"Average",
     "largest": "Largest",
-    "category_breakdown": "Category"
-   
+    "category_breakdown": "Category",
+    "addSuccess": "Saving added successfully",
+    "updateSuccess": "Saving updated successfully",
+    "addError": "Failed to add saving",
+    "updateError": "Failed to update saving"
   },
   "currencies": {
     "USD": "USD",

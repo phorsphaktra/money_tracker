@@ -95,7 +95,11 @@ const savingReducer = (state: SavingState, action: SavingAction): SavingState =>
   }
 
   // Keep savings sorted by date desc and recalculate breakdown
-  const sortedSavings = [...newState.savings].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  const sortedSavings = [...newState.savings].sort((a, b) => {
+    const aKey = a.createdAt || a.date || '';
+    const bKey = b.createdAt || b.date || '';
+    return new Date(bKey).getTime() - new Date(aKey).getTime();
+  });
   return {
     ...newState,
     savings: sortedSavings,
