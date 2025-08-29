@@ -16,6 +16,8 @@ const SavingScreen: React.FC = () => {
   const [description, setDescription] = useState<string>('');
   const { savings, summary, isLoading, error } = state;
   const [isAddingNew, setIsAddingNew] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [flashMessage, setFlashMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [] = useState('');
   const [selectedType, setSelectedType] = useState<'all' | 'credit' | 'debit'>('all');
   const [] = useState<{ start: Date | null, end: Date | null }>({
@@ -35,7 +37,7 @@ const SavingScreen: React.FC = () => {
 
   const handleSubmit = async (savingData: { amount: number; description: string; date: string; categoryId?: string; type: 'credit' | 'debit' }) => {
     if (!savingData.amount) return;
-
+    setIsSubmitting(true);
     try {
       if (editingId) {
         await updateSaving(editingId, {
@@ -45,6 +47,9 @@ const SavingScreen: React.FC = () => {
           categoryId: savingData.categoryId,
           type: savingData.type
         });
+        const msg = { type: 'success' as const, text: t('savings.updateSuccess') };
+        setFlashMessage(msg);
+        setTimeout(() => setFlashMessage(null), 3000);
       } else {
         await addSaving({
           amount: savingData.amount,
@@ -53,6 +58,9 @@ const SavingScreen: React.FC = () => {
           categoryId: savingData.categoryId,
           type: savingData.type
         });
+        const msg = { type: 'success' as const, text: t('savings.addSuccess') };
+        setFlashMessage(msg);
+        setTimeout(() => setFlashMessage(null), 3000);
       }
 
       resetForm();
@@ -64,7 +72,13 @@ const SavingScreen: React.FC = () => {
       }
     } catch (error) {
       console.error('Error saving:', error);
+      const msg = { type: 'error' as const, text: (error as any)?.message || t('savings.saveError') };
+      setFlashMessage(msg);
+      setTimeout(() => setFlashMessage(null), 3000);
+      // rethrow if callers depend on it
       throw error;
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -166,6 +180,11 @@ const SavingScreen: React.FC = () => {
         {isAddingNew && (
           <div className="fixed inset-0 bg-black/30 mobile-modal-backdrop flex items-center justify-center p-3 sm:p-4 z-50 safe-area-inset-top safe-area-inset-bottom">
             <div className="bg-white dark:bg-gray-800 rounded-lg sm:rounded-2xl p-4 sm:p-6 w-full max-w-[95vw] sm:max-w-md max-h-[90vh] overflow-y-auto">
+              {flashMessage && (
+                <div className={`mb-3 p-3 rounded-md text-sm ${flashMessage.type === 'success' ? 'bg-emerald-50 text-emerald-800' : 'bg-red-50 text-red-800'}`}>
+                  {flashMessage.text}
+                </div>
+              )}
               <SavingForm
                 amount={amount}
                 description={description}
@@ -175,8 +194,16 @@ const SavingScreen: React.FC = () => {
                 onAmountChange={setAmount}
                 onDescriptionChange={setDescription}
                 onDateChange={setSelectedDate}
+                isSubmitting={isSubmitting}
               />
             </div>
+          </div>
+        )}
+
+        {/* Flash message (persistent on screen) */}
+        {flashMessage && (
+          <div className={`fixed left-1/2 -translate-x-1/2 bottom-24 z-50 rounded-md px-4 py-2 text-sm ${flashMessage.type === 'success' ? 'bg-emerald-50 text-emerald-800' : 'bg-red-50 text-red-800'}`}>
+            {flashMessage.text}
           </div>
         )}
 

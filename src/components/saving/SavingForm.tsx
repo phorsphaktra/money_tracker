@@ -21,6 +21,7 @@ interface SavingFormProps {
   onAmountChange?: (value: string) => void;
   onDescriptionChange?: (value: string) => void;
   onDateChange?: (date: Date) => void;
+  isSubmitting?: boolean;
 }
 
 // Add custom input component for the date picker
@@ -60,6 +61,7 @@ export const SavingForm: React.FC<SavingFormProps> = ({
   onAmountChange: externalAmountChange,
   onDescriptionChange: externalDescriptionChange,
   onDateChange: externalDateChange,
+  isSubmitting = false,
 }) => {
   const { t } = useTranslation();
   const [amount, setAmount] = useState(initialAmount);
@@ -278,13 +280,14 @@ export const SavingForm: React.FC<SavingFormProps> = ({
           <Button
             variant="primary"
             type="submit"
+            isLoading={isSubmitting}
             className={`w-full sm:w-1/2 min-h-[44px] touch-manipulation ${
               transactionType === 'credit'
                 ? 'bg-green-600 hover:bg-green-700'
                 : 'bg-red-600 hover:bg-red-700'
             }`}
           >
-            {t('savings.add')}
+            {isSubmitting ? (transactionType === 'credit' ? t('savings.saving') : t('savings.saving')) : t('savings.add')}
           </Button>
         </div>
       </form>

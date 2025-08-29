@@ -132,6 +132,17 @@ export const SavingProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   useEffect(() => {
     if (!activeOwnerId) return;
 
+    // perform an initial load so permission errors are surfaced immediately
+    (async () => {
+      try {
+        await loadSavings(activeOwnerId);
+      } catch (e) {
+        console.warn('[SavingContext] initial loadSavings failed', { ownerId: activeOwnerId, error: e });
+      }
+    })();
+
+    console.debug('[SavingContext] subscribing to savings changes', { ownerId: activeOwnerId });
+
     const unsubscribe = savingService.subscribeToSavingsChanges(activeOwnerId, (changes) => {
       if (!Array.isArray(changes) || changes.length === 0) return;
 
