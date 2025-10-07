@@ -3,6 +3,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useTranslation } from 'react-i18next';
 import { useState } from 'react';
 import { NotificationPanel } from './notification/NotificationPanel';
+import { MemberSwitcher } from './member/MemberSwitcher';
 import { useTaskContext } from '../contexts/TaskContext';
 import { useNotifications } from '../contexts/NotificationContext';
 import { useDarkMode } from '../contexts/DarkModeContext';
@@ -53,10 +54,13 @@ export const Navbar = ({ onToggle, isCollapsed }: NavbarProps) => {
           </h1>
         </div>
 
-        <div className="flex items-center gap-2">
-          <button onClick={toggleDarkMode}>
-            {darkMode ? <SunIcon className="w-5 h-5 dark:text-slate-400" /> : <MoonIcon className="w-5 h-5 dark:text-slate-400" />}
-          </button>
+        <div className="flex items-center gap-4">
+          <MemberSwitcher showLabel={false} />
+          
+          <div className="flex items-center gap-2">
+            <button onClick={toggleDarkMode}>
+              {darkMode ? <SunIcon className="w-5 h-5 dark:text-slate-400" /> : <MoonIcon className="w-5 h-5 dark:text-slate-400" />}
+            </button>
           <div className="relative">
             <button
               onClick={toggleNotifications}
@@ -89,6 +93,7 @@ export const Navbar = ({ onToggle, isCollapsed }: NavbarProps) => {
                 />
               </>
             )}
+          </div>
           </div>
         </div>
       </div>

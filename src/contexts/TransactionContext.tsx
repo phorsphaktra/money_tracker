@@ -19,6 +19,9 @@ export interface Transaction {
   // Optional fields for multi-user setups: who created this record
   createdBy?: string; // uid or identifier
   createdByName?: string; // human-friendly name if stored
+  // The member profile this transaction is for (owner or a member)
+  createdForMemberId?: string;
+  createdForMemberName?: string;
   originalAmount?: number;
   originalCurrency?: string;
   exchangeRate?: number;
@@ -65,6 +68,13 @@ export const TransactionProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const [isLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
   const { user } = useAuth();
+  const { activeMember } = (function() {
+    try {
+      return require('./MemberContext').useMember();
+    } catch {
+      return { activeMember: null } as any;
+    }
+  })();
   const { showLoading, hideLoading } = useLoading();
   const [filters, setFilters] = useState<TransactionFilters>({});
   const [sortBy, setSortBy] = useState<'date' | 'amount' | 'category'>('date');
@@ -221,7 +231,15 @@ export const TransactionProvider: React.FC<{ children: React.ReactNode }> = ({ c
     showLoading();
     try {
       const targetOwnerId = activeOwnerId || user.uid;
-      const newTransaction = await transactionService.addTransaction(targetOwnerId, transaction);
+      // Attach created-for identity based on active member/profile selection
+      const txWithFor = {
+        ...transaction,
+        createdBy: user.uid,
+        createdByName: user.displayName || user.email || 'Unknown User',
+        createdForMemberId: activeMember?.uid || user.uid,
+        createdForMemberName: activeMember?.displayName || user.displayName || user.email || 'Unknown User'
+      };
+      const newTransaction = await transactionService.addTransaction(targetOwnerId, txWithFor);
       setTransactions(prev => {
         // avoid duplicates if onSnapshot already delivered this doc
         if (prev.find(t => t.id === newTransaction.id)) {

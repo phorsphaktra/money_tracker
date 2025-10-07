@@ -6,7 +6,11 @@ import { useState, useEffect, useCallback } from 'react';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { LoadingSpinner } from '../components/shared/LoadingSpinner';
 import { useAuth } from '../contexts/AuthContext';
+import { useNotifications } from '../contexts/NotificationContext';
+import { useMember } from '../contexts/MemberContext';
 import { invitationService } from '../services/invitationService';
+import { MemberManagement } from '../components/member/MemberManagement';
+import { PermissionEditor } from '../components/member/PermissionEditor';
 
 const getRateChange = (currentRate: number, previousRate: number) => {
   const change = ((currentRate - previousRate) / previousRate) * 100;
@@ -23,6 +27,8 @@ export const SettingsScreen = () => {
   const { language, setLanguage } = useLanguage();
   const { preferences, updatePreferences, exchangeRates, updateExchangeRate, isLoading } = useSettings();
   const { user } = useAuth();
+  const { uninviteMember, isPushNotificationSupported, requestNotificationPermission } = useNotifications();
+  const { updateMemberPermissions, isOwner } = useMember();
   const [khrRate, setKhrRate] = useState(exchangeRates.KHR_USD.toString());
   const [error, setError] = useState<string | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
@@ -33,6 +39,10 @@ export const SettingsScreen = () => {
   const [isInviting, setIsInviting] = useState(false);
   const [inviteFeedback, setInviteFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [removingEmail, setRemovingEmail] = useState<string | null>(null);
+  const [showUninviteConfirm, setShowUninviteConfirm] = useState(false);
+  const [emailToUninvite, setEmailToUninvite] = useState<string | null>(null);
+  const [editingMember, setEditingMember] = useState<any>(null);
+  const [isUpdatingPermissions, setIsUpdatingPermissions] = useState(false);
 
   // Update khrRate when exchangeRates changes
   useEffect(() => {
@@ -143,10 +153,17 @@ export const SettingsScreen = () => {
     setInviteFeedback(null);
 
     try {
-      const next = existing.filter(e => e !== emailLower);
-      await updatePreferences({ invitedMembers: next });
-
-      setInviteFeedback({ type: 'success', message: t('settings.invite.removed', { email: emailLower }) || `Removed ${emailLower}` });
+      // First try to uninvite (cancel the invitation)
+      try {
+        await uninviteMember(emailLower);
+        setInviteFeedback({ type: 'success', message: t('settings.invite.uninvited', { email: emailLower }) || `Uninvited ${emailLower}` });
+      } catch (uninviteError) {
+        // If uninvite fails, just remove from preferences (fallback)
+        console.warn('Uninvite failed, falling back to preference removal:', uninviteError);
+        const next = existing.filter(e => e !== emailLower);
+        await updatePreferences({ invitedMembers: next });
+        setInviteFeedback({ type: 'success', message: t('settings.invite.removed', { email: emailLower }) || `Removed ${emailLower}` });
+      }
 
       // auto-dismiss success after a few seconds
       setTimeout(() => setInviteFeedback(null), 5000);
@@ -156,7 +173,61 @@ export const SettingsScreen = () => {
     } finally {
       setRemovingEmail(null);
     }
-  }, [preferences.invitedMembers, updatePreferences, t]);
+  }, [preferences.invitedMembers, updatePreferences, t, uninviteMember]);
+
+  const handleUninviteConfirm = useCallback(async () => {
+    if (!emailToUninvite) return;
+    
+    setRemovingEmail(emailToUninvite);
+    setInviteFeedback(null);
+    setShowUninviteConfirm(false);
+
+    try {
+      await uninviteMember(emailToUninvite);
+      setInviteFeedback({ type: 'success', message: t('settings.invite.uninvited', { email: emailToUninvite }) || `Uninvited ${emailToUninvite}` });
+      
+      // auto-dismiss success after a few seconds
+      setTimeout(() => setInviteFeedback(null), 5000);
+    } catch (err) {
+      console.error('Failed to uninvite member:', err);
+      setInviteFeedback({ type: 'error', message: (err instanceof Error ? err.message : t('settings.invite.uninvite_failed') || 'Failed to uninvite member') });
+    } finally {
+      setRemovingEmail(null);
+      setEmailToUninvite(null);
+    }
+  }, [emailToUninvite, t, uninviteMember]);
+
+  const handleRequestNotificationPermission = useCallback(async () => {
+    try {
+      const granted = await requestNotificationPermission();
+      if (granted) {
+        setInviteFeedback({ type: 'success', message: 'Push notifications enabled!' });
+      } else {
+        setInviteFeedback({ type: 'error', message: 'Push notifications permission denied' });
+      }
+      setTimeout(() => setInviteFeedback(null), 5000);
+    } catch (error) {
+      console.error('Failed to request notification permission:', error);
+      setInviteFeedback({ type: 'error', message: 'Failed to enable push notifications' });
+      setTimeout(() => setInviteFeedback(null), 5000);
+    }
+  }, [requestNotificationPermission]);
+
+  const handleUpdateMemberPermissions = useCallback(async (memberId: string, permissions: any) => {
+    setIsUpdatingPermissions(true);
+    try {
+      await updateMemberPermissions(memberId, permissions);
+      setEditingMember(null);
+      setInviteFeedback({ type: 'success', message: 'Member permissions updated successfully!' });
+      setTimeout(() => setInviteFeedback(null), 5000);
+    } catch (error) {
+      console.error('Failed to update member permissions:', error);
+      setInviteFeedback({ type: 'error', message: 'Failed to update member permissions' });
+      setTimeout(() => setInviteFeedback(null), 5000);
+    } finally {
+      setIsUpdatingPermissions(false);
+    }
+  }, [updateMemberPermissions]);
 
   if (isLoading) {
     return (
@@ -302,21 +373,34 @@ export const SettingsScreen = () => {
                       preferences.invitedMembers.map((email) => (
                         <div key={email} className="flex items-center justify-between px-3 py-2 rounded-lg bg-gray-50 dark:bg-gray-700/30">
                           <span className="text-sm text-gray-800 dark:text-gray-200 truncate">{email}</span>
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveMember(email)}
-                            disabled={removingEmail === email}
-                            className={`text-xs px-2.5 py-1.5 rounded ${removingEmail === email ? 'bg-gray-400 cursor-wait' : 'bg-red-500 hover:bg-red-600'} text-white min-h-[32px] touch-manipulation`}
-                          >
-                            {removingEmail === email ? (
-                              <span className="inline-flex items-center gap-2">
-                                <LoadingSpinner size="small" className="text-white" />
-                                {t('settings.invite.removing')}
-                              </span>
-                              ) : (
-                              (t('settings.invite.remove_button') || 'Remove')
-                            )}
-                          </button>
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setEmailToUninvite(email);
+                                setShowUninviteConfirm(true);
+                              }}
+                              disabled={removingEmail === email}
+                              className={`text-xs px-2.5 py-1.5 rounded ${removingEmail === email ? 'bg-gray-400 cursor-wait' : 'bg-orange-500 hover:bg-orange-600'} text-white min-h-[32px] touch-manipulation`}
+                            >
+                              Uninvite
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveMember(email)}
+                              disabled={removingEmail === email}
+                              className={`text-xs px-2.5 py-1.5 rounded ${removingEmail === email ? 'bg-gray-400 cursor-wait' : 'bg-red-500 hover:bg-red-600'} text-white min-h-[32px] touch-manipulation`}
+                            >
+                              {removingEmail === email ? (
+                                <span className="inline-flex items-center gap-2">
+                                  <LoadingSpinner size="small" className="text-white" />
+                                  {t('settings.invite.removing')}
+                                </span>
+                                ) : (
+                                (t('settings.invite.remove_button') || 'Remove')
+                              )}
+                            </button>
+                          </div>
                         </div>
                       ))
                     ) : (
@@ -348,8 +432,40 @@ export const SettingsScreen = () => {
                     />
                   </button>
                 </div>
+
+                {/* Push Notifications Section */}
+                {isPushNotificationSupported && (
+                  <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <span className="text-sm sm:text-base text-gray-700 dark:text-gray-300">
+                          Push Notifications
+                        </span>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                          Get notified about new invitations and updates
+                        </p>
+                      </div>
+                      <button
+                        onClick={handleRequestNotificationPermission}
+                        className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg shadow-sm transition-colors duration-200 min-h-[44px] touch-manipulation mobile-button mobile-active text-sm"
+                      >
+                        Enable
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
+
+            {/* Team Management Section */}
+            {isOwner && (
+              <div className="bg-white dark:bg-gray-800 rounded-lg p-3 sm:p-4 shadow-sm mobile-card-hover mobile-transition">
+                <h2 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-3 sm:mb-4">
+                  Team Management
+                </h2>
+                <MemberManagement onEditMember={setEditingMember} />
+              </div>
+            )}
 
             <div className="bg-white dark:bg-gray-800 rounded-lg p-4 sm:p-6 shadow-sm mobile-card-hover mobile-transition">
               <div className="flex items-center justify-between mb-4 sm:mb-6">
@@ -548,6 +664,30 @@ export const SettingsScreen = () => {
         confirmButtonClass="bg-indigo-600 hover:bg-indigo-700"
         loading={isUpdating}
       />
+      
+      <ConfirmDialog
+        isOpen={showUninviteConfirm}
+        onClose={() => {
+          setShowUninviteConfirm(false);
+          setEmailToUninvite(null);
+        }}
+        onConfirm={handleUninviteConfirm}
+        title="Uninvite Member"
+        message={`Are you sure you want to cancel the invitation for ${emailToUninvite}? They will be notified about the cancellation.`}
+        confirmLabel="Uninvite"
+        confirmButtonClass="bg-red-600 hover:bg-red-700"
+        loading={removingEmail === emailToUninvite}
+      />
+      
+      {/* Permission Editor Modal */}
+      {editingMember && (
+        <PermissionEditor
+          member={editingMember}
+          onSave={handleUpdateMemberPermissions}
+          onCancel={() => setEditingMember(null)}
+          isUpdating={isUpdatingPermissions}
+        />
+      )}
     </>
   );
 };

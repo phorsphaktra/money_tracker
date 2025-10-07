@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useTaskContext } from './TaskContext';
 import { invitationService, Invitation } from '../services/invitationService';
+import { notificationService } from '../services/notificationService';
 import { useAuth } from './AuthContext';
 import { useTransactions } from './TransactionContext';
 import { isToday, isPast, addDays } from 'date-fns';
@@ -26,6 +27,11 @@ interface NotificationContextType {
   refreshInvites: () => Promise<void>;
   acceptInvite: (inviteId: string) => Promise<void>;
   rejectInvite: (inviteId: string) => Promise<void>;
+  // Push notifications
+  isPushNotificationSupported: boolean;
+  requestNotificationPermission: () => Promise<boolean>;
+  // Uninvite functionality
+  uninviteMember: (inviteeEmail: string) => Promise<void>;
 }
 
 const NotificationContext = createContext<NotificationContextType | null>(null);
@@ -45,6 +51,7 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
     upcoming: 0
   });
   const [pendingInvites, setPendingInvites] = useState<Invitation[]>([]);
+  const [isPushNotificationSupported, setIsPushNotificationSupported] = useState(false);
   const { user } = useAuth();
   const { switchActiveOwner } = useTransactions();
   // lazy-load saving context to avoid circular imports in some setups
@@ -90,6 +97,45 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
     }
   }, [tasks]);
 
+  const requestNotificationPermission = useCallback(async (): Promise<boolean> => {
+    if (!user?.uid) return false;
+    
+    try {
+      const token = await notificationService.requestPermission();
+      if (token) {
+        await notificationService.saveTokenToUser(user.uid, token);
+        setIsPushNotificationSupported(true);
+        return true;
+      }
+    } catch (error) {
+      console.error('Failed to request notification permission:', error);
+    }
+    return false;
+  }, [user?.uid]);
+
+  const uninviteMember = useCallback(async (inviteeEmail: string) => {
+    if (!user?.uid) throw new Error('User not authenticated');
+    
+    try {
+      await invitationService.uninviteMember(user.uid, inviteeEmail);
+      // Refresh invites after uninviting
+      await refreshInvites();
+    } catch (error) {
+      console.error('Failed to uninvite member:', error);
+      throw error;
+    }
+  }, [user?.uid]);
+
+  const refreshInvites = useCallback(async () => {
+    if (!user?.email) return;
+    try {
+      const invites = await invitationService.getPendingInvitationsForEmail(user.email);
+      setPendingInvites(invites);
+    } catch (e) {
+      console.error('Failed to load invites', e);
+    }
+  }, [user?.email]);
+
   const value: NotificationContextType = {
     notificationCounts,
     taskGroups: {
@@ -100,40 +146,25 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
     totalNotifications: notificationCounts.overdue + notificationCounts.dueToday + notificationCounts.upcoming,
     refreshNotifications: calculateGroups,
     isLoading,
-    error
-    , pendingInvites,
-    refreshInvites: async () => {
-      if (!user?.email) return;
-      try {
-        const invites = await invitationService.getPendingInvitationsForEmail(user.email);
-        setPendingInvites(invites);
-      } catch (e) {
-        console.error('Failed to load invites', e);
-      }
-    },
+    error,
+    pendingInvites,
+    refreshInvites,
     acceptInvite: async (inviteId: string) => {
       try {
-        await invitationService.acceptInvitation(inviteId);
+        const acceptedInvitation = await invitationService.acceptInvitation(inviteId);
         // refresh list and notifications
-        if (user && user.email) {
-          const invites = await invitationService.getPendingInvitationsForEmail(user.email);
-          setPendingInvites(invites);
-        }
-        // load the accepted invitation to find ownerId and switch active owner for transactions and savings
-        if (user && user.email) {
-          const accepted = await invitationService.getPendingInvitationsForEmail(user.email);
-          const justAccepted = accepted.find(inv => inv.id === inviteId) || null;
-          if (justAccepted && justAccepted.ownerId) {
-            try {
-              await switchActiveOwner(justAccepted.ownerId);
-            } catch (e) {
-              console.error('Failed to switch to accepted owner (transactions)', e);
-            }
-            try {
-              await switchSavingOwner(justAccepted.ownerId);
-            } catch (e) {
-              console.error('Failed to switch to accepted owner (savings)', e);
-            }
+        await refreshInvites();
+        // Use returned ownerId to switch active owner immediately
+        if (acceptedInvitation && acceptedInvitation.ownerId) {
+          try {
+            await switchActiveOwner(acceptedInvitation.ownerId);
+          } catch (e) {
+            console.error('Failed to switch to accepted owner (transactions)', e);
+          }
+          try {
+            await switchSavingOwner(acceptedInvitation.ownerId);
+          } catch (e) {
+            console.error('Failed to switch to accepted owner (savings)', e);
           }
         }
       } catch (e) {
@@ -144,20 +175,29 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
     rejectInvite: async (inviteId: string) => {
       try {
         await invitationService.rejectInvitation(inviteId);
-        if (user?.email) {
-          const invites = await invitationService.getPendingInvitationsForEmail(user.email);
-          setPendingInvites(invites);
-        }
+        await refreshInvites();
       } catch (e) {
         console.error('Failed to reject invite', e);
         throw e;
       }
-    }
+    },
+    isPushNotificationSupported,
+    requestNotificationPermission,
+    uninviteMember
   };
 
   useEffect(() => {
     calculateGroups();
   }, [calculateGroups]);
+
+  useEffect(() => {
+    // Check if push notifications are supported
+    setIsPushNotificationSupported(
+      'Notification' in window && 
+      'serviceWorker' in navigator && 
+      'PushManager' in window
+    );
+  }, []);
 
   useEffect(() => {
     // load invites on auth change
@@ -174,6 +214,30 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
       }
     })();
   }, [user?.email]);
+
+  useEffect(() => {
+    // Set up foreground message listener
+    const unsubscribe = notificationService.onForegroundMessage((payload) => {
+      console.log('Foreground message received:', payload);
+      
+      // Handle different notification types
+      if (payload.data?.type === 'invitation') {
+        // Refresh invites when new invitation is received
+        refreshInvites();
+      }
+      
+      // Show browser notification if permission is granted
+      if (Notification.permission === 'granted') {
+        new Notification(payload.notification?.title || 'Money Tracker', {
+          body: payload.notification?.body || 'You have a new notification',
+          icon: '/icon-192.png',
+          tag: payload.data?.type || 'default'
+        });
+      }
+    });
+
+    return unsubscribe;
+  }, [refreshInvites]);
 
   return (
     <NotificationContext.Provider value={value}>

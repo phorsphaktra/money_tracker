@@ -11,6 +11,8 @@ import { SettingsProvider } from './contexts/SettingsContext';
 import { router } from './routes';
 import { SavingProvider } from './contexts/SavingContext';
 import { AnalyticsProvider } from './contexts/AnalyticsContext';
+import { MemberProvider } from './contexts/MemberContext';
+import { NotificationHandler } from './components/notification/NotificationHandler';
 
 export default function App() {
   return (
@@ -24,7 +26,11 @@ export default function App() {
                   <DarkModeProvider>
                     <TaskProvider>
                       <NotificationProvider>
-                        <RouterProvider router={router} />
+                        <MemberProvider>
+                          <NotificationHandler>
+                            <RouterProvider router={router} />
+                          </NotificationHandler>
+                        </MemberProvider>
                       </NotificationProvider>
                     </TaskProvider>
                   </DarkModeProvider>

@@ -53,6 +53,18 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    // Member Groups - Allow owners and invited members to access their group
+    match /memberGroups/{ownerId} {
+      allow read: if request.auth != null && (
+        request.auth.uid == ownerId || 
+        (resource.data.memberIds != null && resource.data.memberIds.hasAny([request.auth.uid])) ||
+        get(/databases/$(database)/documents/users/$(ownerId)).data.preferences.invitedMembers.hasAny([request.auth.token.email])
+      );
+      allow create: if request.auth != null && request.auth.uid == ownerId;
+      allow update: if request.auth != null && request.auth.uid == ownerId;
+      allow delete: if false; // Prevent deletion of member groups
+    }
+
     function isSignedIn() {
       return request.auth != null;
     }
