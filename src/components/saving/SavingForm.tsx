@@ -66,7 +66,7 @@ export const SavingForm: React.FC<SavingFormProps> = ({
   const [amount, setAmount] = useState(initialAmount);
   const [description, setDescription] = useState(initialDescription);
   const [selectedDate, setSelectedDate] = useState(initialDate);
-  const [selectedCategory, setSelectedCategory] = useState<string>('');
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [transactionType, setTransactionType] = useState<'credit' | 'debit'>('credit');
   const [formError, setFormError] = useState<string | null>(null);
   const amountRef = useRef<HTMLInputElement | null>(null);
@@ -94,6 +94,20 @@ export const SavingForm: React.FC<SavingFormProps> = ({
     }
   };
 
+  const toggleCategory = (categoryId: string) => {
+    setSelectedCategories((prev) => {
+      if (prev.includes(categoryId)) {
+        const next = prev.filter((id) => id !== categoryId);
+        return next.length === 0 ? ['__auto__'] : next;
+      }
+      return [...prev.filter((id) => id !== '__auto__'), categoryId];
+    });
+  };
+
+  const toggleAutoAllocate = () => {
+    setSelectedCategories(['__auto__']);
+  };
+
   const handleFormSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (isSubmitting) return;
@@ -106,13 +120,29 @@ export const SavingForm: React.FC<SavingFormProps> = ({
 
     try {
       const finalAmount = parseFloat(amount);
-      await onSubmit({
-        amount: Math.abs(finalAmount),
-        description: description.trim(),
-        date: selectedDate.toISOString(),
-        categoryId: selectedCategory || undefined,
-        type: transactionType
-      });
+      const effectiveCategories = selectedCategories.filter((id) => id !== '__auto__');
+
+      if (effectiveCategories.length === 0) {
+        // Auto allocate across defaults
+        await onSubmit({
+          amount: Math.abs(finalAmount),
+          description: description.trim(),
+          date: selectedDate.toISOString(),
+          categoryId: undefined,
+          type: transactionType
+        });
+      } else {
+        const splitAmount = Math.abs(finalAmount) / effectiveCategories.length;
+        for (const categoryId of effectiveCategories) {
+          await onSubmit({
+            amount: splitAmount,
+            description: description.trim(),
+            date: selectedDate.toISOString(),
+            categoryId,
+            type: transactionType
+          });
+        }
+      }
       // the parent screen will show success flash / reset; clear any local error
       setFormError(null);
     } catch (error) {
@@ -213,29 +243,63 @@ export const SavingForm: React.FC<SavingFormProps> = ({
           </div>
         </div>
 
-        {/* Category Field */}
-        <div className="space-y-1 sm:space-y-1">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-            {t('savings.category')}
-          </label>
-          <select
-            value={selectedCategory}
-            onChange={(e) => setSelectedCategory(e.target.value)}
-            className="w-full px-2 py-1.5 sm:py-1.5 rounded-xl border border-gray-300 
-              focus:ring-2 focus:ring-indigo-500 focus:border-transparent
-              dark:bg-gray-800 dark:border-gray-700 transition-all duration-200
-              hover:border-indigo-300 min-h-[36px] touch-manipulation"
-          >
-            <option value="">{t('savings.auto_allocate')}</option>
-            {SAVINGS_CATEGORIES.map((category) => (
-              <option key={category.id} value={category.id}>
-                {category.label} ({category.percentage}%)
-              </option>
-            ))}
-          </select>
-          {!selectedCategory && (
-            <p className="text-sm text-red-500 dark:text-red-400 mt-1">
+        {/* Category Field (multi-select with radio/checkbox) */}
+        <div className="space-y-2 sm:space-y-2">
+          <div className="flex items-center justify-between">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              {t('savings.category')}
+            </label>
+            <button
+              type="button"
+              onClick={toggleAutoAllocate}
+              className="text-xs text-indigo-600 hover:text-indigo-700 dark:text-indigo-400"
+            >
+              {t('savings.auto_allocate')}
+            </button>
+          </div>
+
+          <div className="space-y-2 rounded-xl border border-gray-200 dark:border-gray-700 p-3">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="radio"
+                name="auto-allocate"
+                checked={selectedCategories.includes('__auto__') || selectedCategories.length === 0}
+                onChange={toggleAutoAllocate}
+                className="h-4 w-4 text-indigo-600 border-gray-300 focus:ring-indigo-500"
+              />
+              <span className="text-sm text-gray-700 dark:text-gray-300">{t('savings.auto_allocate')}</span>
+            </label>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {SAVINGS_CATEGORIES.map((category) => {
+                const checked = selectedCategories.includes(category.id);
+                return (
+                  <label
+                    key={category.id}
+                    className="flex items-center gap-2 cursor-pointer rounded-lg px-2 py-1.5 hover:bg-gray-50 dark:hover:bg-gray-800"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      onChange={() => toggleCategory(category.id)}
+                      className="h-4 w-4 text-indigo-600 border-gray-300 focus:ring-indigo-500"
+                    />
+                    <span className="text-sm text-gray-700 dark:text-gray-200 truncate">
+                      {category.label} ({category.percentage}%)
+                    </span>
+                  </label>
+                );
+              })}
+            </div>
+          </div>
+
+          {selectedCategories.includes('__auto__') || selectedCategories.length === 0 ? (
+            <p className="text-sm text-gray-500 dark:text-gray-400">
               {t('savings.auto_allocate_hint')}
+            </p>
+          ) : (
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              {t('savings.manual_allocate_hint', 'Amount will be split evenly across selected categories.')}
             </p>
           )}
         </div>

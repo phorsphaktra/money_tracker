@@ -362,7 +362,8 @@
     "add_debit": "Add Debit",
     "add_credit": "Add Credit",
     "update_debit": "Update Debit",
-    "update_credit": "Update Credit"
+    "update_credit": "Update Credit",
+    "type": "Type"
   },
   "currencies": {
     "USD": "USD",
