@@ -1,13 +1,31 @@
 import { createContext, useContext, useEffect, useState, ReactNode, useCallback, useRef } from 'react';
-import { User, getRedirectResult } from 'firebase/auth';
-import { auth } from '../config/firebase';
 import { authService } from '../services/authService';
+import { supabase } from '../config/supabase';
+
+// Application user shape compatible with previous Firebase usage
+export interface AppUser {
+    uid: string;
+    email?: string | null;
+    displayName?: string | null;
+    photoURL?: string | null;
+    user_metadata?: any;
+}
+
+function mapSupabaseUser(su: any): AppUser {
+    return {
+        uid: su.id,
+        email: su.email ?? null,
+        displayName: su.user_metadata?.full_name ?? su.user_metadata?.name ?? null,
+        photoURL: su.user_metadata?.avatar_url ?? null,
+        user_metadata: su.user_metadata ?? {}
+    } as AppUser;
+}
 
 /**
  * Interface representing the authentication state
  */
 interface AuthState {
-    user: User | null;
+    user: any | null; // using `any` for now to preserve compatibility with existing code
     loading: boolean;
     isAuthenticated: boolean;
     error: string | null;
@@ -17,9 +35,9 @@ interface AuthState {
  * Interface extending AuthState with authentication methods
  */
 interface AuthContextType extends AuthState {
-    login: (email: string, password: string) => Promise<User | null>;
-    register: (email: string, password: string, displayName: string) => Promise<User | null>;
-    loginWithGoogle: () => Promise<User | null>;
+    login: (email: string, password: string) => Promise<any | null>;
+    register: (email: string, password: string, displayName: string) => Promise<any | null>;
+    loginWithGoogle: () => Promise<any | null>;
     logout: () => Promise<void>;
     clearError: () => void;
 }
@@ -115,75 +133,74 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
      * Forces logout if token refresh fails
      */
     const refreshToken = useCallback(async () => {
-        if (state.user) {
-            try {
-                const currentUser = auth.currentUser;
-                if (currentUser) {
-                    await currentUser.getIdToken(true);
-                }
-            } catch (error) {
-                console.error('Token refresh failed:', error);
-                // Force logout if token refresh fails
+        // Supabase handles token refresh automatically in the client SDK.
+        // We'll check user session validity and force logout on error.
+        try {
+            const { data, error } = await supabase.auth.getSession();
+            if (error || !data.session) {
                 await logout();
             }
+        } catch (error) {
+            console.error('Token refresh failed:', error);
+            await logout();
         }
-    }, [state.user, logout]);
+    }, [logout]);
 
     /**
      * Firebase auth state listener
      * Updates user state and handles token refresh
      */
     useEffect(() => {
-        // Process redirect result (if any) once on mount so redirect-based
-        // Google sign-in can create the user profile server-side.
-        (async () => {
-            try {
-                const redirectResult = await getRedirectResult(auth);
-                if (redirectResult && redirectResult.user) {
-                    // Ensure profile exists for redirected user
-                    await authService.handleGoogleLogin(redirectResult.user);
+        // Supabase OAuth redirect handling is automatic on page load; we also
+        // listen to auth state changes via onAuthStateChange.
+        const setup = async () => {
+            // If a session already exists, set the user
+                const { data } = await supabase.auth.getSession();
+                const supaUser = data.session?.user ?? null;
+                const mappedUser = supaUser ? mapSupabaseUser(supaUser) : null;
+                setState(prev => ({ ...prev, user: mappedUser, isAuthenticated: !!mappedUser, loading: false }));
+                if (supaUser) {
+                    try {
+                        await authService.updateLastLogin(supaUser.id);
+                        refreshIntervalRef.current = window.setInterval(refreshToken, TOKEN_REFRESH_INTERVAL) as unknown as number;
+                    } catch (error) {
+                        console.error('Failed to update last login:', error);
+                    }
                 }
-            } catch (err) {
-                // If there was no redirect result this will often throw - ignore
-                // non-fatal errors but surface others.
-                if ((err as any)?.code && !(String(err).includes('no-auth-event')) ) {
-                    console.error('Redirect sign-in result handling failed', err);
-                }
-            }
-        })();
+        };
+        setup();
 
-        const unsubscribe = auth.onAuthStateChanged(async (user) => {
-            setState(prev => ({
-                ...prev,
-                user,
-                isAuthenticated: !!user,
-                loading: false
-            }));
-
+        const { data: listener } = supabase.auth.onAuthStateChange(async (_event, session) => {
+            const supaUser = session?.user ?? null;
+            const mappedUser = supaUser ? mapSupabaseUser(supaUser) : null;
+            setState(prev => ({ ...prev, user: mappedUser, isAuthenticated: !!mappedUser, loading: false }));
             // clear any existing interval whenever auth state changes
             if (refreshIntervalRef.current) {
                 clearInterval(refreshIntervalRef.current);
                 refreshIntervalRef.current = null;
             }
-
-            if (user) {
+            if (supaUser) {
                 try {
-                    await authService.updateLastLogin(user.uid);
-                    // Set up token refresh interval
+                    await authService.updateLastLogin(supaUser.id);
                     refreshIntervalRef.current = window.setInterval(refreshToken, TOKEN_REFRESH_INTERVAL) as unknown as number;
                 } catch (error) {
-                    if (error instanceof Error && error.message.includes('auth/id-token-expired')) {
-                        await logout();
-                        handleError(new Error('Your session has expired. Please login again.'));
-                    } else {
-                        console.error('Failed to update last login:', error);
-                    }
+                    console.error('Failed to update last login:', error);
                 }
             }
         });
 
+    function mapSupabaseUser(su: any): AppUser {
+        return {
+            uid: su.id,
+            email: su.email ?? null,
+            displayName: su.user_metadata?.full_name ?? su.user_metadata?.name ?? null,
+            photoURL: su.user_metadata?.avatar_url ?? null,
+            user_metadata: su.user_metadata ?? {}
+        } as AppUser;
+    }
+
         return () => {
-            unsubscribe();
+            listener.subscription.unsubscribe();
             if (refreshIntervalRef.current) {
                 clearInterval(refreshIntervalRef.current);
                 refreshIntervalRef.current = null;
@@ -205,8 +222,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         try {
             setState(prev => ({ ...prev, loading: true }));
             const result = await authService.loginWithEmail(email, password);
+            // Supabase returns session data; extract and map user if present
             clearError();
-            return result ? (result as any).user ?? null : null;
+            const supaUser = (result as any)?.data?.user ?? null;
+            return supaUser ? mapSupabaseUser(supaUser) : null;
         } catch (error) {
             handleError(error as Error);
             return null;
@@ -241,10 +260,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const register = useCallback(async (email: string, password: string, displayName: string) => {
         try {
             setState(prev => ({ ...prev, loading: true }));
-            const user = await authService.registerWithProfile(email, password, displayName);
+            const result = await authService.registerWithProfile(email, password, displayName);
             resetActivityTimer();
             clearError();
-            return user ?? null;
+            const supaUser = (result as any)?.data?.user ?? null;
+            return supaUser ? mapSupabaseUser(supaUser) : null;
         } catch (error) {
             handleError(error as Error);
             return null;
@@ -262,10 +282,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const loginWithGoogle = useCallback(async () => {
         try {
             setState(prev => ({ ...prev, loading: true }));
-            const user = await authService.loginWithGoogle();
+            const result = await authService.loginWithGoogle();
             resetActivityTimer();
             clearError();
-            return user ?? null;
+            const supaUser = (result as any)?.data?.user ?? null;
+            return supaUser ? mapSupabaseUser(supaUser) : null;
         } catch (error) {
             handleError(error as Error);
             return null;

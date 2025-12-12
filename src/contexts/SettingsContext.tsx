@@ -1,8 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useAuth } from './AuthContext';
 import { authService } from '../services/authService';
-import { doc, setDoc, onSnapshot, collection, query, where, updateDoc, arrayRemove } from 'firebase/firestore';
-import { db } from '../config/firebase';
+import { supabase } from '../config/supabase';
 
 interface RateHistory {
   rate: number;
@@ -74,42 +73,86 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     // immediately in the UI without requiring a reload.
     let unsubscribe: (() => void) | undefined;
     if (user) {
-      const userRef = doc(db, 'users', user.uid);
-      unsubscribe = onSnapshot(userRef, (snap) => {
-        if (!snap.exists()) {
-          setIsLoading(false);
-          return;
-        }
-        const userProfile = snap.data() as any;
-        const prefs = userProfile.preferences || {};
-        setPreferences({
-          currency: prefs.currency ?? 'USD',
-          language: prefs.language ?? 'en',
-          darkMode: prefs.darkMode ?? false,
-          invitedMembers: prefs.invitedMembers ?? [],
-          allowMemberEditAllTransactions: prefs.allowMemberEditAllTransactions ?? false
-        });
-
-        // Validate and set exchange rates
-        const storedRates = prefs.exchangeRates;
-        if (storedRates?.KHR_USD && storedRates.KHR_USD > 0) {
-          setExchangeRates({
-            ...storedRates,
-            source: 'user',
-            history: storedRates.history || [
-              {
-                rate: storedRates.KHR_USD,
-                date: storedRates.lastUpdated || new Date().toISOString(),
-                updatedBy: 'System Import'
-              }
-            ]
+      // Fetch initial profile
+      (async () => {
+        try {
+          const { data, error } = await supabase.from('users').select('*').eq('uid', (user as any).id).limit(1).maybeSingle();
+          if (error) {
+            console.error('Failed to fetch user profile:', error);
+            setIsLoading(false);
+            return;
+          }
+          if (!data) {
+            setIsLoading(false);
+            return;
+          }
+          const prefs = data.preferences || {};
+          setPreferences({
+            currency: prefs.currency ?? 'USD',
+            language: prefs.language ?? 'en',
+            darkMode: prefs.darkMode ?? false,
+            invitedMembers: prefs.invitedMembers ?? [],
+            allowMemberEditAllTransactions: prefs.allowMemberEditAllTransactions ?? false
           });
+
+          const storedRates = prefs.exchangeRates;
+          if (storedRates?.KHR_USD && storedRates.KHR_USD > 0) {
+            setExchangeRates({
+              ...storedRates,
+              source: 'user',
+              history: storedRates.history || [
+                {
+                  rate: storedRates.KHR_USD,
+                  date: storedRates.lastUpdated || new Date().toISOString(),
+                  updatedBy: 'System Import'
+                }
+              ]
+            });
+          }
+        } catch (err) {
+          console.error('Failed to subscribe to user preferences:', err);
+        } finally {
+          setIsLoading(false);
         }
-        setIsLoading(false);
-      }, (err) => {
-        console.error('Failed to subscribe to user preferences:', err);
-        setIsLoading(false);
-      });
+      })();
+
+      // Set up realtime subscription for the user's row
+      const channel = supabase.channel(`public:users:uid=eq.${(user as any).id}`)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'users', filter: `uid=eq.${(user as any).id}` }, (payload) => {
+          const newData = payload.new as any;
+          const prefs = newData?.preferences || {};
+          setPreferences({
+            currency: prefs.currency ?? 'USD',
+            language: prefs.language ?? 'en',
+            darkMode: prefs.darkMode ?? false,
+            invitedMembers: prefs.invitedMembers ?? [],
+            allowMemberEditAllTransactions: prefs.allowMemberEditAllTransactions ?? false
+          });
+
+          const storedRates = prefs.exchangeRates;
+          if (storedRates?.KHR_USD && storedRates.KHR_USD > 0) {
+            setExchangeRates({
+              ...storedRates,
+              source: 'user',
+              history: storedRates.history || [
+                {
+                  rate: storedRates.KHR_USD,
+                  date: storedRates.lastUpdated || new Date().toISOString(),
+                  updatedBy: 'System Import'
+                }
+              ]
+            });
+          }
+        })
+        .subscribe((status) => {
+          if (status === 'SUBSCRIBED') {
+            // subscribed
+          }
+        });
+      unsubscribe = () => {
+        // unsubscribe channel
+        try { channel.unsubscribe(); } catch (e) { /* ignore */ }
+      };
     } else {
       setIsLoading(false);
     }
@@ -125,33 +168,35 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   useEffect(() => {
     if (!user) return;
 
-    const invitationsRef = collection(db, 'invitations');
-    const q = query(invitationsRef, where('ownerId', '==', user.uid), where('status', '==', 'rejected'));
-    const unsubInv = onSnapshot(q, async (snap) => {
-      if (snap.empty) return;
-      const ownerRef = doc(db, 'users', user.uid);
-      for (const d of snap.docs) {
-        try {
-          const data = d.data() as any;
-          const email = data.inviteeEmail;
+    // Listen for invitations owned by the user that move to 'rejected' status
+    const channel = supabase.channel(`public:invitations:ownerId=eq.${(user as any).id}`)
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'invitations', filter: `ownerId=eq.${(user as any).id}` }, async (payload) => {
+        const newRow = payload.new as any;
+        if (newRow?.status === 'rejected') {
+          const email = newRow.invitee_email || newRow.inviteeEmail;
           if (email) {
-            await updateDoc(ownerRef, {
-              'preferences.invitedMembers': arrayRemove(email)
-            });
+            try {
+              const profile = await authService.getUserProfile((user as any).id);
+              const currentPrefs = profile?.preferences || {};
+              const invited = currentPrefs.invitedMembers || [];
+              const updatedInvited = invited.filter((e: string) => e !== email);
+              const newPrefs = { ...currentPrefs, invitedMembers: updatedInvited };
+              await authService.updateUserPreferences((user as any).id, newPrefs);
+            } catch (err) {
+              console.error('Failed to remove rejected invitee from preferences:', err);
+            }
           }
-        } catch (err) {
-          console.error('Failed to remove rejected invitee from preferences:', err);
         }
-      }
-    }, (err) => console.error('Invitation listener error:', err));
+      })
+      .subscribe();
 
-    return () => unsubInv();
+    return () => { try { channel.unsubscribe(); } catch (e) { /* ignore */ } };
   }, [user]);
 
   const updatePreferences = async (newPreferences: Partial<typeof preferences>) => {
     if (user) {
       const updatedPreferences = { ...preferences, ...newPreferences };
-      await authService.updateUserPreferences(user.uid, updatedPreferences);
+      await authService.updateUserPreferences((user as any).id, updatedPreferences);
       setPreferences(updatedPreferences);
     }
   };
@@ -170,10 +215,11 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       const averageRate = [...recentRates, rate]
         .reduce((a, b) => a + b, 0) / (recentRates.length + 1);
 
+      const displayName = (user as any).user_metadata?.full_name || (user as any).user_metadata?.name || (user as any).email;
       const newHistory: RateHistory = {
         rate,
         date: new Date().toISOString(),
-        updatedBy: user.displayName || user.email || 'Unknown user',
+        updatedBy: displayName || 'Unknown user',
         changePercentage
       };
 
@@ -185,11 +231,11 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         averageRate
       };
 
-      await setDoc(
-        doc(db, 'users', user.uid),
-        { preferences: { exchangeRates: newRates } },
-        { merge: true }
-      );
+      // Merge with existing preferences and update via authService
+      const profile = await authService.getUserProfile((user as any).id);
+      const currentPrefs = profile?.preferences || {};
+      const mergedPrefs = { ...currentPrefs, exchangeRates: newRates };
+      await authService.updateUserPreferences((user as any).id, mergedPrefs);
       setExchangeRates(newRates);
     } catch (error) {
       console.error('Error updating exchange rate:', error);
