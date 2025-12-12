@@ -25,7 +25,6 @@ import { LoadingSpinner } from '../components/shared/LoadingSpinner';
 import { useAnalytics } from '../contexts/AnalyticsContext';
 import { CardGroup } from '../components/analytics/CardGroup';
 import { SummaryCards } from '../components/analytics/SummaryCards';
-import { MonthlyTrendsChart } from '../components/analytics/MonthlyTrendsChart';
 import { CategoryBreakdownChart } from '../components/analytics/CategoryBreakdownChart';
 import { SavingsTypeMetricsCard } from '../components/analytics/SavingsTypeMetricsCard';
 
@@ -438,7 +437,7 @@ const FloatingActionButton = ({ onAddTransaction, onAddSaving }: {
 export const DashboardScreen = () => {
   const { t } = useTranslation();
   const { transactions, loadTransactions } = useTransactions();
-  const { state: savingState, loadSavings } = useSaving();
+  const { state: savingState, loadSavings, addSaving } = useSaving();
   const { tasks, loading: tasksLoading } = useTaskContext();
   const [showTransactionModal, setShowTransactionModal] = useState(false);
   const [showSavingForm, setShowSavingForm] = useState(false);
@@ -706,8 +705,15 @@ export const DashboardScreen = () => {
           <div className="fixed inset-0 bg-black/30 mobile-modal-backdrop z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto safe-area-inset-top safe-area-inset-bottom">
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-[95vw] sm:max-w-md w-full p-3 sm:p-6 mx-auto">
               <SavingForm
-                onSubmit={async () => {
-                    await loadSavings();
+                onSubmit={async (savingData) => {
+                  await addSaving({
+                    amount: savingData.amount,
+                    description: savingData.description,
+                    date: savingData.date,
+                    categoryId: savingData.categoryId,
+                    type: savingData.type
+                  });
+                  await loadSavings();
                   setShowSavingForm(false);
                 }}
                 onCancel={() => setShowSavingForm(false)}
