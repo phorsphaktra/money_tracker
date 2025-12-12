@@ -601,7 +601,7 @@ export const DashboardScreen = () => {
         </CardGroup>
 
         {/* Monthly Trends Chart */}
-        <CardGroup
+        {/* <CardGroup
           title={t('dashboard.monthly_trends')}
           icon={ChartPieIcon}
           defaultExpanded={true}
@@ -612,7 +612,7 @@ export const DashboardScreen = () => {
               <MonthlyTrendsChart data={monthlyData} />
             </div>
           </div>
-        </CardGroup>
+        </CardGroup> */}
 
         {/* Category Breakdown Charts */}
         <CardGroup
