@@ -1,5 +1,5 @@
 import { db } from '../config/firebase';
-import { addDoc, collection, doc, getDocs, limit, query, serverTimestamp, updateDoc, where } from 'firebase/firestore';
+import { addDoc, collection, doc, getDocs, getDoc, limit, query, serverTimestamp, updateDoc, where, arrayRemove } from 'firebase/firestore';
 
 export interface Invitation {
   id?: string;
@@ -7,7 +7,7 @@ export interface Invitation {
   ownerEmail?: string;
   ownerName?: string;
   inviteeEmail: string;
-  status: 'pending' | 'accepted';
+  status: 'pending' | 'accepted' | 'rejected';
   createdAt?: any;
   acceptedAt?: any;
 }
@@ -46,10 +46,27 @@ export const invitationService = {
 
   async rejectInvitation(invitationId: string) {
     const ref = doc(db, COLLECTION, invitationId);
+    // Load the invitation to get ownerId and inviteeEmail so we can update owner's invitedMembers
+    const snap = await getDoc(ref);
+    const invitation = snap.exists() ? (snap.data() as Invitation) : null;
+
     await updateDoc(ref, {
       status: 'rejected',
       acceptedAt: null
     });
+
+    // If we have the ownerId and inviteeEmail, remove the invitee from the owner's invitedMembers
+    if (invitation && invitation.ownerId && invitation.inviteeEmail) {
+      try {
+        const ownerRef = doc(db, 'users', invitation.ownerId);
+        await updateDoc(ownerRef, {
+          'preferences.invitedMembers': arrayRemove(invitation.inviteeEmail)
+        });
+      } catch (e) {
+        // best-effort: log but don't fail the rejection
+        console.warn('Failed to remove invited member from owner preferences', e);
+      }
+    }
   },
 
   async sendInviteEmail(invite: Invitation) {
