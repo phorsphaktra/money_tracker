@@ -17,7 +17,7 @@ interface Profile {
 export const ProfileSwitcher = () => {
   const { user } = useAuth();
   const { activeOwnerId: txActiveOwnerId, switchActiveOwner: switchTxOwner } = useTransactions();
-  const { activeOwnerId: savingActiveOwnerId, switchActiveOwner: switchSavingOwner } = useSaving();
+  const { switchActiveOwner: switchSavingOwner } = useSaving();
   const [isOpen, setIsOpen] = useState(false);
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(true);
