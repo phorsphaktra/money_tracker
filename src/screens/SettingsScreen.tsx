@@ -6,7 +6,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { LoadingSpinner } from '../components/shared/LoadingSpinner';
 import { useAuth } from '../contexts/AuthContext';
-import { invitationService } from '../services/invitationService';
+import { invitationService, Invitation } from '../services/invitationService';
 
 const getRateChange = (currentRate: number, previousRate: number) => {
   const change = ((currentRate - previousRate) / previousRate) * 100;
@@ -33,11 +33,36 @@ export const SettingsScreen = () => {
   const [isInviting, setIsInviting] = useState(false);
   const [inviteFeedback, setInviteFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [removingEmail, setRemovingEmail] = useState<string | null>(null);
+  const [sentInvitations, setSentInvitations] = useState<Invitation[]>([]);
+  const [loadingInvitations, setLoadingInvitations] = useState(false);
+  const [cancellingInviteId, setCancellingInviteId] = useState<string | null>(null);
 
   // Update khrRate when exchangeRates changes
   useEffect(() => {
     setKhrRate(exchangeRates.KHR_USD.toString());
   }, [exchangeRates.KHR_USD]);
+
+  // Load sent invitations
+  useEffect(() => {
+    if (!user) {
+      setSentInvitations([]);
+      return;
+    }
+
+    const loadInvitations = async () => {
+      setLoadingInvitations(true);
+      try {
+        const invites = await invitationService.getInvitationsByOwner(user.uid);
+        setSentInvitations(invites);
+      } catch (err) {
+        console.error('Failed to load invitations:', err);
+      } finally {
+        setLoadingInvitations(false);
+      }
+    };
+
+    loadInvitations();
+  }, [user]);
 
   const handleCurrencyChange = async (value: string) => {
     await updatePreferences({ currency: value });
@@ -108,6 +133,15 @@ export const SettingsScreen = () => {
         return;
       }
 
+      // Check if there's already a pending invitation
+      if (user) {
+        const existingPending = await invitationService.getPendingInvitationByOwnerAndEmail(user.uid, emailLower);
+        if (existingPending) {
+          setInviteFeedback({ type: 'error', message: t('settings.invite.already_pending', { email: emailLower }) || `Invitation to ${emailLower} is already pending` });
+          return;
+        }
+      }
+
       const next = [emailLower, ...existing];
       await updatePreferences({ invitedMembers: next });
 
@@ -118,6 +152,9 @@ export const SettingsScreen = () => {
           ownerName: user.displayName || undefined,
           inviteeEmail: emailLower,
         });
+        // Refresh invitations list
+        const invites = await invitationService.getInvitationsByOwner(user.uid);
+        setSentInvitations(invites);
       }
 
       setNewMemberEmail('');
@@ -143,6 +180,14 @@ export const SettingsScreen = () => {
     setInviteFeedback(null);
 
     try {
+      // Cancel any pending invitations for this email
+      if (user) {
+        await invitationService.cancelInvitationsByEmail(user.uid, emailLower);
+        // Refresh invitations list
+        const invites = await invitationService.getInvitationsByOwner(user.uid);
+        setSentInvitations(invites);
+      }
+
       const next = existing.filter(e => e !== emailLower);
       await updatePreferences({ invitedMembers: next });
 
@@ -156,7 +201,47 @@ export const SettingsScreen = () => {
     } finally {
       setRemovingEmail(null);
     }
-  }, [preferences.invitedMembers, updatePreferences, t]);
+  }, [preferences.invitedMembers, updatePreferences, user, t]);
+
+  const handleCancelInvitation = useCallback(async (invitationId: string) => {
+    if (!user) return;
+
+    setCancellingInviteId(invitationId);
+    setInviteFeedback(null);
+
+    try {
+      await invitationService.cancelInvitation(invitationId, user.uid);
+      // Refresh invitations list
+      const invites = await invitationService.getInvitationsByOwner(user.uid);
+      setSentInvitations(invites);
+
+      // Also remove from invitedMembers if still there
+      const invitation = sentInvitations.find(inv => inv.id === invitationId);
+      if (invitation && invitation.inviteeEmail) {
+        const existing = preferences.invitedMembers || [];
+        const emailLower = invitation.inviteeEmail.toLowerCase();
+        if (existing.includes(emailLower)) {
+          const next = existing.filter(e => e !== emailLower);
+          await updatePreferences({ invitedMembers: next });
+        }
+      }
+
+      setInviteFeedback({ type: 'success', message: t('settings.invite.cancelled') || 'Invitation cancelled' });
+      setTimeout(() => setInviteFeedback(null), 3000);
+    } catch (err) {
+      console.error('Failed to cancel invitation:', err);
+      setInviteFeedback({ type: 'error', message: (err instanceof Error ? err.message : t('settings.invite.cancel_failed') || 'Failed to cancel invitation') });
+    } finally {
+      setCancellingInviteId(null);
+    }
+  }, [user, sentInvitations, preferences.invitedMembers, updatePreferences, t]);
+
+  // Helper to get invitation status for an email
+  const getInvitationStatus = useCallback((email: string): Invitation['status'] | null => {
+    const emailLower = email.toLowerCase();
+    const invitation = sentInvitations.find(inv => inv.inviteeEmail.toLowerCase() === emailLower);
+    return invitation ? invitation.status : null;
+  }, [sentInvitations]);
 
   if (isLoading) {
     return (
@@ -297,33 +382,79 @@ export const SettingsScreen = () => {
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Invited Members
                   </label>
+                  {loadingInvitations && preferences.invitedMembers.length > 0 && (
+                    <div className="mb-2 text-xs text-gray-500 dark:text-gray-400">Loading invitation statuses...</div>
+                  )}
                   <div className="space-y-2">
                     {(preferences.invitedMembers && preferences.invitedMembers.length > 0) ? (
-                      preferences.invitedMembers.map((email) => (
-                        <div key={email} className="flex items-center justify-between px-3 py-2 rounded-lg bg-gray-50 dark:bg-gray-700/30">
-                          <span className="text-sm text-gray-800 dark:text-gray-200 truncate">{email}</span>
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveMember(email)}
-                            disabled={removingEmail === email}
-                            className={`text-xs px-2.5 py-1.5 rounded ${removingEmail === email ? 'bg-gray-400 cursor-wait' : 'bg-red-500 hover:bg-red-600'} text-white min-h-[32px] touch-manipulation`}
-                          >
-                            {removingEmail === email ? (
-                              <span className="inline-flex items-center gap-2">
-                                <LoadingSpinner size="small" className="text-white" />
-                                {t('settings.invite.removing')}
-                              </span>
-                              ) : (
-                              (t('settings.invite.remove_button') || 'Remove')
-                            )}
-                          </button>
-                        </div>
-                      ))
+                      preferences.invitedMembers.map((email) => {
+                        const status = getInvitationStatus(email);
+                        const pendingInvitation = sentInvitations.find(inv => inv.inviteeEmail.toLowerCase() === email.toLowerCase() && inv.status === 'pending');
+                        
+                        return (
+                          <div key={email} className="flex items-center justify-between gap-2 px-3 py-2 rounded-lg bg-gray-50 dark:bg-gray-700/30">
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2">
+                                <span className="text-sm text-gray-800 dark:text-gray-200 truncate">{email}</span>
+                                {status && (
+                                  <span className={`text-xs px-2 py-0.5 rounded-full flex-shrink-0 ${
+                                    status === 'pending' 
+                                      ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400'
+                                      : status === 'accepted'
+                                      ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
+                                      : status === 'rejected'
+                                      ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
+                                      : 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400'
+                                  }`}>
+                                    {status === 'pending' ? 'Pending' : status === 'accepted' ? 'Accepted' : status === 'rejected' ? 'Rejected' : 'Cancelled'}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2 flex-shrink-0">
+                              {pendingInvitation && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleCancelInvitation(pendingInvitation.id!)}
+                                  disabled={cancellingInviteId === pendingInvitation.id}
+                                  className={`text-xs px-2.5 py-1.5 rounded ${
+                                    cancellingInviteId === pendingInvitation.id 
+                                      ? 'bg-gray-400 cursor-wait' 
+                                      : 'bg-orange-500 hover:bg-orange-600'
+                                  } text-white min-h-[32px] touch-manipulation`}
+                                  title="Cancel invitation"
+                                >
+                                  {cancellingInviteId === pendingInvitation.id ? (
+                                    <LoadingSpinner size="small" className="text-white" />
+                                  ) : (
+                                    'Cancel'
+                                  )}
+                                </button>
+                              )}
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveMember(email)}
+                                disabled={removingEmail === email}
+                                className={`text-xs px-2.5 py-1.5 rounded ${removingEmail === email ? 'bg-gray-400 cursor-wait' : 'bg-red-500 hover:bg-red-600'} text-white min-h-[32px] touch-manipulation`}
+                              >
+                                {removingEmail === email ? (
+                                  <span className="inline-flex items-center gap-2">
+                                    <LoadingSpinner size="small" className="text-white" />
+                                    {t('settings.invite.removing')}
+                                  </span>
+                                ) : (
+                                  (t('settings.invite.remove_button') || 'Remove')
+                                )}
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })
                     ) : (
                       <p className="text-sm text-gray-500 dark:text-gray-400 italic">{t('settings.invite.none') || 'No invited members yet'}</p>
                     )}
                     {inviteFeedback && (
-                      <div className={`mt-3 text-sm ${inviteFeedback.type === 'success' ? 'text-green-600' : 'text-red-600'}`}>
+                      <div className={`mt-3 text-sm ${inviteFeedback.type === 'success' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
                         {inviteFeedback.message}
                       </div>
                     )}

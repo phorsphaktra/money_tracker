@@ -6,6 +6,7 @@ import { NotificationPanel } from './notification/NotificationPanel';
 import { useTaskContext } from '../contexts/TaskContext';
 import { useNotifications } from '../contexts/NotificationContext';
 import { useDarkMode } from '../contexts/DarkModeContext';
+import { ProfileSwitcher } from './ProfileSwitcher';
 
 interface NavbarProps {
   onToggle: () => void;
@@ -54,6 +55,7 @@ export const Navbar = ({ onToggle, isCollapsed }: NavbarProps) => {
         </div>
 
         <div className="flex items-center gap-2">
+          <ProfileSwitcher />
           <button onClick={toggleDarkMode}>
             {darkMode ? <SunIcon className="w-5 h-5 dark:text-slate-400" /> : <MoonIcon className="w-5 h-5 dark:text-slate-400" />}
           </button>
