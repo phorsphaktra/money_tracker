@@ -2,10 +2,11 @@ import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { PiggyBank, Settings2, Plus, Trash2, Upload, Download, RotateCcw } from "lucide-react";
 import { useTranslation } from 'react-i18next';
+import { getRuleCategories } from "../utils/savings";
 
 // ---------- helpers ----------
-const fmt = (n: number | string | undefined, c?: string) =>
-  (c || "$") + (isNaN(Number(n)) ? "0" : Number(n).toLocaleString(undefined, { maximumFractionDigits: 2 }));
+const fmt = (n: number | string | undefined): string =>
+  "$" + (isNaN(Number(n)) ? "0" : Number(n).toLocaleString(undefined, { maximumFractionDigits: 2 }));
 
 const clamp = (v: number, min: number, max: number) => Math.min(Math.max(v, min), max);
 
@@ -27,7 +28,6 @@ const save = (key: string, value: any) => {
 // ---------- main component ----------
 export default function SavingsPlannerApp() {
   const { t } = useTranslation();
-  const [currency, setCurrency] = useState(load("sp_currency", "$"));
   const initialIncome = load<number>("sp_income", 300);
   // keep input as string so it's empty when zero and doesn't produce leading zeros when typing
   const [incomeStr, setIncomeStr] = useState<string>(initialIncome === 0 ? '' : String(initialIncome));
@@ -59,8 +59,10 @@ export default function SavingsPlannerApp() {
     ])
   );
 
+  // Savings breakdown type (regular, goal, all)
+  const [sbType, setSbType] = useState(load("sp_sbType", "regular"));
+
   // persist
-  useEffect(() => save("sp_currency", currency), [currency]);
   useEffect(() => save("sp_income", income), [income]);
   useEffect(() => save("sp_rule", rule), [rule]);
   useEffect(() => save("sp_pyfPct", pyfPct), [pyfPct]);
@@ -68,17 +70,42 @@ export default function SavingsPlannerApp() {
   useEffect(() => save("sp_gbSavingsPct", gbSavingsPct), [gbSavingsPct]);
   useEffect(() => save("sp_goals", goals), [goals]);
   useEffect(() => save("sp_zbCats", zbCats), [zbCats]);
+  useEffect(() => save("sp_sbType", sbType), [sbType]);
 
   // derived allocations
   const plan = useMemo(() => {
     const inc = Number(income) || 0;
 
     if (rule === "50-30-20") {
-      return [
-        { label: "Needs (50%)", amount: inc * 0.5 },
-        { label: "Wants (30%)", amount: inc * 0.3 },
-        { label: "Savings (20%)", amount: inc * 0.2 },
-      ];
+      const categories = getRuleCategories('50-30-20');
+      return categories.map(cat => ({
+        label: cat.label,
+        amount: inc * (cat.percentage / 100),
+      }));
+    }
+
+    if (rule === "savings-breakdown-regular") {
+      const categories = getRuleCategories('savings-breakdown-regular');
+      return categories.map(cat => ({
+        label: cat.label,
+        amount: inc * (cat.percentage / 100),
+      }));
+    }
+
+    if (rule === "savings-breakdown-goal") {
+      const categories = getRuleCategories('savings-breakdown-goal');
+      return categories.map(cat => ({
+        label: cat.label,
+        amount: inc * (cat.percentage / 100),
+      }));
+    }
+
+    if (rule === "savings-breakdown-all") {
+      const categories = getRuleCategories('savings-breakdown-all');
+      return categories.map(cat => ({
+        label: cat.label,
+        amount: inc * (cat.percentage / 100),
+      }));
     }
 
     if (rule === "pyf") {
@@ -92,8 +119,8 @@ export default function SavingsPlannerApp() {
     if (rule === "goal-based") {
       const s = clamp(Number(gbSavingsPct), 1, 90) / 100;
       const savings = inc * s;
-  const totalPct = goals.reduce((a: number, g) => a + (Number(g.pct) || 0), 0) || 1;
-  const norm = goals.map((g) => ({ ...g, share: (Number(g.pct) || 0) / totalPct }));
+      const totalPct = goals.reduce((a: number, g) => a + (Number(g.pct) || 0), 0) || 1;
+      const norm = goals.map((g) => ({ ...g, share: (Number(g.pct) || 0) / totalPct }));
       return [
         { label: `Savings Total (${Math.round(s * 100)}%)`, amount: savings },
         ...norm.map((g) => ({ label: `• ${g.name}`, amount: savings * g.share })),
@@ -111,8 +138,8 @@ export default function SavingsPlannerApp() {
 
     if (rule === "zero-based") {
       // In ZBB, allocations are exact categories. If total != income, show remainder.
-  const total = zbCats.reduce((a: number, c) => a + (Number(c.amount) || 0), 0);
-  const rows = [...zbCats.map((c) => ({ label: c.name, amount: Number(c.amount) || 0 }))];
+      const total = zbCats.reduce((a: number, c) => a + (Number(c.amount) || 0), 0);
+      const rows = [...zbCats.map((c) => ({ label: c.name, amount: Number(c.amount) || 0 }))];
       const diff = inc - total;
       if (Math.abs(diff) > 0.005) rows.push({ label: diff > 0 ? "Unassigned" : "Over Budget", amount: diff });
       return rows;
@@ -126,7 +153,6 @@ export default function SavingsPlannerApp() {
   // export / import
   const exportJson = () => {
     const data = {
-      currency,
       income,
       rule,
       pyfPct,
@@ -151,8 +177,7 @@ export default function SavingsPlannerApp() {
       try {
         const text = typeof reader.result === 'string' ? reader.result : '';
         const data = JSON.parse(text) as any;
-  if (data.currency) setCurrency(data.currency);
-  if (data.income !== undefined) setIncomeStr(data.income ? String(data.income) : '');
+        if (data.income !== undefined) setIncomeStr(data.income ? String(data.income) : '');
         if (data.rule) setRule(data.rule);
         if (data.pyfPct) setPyfPct(data.pyfPct);
         if (data.aggPct) setAggPct(data.aggPct);
@@ -168,8 +193,7 @@ export default function SavingsPlannerApp() {
 
   const resetAll = () => {
     if (!confirm("Reset all settings?")) return;
-    setCurrency("$");
-  setIncomeStr('300');
+    setIncomeStr('300');
     setRule("50-30-20");
     setPyfPct(20);
     setAggPct(30);
@@ -215,19 +239,9 @@ export default function SavingsPlannerApp() {
         </div>
 
         {/* Controls */}
-        <div className="grid md:grid-cols-3 gap-4 mb-6">
+        <div className="grid md:grid-cols-2 gap-4 mb-6">
           <div className="p-4 rounded-2xl border bg-white shadow-sm">
-            <div className="text-sm text-slate-500 mb-1">Currency</div>
-            <input
-              className="w-full px-3 py-2 rounded-xl border"
-              value={currency}
-              onChange={(e) => setCurrency(e.target.value || "$")}
-              placeholder="$ or ៛"
-            />
-          </div>
-
-          <div className="p-4 rounded-2xl border bg-white shadow-sm">
-            <div className="text-sm text-slate-500 mb-1">Monthly Income</div>
+            <div className="text-sm text-slate-500 mb-1">Monthly Income ($)</div>
               <input
                 inputMode="numeric"
                 pattern="[0-9]*"
@@ -243,7 +257,7 @@ export default function SavingsPlannerApp() {
           </div>
 
           <div className="p-4 rounded-2xl border bg-white shadow-sm">
-            <div className="text-sm text-slate-500 mb-1 flex items-center gap-2"><Settings2 className="w-4 h-4"/> Saving Rule</div>
+            <div className="text-sm text-slate-500 mb-1 flex items-center gap-2"><Settings2 className="w-4 h-4"/> Rule</div>
             <div className="flex flex-wrap gap-2">
               {[
                 { id: "50-30-20", label: "50/30/20" },
@@ -251,6 +265,7 @@ export default function SavingsPlannerApp() {
                 { id: "goal-based", label: "Goal-based" },
                 { id: "aggressive", label: "Aggressive" },
                 { id: "zero-based", label: "Zero-based" },
+                { id: "savings-breakdown-regular", label: "Savings Breakdown" },
               ].map((r) => (
                 <button
                   key={r.id}
@@ -359,23 +374,158 @@ export default function SavingsPlannerApp() {
               </div>
             </motion.div>
           )}
+
+          {rule === "savings-breakdown-regular" && (
+            <motion.div key="sb" initial={{opacity:0, y:8}} animate={{opacity:1, y:0}} exit={{opacity:0, y:-8}} className="p-4 rounded-2xl border bg-white shadow-sm mb-6">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <div className="font-medium">Savings Breakdown</div>
+                  <div className="text-sm text-slate-500">Allocate income across savings categories.</div>
+                </div>
+                <div className="text-right">
+                  <div className="text-sm">Total Categories</div>
+                  <div className="text-xl font-semibold">{getRuleCategories('savings-breakdown-regular').length}</div>
+                </div>
+              </div>
+              
+              <div className="mb-4">
+                <div className="text-sm text-slate-600 mb-2 font-medium">Type:</div>
+                <div className="flex flex-wrap gap-2">
+                  {[
+                    { id: 'regular', label: 'Regular', rule: 'savings-breakdown-regular' },
+                    { id: 'goal', label: 'Goal', rule: 'savings-breakdown-goal' },
+                    { id: 'all', label: 'All', rule: 'savings-breakdown-all' },
+                  ].map((t) => (
+                    <button
+                      key={t.id}
+                      onClick={() => { setRule(t.rule as any); setSbType(t.id); }}
+                      className={`px-3 py-1 rounded-lg border text-sm ${sbType===t.id?"bg-slate-900 text-white border-slate-900":"bg-white hover:bg-slate-50"}`}
+                    >
+                      {t.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              
+              <div className="p-3 bg-slate-50 rounded-xl">
+                <div className="text-xs text-slate-600 mb-2 font-medium">Category Allocation:</div>
+                <div className="flex flex-wrap gap-1">
+                  {getRuleCategories(rule as any).map((cat) => (
+                    <div key={cat.id} className="text-xs px-2 py-1 rounded-lg text-white" style={{backgroundColor: cat.color}}>
+                      {cat.label} ({cat.percentage}%)
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {rule === "savings-breakdown-goal" && (
+            <motion.div key="sb-goal" initial={{opacity:0, y:8}} animate={{opacity:1, y:0}} exit={{opacity:0, y:-8}} className="p-4 rounded-2xl border bg-white shadow-sm mb-6">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <div className="font-medium">Savings Breakdown</div>
+                  <div className="text-sm text-slate-500">Allocate income across goal savings categories.</div>
+                </div>
+                <div className="text-right">
+                  <div className="text-sm">Total Categories</div>
+                  <div className="text-xl font-semibold">{getRuleCategories('savings-breakdown-goal').length}</div>
+                </div>
+              </div>
+              
+              <div className="mb-4">
+                <div className="text-sm text-slate-600 mb-2 font-medium">Type:</div>
+                <div className="flex flex-wrap gap-2">
+                  {[
+                    { id: 'regular', label: 'Regular', rule: 'savings-breakdown-regular' },
+                    { id: 'goal', label: 'Goal', rule: 'savings-breakdown-goal' },
+                    { id: 'all', label: 'All', rule: 'savings-breakdown-all' },
+                  ].map((t) => (
+                    <button
+                      key={t.id}
+                      onClick={() => { setRule(t.rule as any); setSbType(t.id); }}
+                      className={`px-3 py-1 rounded-lg border text-sm ${sbType===t.id?"bg-slate-900 text-white border-slate-900":"bg-white hover:bg-slate-50"}`}
+                    >
+                      {t.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              
+              <div className="p-3 bg-slate-50 rounded-xl">
+                <div className="text-xs text-slate-600 mb-2 font-medium">Category Allocation:</div>
+                <div className="flex flex-wrap gap-1">
+                  {getRuleCategories(rule as any).map((cat) => (
+                    <div key={cat.id} className="text-xs px-2 py-1 rounded-lg text-white" style={{backgroundColor: cat.color}}>
+                      {cat.label} ({cat.percentage}%)
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {rule === "savings-breakdown-all" && (
+            <motion.div key="sb-all" initial={{opacity:0, y:8}} animate={{opacity:1, y:0}} exit={{opacity:0, y:-8}} className="p-4 rounded-2xl border bg-white shadow-sm mb-6">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <div className="font-medium">Savings Breakdown</div>
+                  <div className="text-sm text-slate-500">Allocate income across all savings categories.</div>
+                </div>
+                <div className="text-right">
+                  <div className="text-sm">Total Categories</div>
+                  <div className="text-xl font-semibold">{getRuleCategories('savings-breakdown-all').length}</div>
+                </div>
+              </div>
+              
+              <div className="mb-4">
+                <div className="text-sm text-slate-600 mb-2 font-medium">Type:</div>
+                <div className="flex flex-wrap gap-2">
+                  {[
+                    { id: 'regular', label: 'Regular', rule: 'savings-breakdown-regular' },
+                    { id: 'goal', label: 'Goal', rule: 'savings-breakdown-goal' },
+                    { id: 'all', label: 'All', rule: 'savings-breakdown-all' },
+                  ].map((t) => (
+                    <button
+                      key={t.id}
+                      onClick={() => { setRule(t.rule as any); setSbType(t.id); }}
+                      className={`px-3 py-1 rounded-lg border text-sm ${sbType===t.id?"bg-slate-900 text-white border-slate-900":"bg-white hover:bg-slate-50"}`}
+                    >
+                      {t.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              
+              <div className="p-3 bg-slate-50 rounded-xl">
+                <div className="text-xs text-slate-600 mb-2 font-medium">Category Allocation:</div>
+                <div className="flex flex-wrap gap-1">
+                  {getRuleCategories(rule as any).map((cat) => (
+                    <div key={cat.id} className="text-xs px-2 py-1 rounded-lg text-white" style={{backgroundColor: cat.color}}>
+                      {cat.label} ({cat.percentage}%)
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </motion.div>
+          )}
         </AnimatePresence>
 
     {/* Summary */}
         <div className="grid md:grid-cols-3 gap-4 mb-6">
           <div className="p-4 rounded-2xl border bg-white shadow-sm">
-      <div className="text-sm text-slate-500 dark:text-slate-400 mb-1">{t('dashboard.summary') || 'Total Planned'}</div>
-      <div className="text-2xl font-semibold text-slate-900 dark:text-white">{fmt(totalPlanned, currency)}</div>
-      <div className="text-xs text-slate-500 dark:text-slate-400">Income: {fmt(income, currency)}</div>
+            <div className="text-sm text-slate-500 dark:text-slate-400 mb-1">{t('dashboard.summary') || 'Total Planned'}</div>
+            <div className="text-2xl font-semibold text-slate-900 dark:text-white">{fmt(totalPlanned)}</div>
+            <div className="text-xs text-slate-500 dark:text-slate-400">Income: {fmt(income)}</div>
           </div>
           <div className="p-4 rounded-2xl border bg-white shadow-sm">
-      <div className="text-sm text-slate-500 dark:text-slate-400 mb-1">{t('savings.savings_rate') || 'Remainder'}</div>
-      <div className={`text-2xl font-semibold ${Math.abs(income-totalPlanned)<0.01?"text-emerald-600":"text-amber-600"}`}>{fmt(income - totalPlanned, currency)}</div>
-      <div className="text-xs text-slate-500 dark:text-slate-400">Aim for 0 remainder</div>
+            <div className="text-sm text-slate-500 dark:text-slate-400 mb-1">{t('savings.savings_rate') || 'Remainder'}</div>
+            <div className={`text-2xl font-semibold ${Math.abs(income-totalPlanned)<0.01?"text-emerald-600":"text-amber-600"}`}>{fmt(income - totalPlanned)}</div>
+            <div className="text-xs text-slate-500 dark:text-slate-400">Aim for 0 remainder</div>
           </div>
           <div className="p-4 rounded-2xl border bg-white shadow-sm">
-      <div className="text-sm text-slate-500 dark:text-slate-400 mb-1">Autosave Tip</div>
-      <div className="text-sm text-slate-700 dark:text-slate-300">Schedule an automatic transfer on payday equal to your chosen savings amount.</div>
+            <div className="text-sm text-slate-500 dark:text-slate-400 mb-1">Autosave Tip</div>
+            <div className="text-sm text-slate-700 dark:text-slate-300">Schedule an automatic transfer on payday equal to your chosen savings amount.</div>
           </div>
         </div>
 
@@ -392,7 +542,7 @@ export default function SavingsPlannerApp() {
                     style={{ width: `${clamp((Math.abs(row.amount) / (income || 1)) * 100, 0, 100)}%` }}
                   />
                 </div>
-                <div className="w-32 text-right font-medium">{fmt(row.amount, currency)}</div>
+                <div className="w-32 text-right font-medium">{fmt(row.amount)}</div>
               </div>
             ))}
           </div>

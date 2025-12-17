@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import DatePicker from 'react-datepicker';
 import { Button } from '../shared/Button';
 import { XMarkIcon, CalendarIcon, PlusIcon, MinusIcon } from '@heroicons/react/24/outline';
-import { SAVINGS_CATEGORIES } from '../../utils/savings';
+import { getSavingsCategories, SavingsGroup } from '../../utils/savings';
 
 interface SavingFormProps {
   amount?: string;
@@ -68,6 +68,7 @@ export const SavingForm: React.FC<SavingFormProps> = ({
   const [selectedDate, setSelectedDate] = useState(initialDate);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [transactionType, setTransactionType] = useState<'credit' | 'debit'>('credit');
+  const [savingsGroup, setSavingsGroup] = useState<SavingsGroup>('regular');
   const [formError, setFormError] = useState<string | null>(null);
   const amountRef = useRef<HTMLInputElement | null>(null);
 
@@ -203,6 +204,40 @@ export const SavingForm: React.FC<SavingFormProps> = ({
           </button>
         </div>
 
+        {/* Savings Group */}
+        <div className="grid grid-cols-3 gap-1 sm:gap-2">
+          <button
+            type="button"
+            onClick={() => { setSavingsGroup('regular'); setSelectedCategories(['__auto__']); }}
+            className={`flex items-center justify-center px-2 sm:px-3 py-1.5 rounded-xl border transition-all duration-200 min-h-[44px] touch-manipulation ${savingsGroup === 'regular'
+              ? 'bg-indigo-50 border-indigo-500 text-indigo-700'
+              : 'border-gray-300 dark:border-gray-600 hover:border-indigo-300 dark:hover:border-indigo-400'
+            }`}
+          >
+            <span className="text-sm">Regular</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => { setSavingsGroup('goal'); setSelectedCategories(['__auto__']); }}
+            className={`flex items-center justify-center px-2 sm:px-3 py-1.5 rounded-xl border transition-all duration-200 min-h-[44px] touch-manipulation ${savingsGroup === 'goal'
+              ? 'bg-indigo-50 border-indigo-500 text-indigo-700'
+              : 'border-gray-300 dark:border-gray-600 hover:border-indigo-300 dark:hover:border-indigo-400'
+            }`}
+          >
+            <span className="text-sm">Goal</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => { setSavingsGroup('all'); setSelectedCategories(['__auto__']); }}
+            className={`flex items-center justify-center px-2 sm:px-3 py-1.5 rounded-xl border transition-all duration-200 min-h-[44px] touch-manipulation ${savingsGroup === 'all'
+              ? 'bg-indigo-50 border-indigo-500 text-indigo-700'
+              : 'border-gray-300 dark:border-gray-600 hover:border-indigo-300 dark:hover:border-indigo-400'
+            }`}
+          >
+            <span className="text-sm">All</span>
+          </button>
+        </div>
+
         {/* Amount Field */}
         <div className="space-y-1 sm:space-y-1">
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -271,7 +306,7 @@ export const SavingForm: React.FC<SavingFormProps> = ({
             </label>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {SAVINGS_CATEGORIES.map((category) => {
+              {getSavingsCategories(savingsGroup).map((category) => {
                 const checked = selectedCategories.includes(category.id);
                 return (
                   <label
