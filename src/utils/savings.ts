@@ -17,7 +17,6 @@ export const SAVINGS_CATEGORIES: SavingsCategory[] = [
   { id: 'travel', label: 'Travel', percentage: 15, color: '#F59E0B' },
   { id: 'accessory', label: 'Accessory', percentage: 15, color: '#8B5CF6' },
   { id: 'other', label: 'Other', percentage: 5, color: '#f65cf1ff' },
-  // { id: 'goal_saving', label: 'Goal Saving', percentage: 100, color: '#f65c5cff' }
 ];
 
 export const GOAL_SAVINGS_CATEGORIES: SavingsCategory[] = [
@@ -32,11 +31,45 @@ export interface SavingWithCategory {
 }
 
 export type SavingsGroup = 'regular' | 'goal' | 'all';
+export type SavingRule = '50-30-20' | 'pyf' | 'goal-based' | 'aggressive' | 'zero-based' | 'savings-breakdown-regular' | 'savings-breakdown-goal' | 'savings-breakdown-all';
+
+export interface RuleCategory extends SavingsCategory {
+  isSpending?: boolean;
+}
+
+// Rule-based category configurations
+export const RULE_CATEGORIES: Record<SavingRule, RuleCategory[]> = {
+  '50-30-20': [
+    { id: 'needs', label: 'Needs (50%)', percentage: 50, color: '#6366F1', isSpending: true },
+    { id: 'wants', label: 'Wants (30%)', percentage: 30, color: '#48ec63ff', isSpending: true },
+    { id: 'savings', label: 'Savings (20%)', percentage: 20, color: '#F59E0B', isSpending: false },
+  ],
+  'pyf': [
+    { id: 'savings', label: 'Savings', percentage: 20, color: '#F59E0B', isSpending: false },
+    { id: 'spending', label: 'Spending', percentage: 80, color: '#6366F1', isSpending: true },
+  ],
+  'goal-based': [
+    { id: 'savings', label: 'Savings', percentage: 20, color: '#F59E0B', isSpending: false },
+    { id: 'spending', label: 'Spending', percentage: 80, color: '#6366F1', isSpending: true },
+  ],
+  'aggressive': [
+    { id: 'savings', label: 'Savings', percentage: 30, color: '#F59E0B', isSpending: false },
+    { id: 'spending', label: 'Spending', percentage: 70, color: '#6366F1', isSpending: true },
+  ],
+  'zero-based': SAVINGS_CATEGORIES.map(cat => ({ ...cat, isSpending: false })),
+  'savings-breakdown-regular': SAVINGS_CATEGORIES.map(cat => ({ ...cat, isSpending: false })),
+  'savings-breakdown-goal': GOAL_SAVINGS_CATEGORIES.map(cat => ({ ...cat, isSpending: false })),
+  'savings-breakdown-all': [...SAVINGS_CATEGORIES, ...GOAL_SAVINGS_CATEGORIES].map(cat => ({ ...cat, isSpending: false })),
+};
 
 export const getSavingsCategories = (group: SavingsGroup = 'regular'): SavingsCategory[] => {
   if (group === 'regular') return SAVINGS_CATEGORIES;
   if (group === 'goal') return GOAL_SAVINGS_CATEGORIES;
   return [...SAVINGS_CATEGORIES, ...GOAL_SAVINGS_CATEGORIES];
+};
+
+export const getRuleCategories = (rule: SavingRule): RuleCategory[] => {
+  return RULE_CATEGORIES[rule] || RULE_CATEGORIES['50-30-20'];
 };
 
 export const calculateSavingsBreakdown = (
