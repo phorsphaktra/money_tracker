@@ -14,7 +14,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { formatUSD } from '../../utils/currencyUtils';
 import { ConfirmDialog } from '../ConfirmDialog';
-import { SAVINGS_CATEGORIES } from '../../utils/savings';
+import { getSavingsCategories } from '../../utils/savings';
 import { SavingCard } from './SavingCard';
 
 interface SavingListProps {
@@ -185,7 +185,7 @@ export const SavingList: React.FC<SavingListProps> = ({
                 onChange={(e) => setSelectedCategory(e.target.value)}
               >
                 <option value="">{t('savings.allCategories')}</option>
-                {SAVINGS_CATEGORIES.map(category => (
+                {getSavingsCategories('all').map(category => (
                   <option key={category.id} value={category.id}>
                     {category.label}
                   </option>
@@ -230,7 +230,7 @@ export const SavingList: React.FC<SavingListProps> = ({
             onChange={(e) => setSelectedCategory(e.target.value)}
           >
             <option value="">{t('savings.allCategories')}</option>
-            {SAVINGS_CATEGORIES.map(category => (
+            {getSavingsCategories('all').map(category => (
               <option key={category.id} value={category.id}>
                 {category.label}
               </option>
@@ -309,14 +309,13 @@ export const SavingList: React.FC<SavingListProps> = ({
                     <th scope="col" className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                       {t('savings.type')}
                     </th>
-                    <th scope="col" className="relative px-3 sm:px-6 py-3">
-                      <span className="sr-only">{t('common.actions')}</span>
+                    <th scope="col" className="px-3 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      {t('common.actions')}
                     </th>
                   </tr>
                 </thead>
                 <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
                   {paginatedSavings.map((saving, index) => {
-                    const category = SAVINGS_CATEGORIES.find(c => c.id === saving.categoryId);
                     const isCredit = saving.type === 'credit';
                     return (
                       <tr 
@@ -354,17 +353,20 @@ export const SavingList: React.FC<SavingListProps> = ({
                           )}
                         </td>
                         <td className="px-3 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm">
-                          {category ? (
-                            <span 
-                              className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
-                              style={{ 
-                                backgroundColor: `${category.color}20`,
-                                color: category.color 
-                              }}
-                            >
-                              {category.label}
-                            </span>
-                          ) : '-'}
+                          {(() => {
+                            const allCategory = getSavingsCategories('all').find(c => c.id === saving.categoryId);
+                            return allCategory ? (
+                              <span 
+                                className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
+                                style={{ 
+                                  backgroundColor: `${allCategory.color}20`,
+                                  color: allCategory.color 
+                                }}
+                              >
+                                {allCategory.label}
+                              </span>
+                            ) : '-';
+                          })()}
                         </td>
                         <td className="px-3 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm">
                           <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
