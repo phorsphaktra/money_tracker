@@ -279,7 +279,7 @@ export const SavingList: React.FC<SavingListProps> = ({
                         onClick={() => handleSort('date')}
                         className="group inline-flex items-center space-x-1 hover:text-gray-700 dark:hover:text-gray-300 touch-manipulation"
                       >
-                        <span>{t('savings.date')}</span>
+                        <span>{t('savings.date').toUpperCase()}</span>
                         {sortField === 'date' && (
                           sortDirection === 'asc' ? 
                             <ChevronUpIcon className="w-4 h-4" /> : 
@@ -292,7 +292,7 @@ export const SavingList: React.FC<SavingListProps> = ({
                         onClick={() => handleSort('amount')}
                         className="group inline-flex items-center space-x-1 hover:text-gray-700 dark:hover:text-gray-300 touch-manipulation"
                       >
-                        <span>{t('savings.amount')}</span>
+                        <span>{t('savings.amount').toUpperCase()}</span>
                         {sortField === 'amount' && (
                           sortDirection === 'asc' ? 
                             <ChevronUpIcon className="w-4 h-4" /> : 
