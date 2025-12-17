@@ -93,7 +93,8 @@
     "of": "of",
     "results": "results",
     "prev": "Previous",
-    "next": "Next"
+    "next": "Next",
+    "actions": "Actions"
   },
   "dashboard": {
     "version": "Version: ",

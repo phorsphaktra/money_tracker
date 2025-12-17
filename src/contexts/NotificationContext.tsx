@@ -113,27 +113,26 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
     },
     acceptInvite: async (inviteId: string) => {
       try {
-        await invitationService.acceptInvitation(inviteId);
-        // refresh list and notifications
+        // Accept invitation and get the invitation data for context switching
+        const accepted = await invitationService.acceptInvitation(inviteId);
+        
+        // Refresh pending invites list
         if (user && user.email) {
           const invites = await invitationService.getPendingInvitationsForEmail(user.email);
           setPendingInvites(invites);
         }
-        // load the accepted invitation to find ownerId and switch active owner for transactions and savings
-        if (user && user.email) {
-          const accepted = await invitationService.getPendingInvitationsForEmail(user.email);
-          const justAccepted = accepted.find(inv => inv.id === inviteId) || null;
-          if (justAccepted && justAccepted.ownerId) {
-            try {
-              await switchActiveOwner(justAccepted.ownerId);
-            } catch (e) {
-              console.error('Failed to switch to accepted owner (transactions)', e);
-            }
-            try {
-              await switchSavingOwner(justAccepted.ownerId);
-            } catch (e) {
-              console.error('Failed to switch to accepted owner (savings)', e);
-            }
+        
+        // Switch active owner context for transactions and savings
+        if (accepted.ownerId) {
+          try {
+            await switchActiveOwner(accepted.ownerId);
+          } catch (e) {
+            console.error('Failed to switch to accepted owner (transactions)', e);
+          }
+          try {
+            await switchSavingOwner(accepted.ownerId);
+          } catch (e) {
+            console.error('Failed to switch to accepted owner (savings)', e);
           }
         }
       } catch (e) {
